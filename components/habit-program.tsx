@@ -142,36 +142,46 @@ const AchievementsPanel = ({ achievements }: { achievements: Achievement[] }) =>
   );
 };
 const useUserStorage = () => {
-  const [userId, setUserId] = useState(() => {
-    const existingId = localStorage.getItem('habit_tracker_user_id');
-    if (existingId) return existingId;
-    
-    const newId = crypto.randomUUID();
-    localStorage.setItem('habit_tracker_user_id', newId);
-    return newId;
+  const [userId, setUserId] = useState<string>('');
+  const [userData, setUserData] = useState<UserProgress>({
+    currentStreak: 0,
+    longestStreak: 0,
+    totalPoints: 0,
+    completedHabits: 0,
+    achievements: ACHIEVEMENTS,
+    weeklyProgress: {},
+    lastUpdated: new Date().toISOString()
   });
 
-  const [userData, setUserData] = useState<UserProgress>(() => {
-    const saved = localStorage.getItem(`habit_tracker_${userId}`);
-    return saved ? JSON.parse(saved) : {
-      currentStreak: 0,
-      longestStreak: 0,
-      totalPoints: 0,
-      completedHabits: 0,
-      achievements: ACHIEVEMENTS,
-      weeklyProgress: {},
-      lastUpdated: new Date().toISOString()
-    };
-  });
+  useEffect(() => {
+    // Only access localStorage after component mounts (client-side)
+    const existingId = localStorage.getItem('habit_tracker_user_id');
+    if (existingId) {
+      setUserId(existingId);
+    } else {
+      const newId = crypto.randomUUID();
+      localStorage.setItem('habit_tracker_user_id', newId);
+      setUserId(newId);
+    }
+
+    const saved = localStorage.getItem(`habit_tracker_${existingId || ''}`);
+    if (saved) {
+      setUserData(JSON.parse(saved));
+    }
+  }, []);
 
   const saveData = useCallback(() => {
-    localStorage.setItem(`habit_tracker_${userId}`, JSON.stringify({
-      ...userData,
-      lastUpdated: new Date().toISOString()
-    }));
+    if (typeof window !== 'undefined') {  // Check if we're on the client
+      localStorage.setItem(`habit_tracker_${userId}`, JSON.stringify({
+        ...userData,
+        lastUpdated: new Date().toISOString()
+      }));
+    }
   }, [userData, userId]);
 
   const exportProgress = () => {
+    if (typeof window === 'undefined') return;  // Guard against server execution
+    
     const dataStr = JSON.stringify(userData);
     const dataUri = `data:application/json;charset=utf-8,${encodeURIComponent(dataStr)}`;
     
@@ -184,6 +194,8 @@ const useUserStorage = () => {
   };
 
   const importProgress = (jsonFile: File) => {
+    if (typeof window === 'undefined') return;  // Guard against server execution
+    
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
