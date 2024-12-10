@@ -12,12 +12,12 @@ interface Habit {
 interface Week {
   week: number;
   focus: string;
-  habits: Habit[];
+  habits: ReadonlyArray<Habit>;
 }
 
 interface Program {
   title: string;
-  weeks: Week[];
+  weeks: ReadonlyArray<Week>;
 }
 
 interface CollapsibleCardProps {
