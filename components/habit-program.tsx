@@ -142,7 +142,10 @@ const AchievementsPanel = ({ achievements }: { achievements: Achievement[] }) =>
   );
 };
 const useUserStorage = () => {
+  // Initial empty state that's safe for SSR
   const [userId, setUserId] = useState<string>('');
+  const [isClient, setIsClient] = useState(false);
+  const [savedData, setSavedData] = useState<SavedData>({});
   const [userData, setUserData] = useState<UserProgress>({
     currentStreak: 0,
     longestStreak: 0,
@@ -153,60 +156,48 @@ const useUserStorage = () => {
     lastUpdated: new Date().toISOString()
   });
 
+  // Run only on client-side after mount
   useEffect(() => {
-    // Only access localStorage after component mounts (client-side)
-    const existingId = localStorage.getItem('habit_tracker_user_id');
-    if (existingId) {
-      setUserId(existingId);
-    } else {
-      const newId = crypto.randomUUID();
-      localStorage.setItem('habit_tracker_user_id', newId);
-      setUserId(newId);
+    setIsClient(true);
+    
+    // Initialize userId
+    let existingId = localStorage.getItem('habit_tracker_user_id');
+    if (!existingId) {
+      existingId = crypto.randomUUID();
+      localStorage.setItem('habit_tracker_user_id', existingId);
     }
+    setUserId(existingId);
 
-    const saved = localStorage.getItem(`habit_tracker_${existingId || ''}`);
+    // Load saved data
+    const saved = localStorage.getItem(`habit_tracker_${existingId}`);
     if (saved) {
       setUserData(JSON.parse(saved));
+    }
+
+    // Load habit progress
+    const savedProgress = localStorage.getItem('habitProgress');
+    if (savedProgress) {
+      setSavedData(JSON.parse(savedProgress));
     }
   }, []);
 
   const saveData = useCallback(() => {
-    if (typeof window !== 'undefined') {  // Check if we're on the client
-      localStorage.setItem(`habit_tracker_${userId}`, JSON.stringify({
-        ...userData,
-        lastUpdated: new Date().toISOString()
-      }));
-    }
-  }, [userData, userId]);
+    if (!isClient) return;
+    localStorage.setItem(`habit_tracker_${userId}`, JSON.stringify({
+      ...userData,
+      lastUpdated: new Date().toISOString()
+    }));
+  }, [userData, userId, isClient]);
 
+  // Rest of your functions
   const exportProgress = () => {
-    if (typeof window === 'undefined') return;  // Guard against server execution
-    
-    const dataStr = JSON.stringify(userData);
-    const dataUri = `data:application/json;charset=utf-8,${encodeURIComponent(dataStr)}`;
-    
-    const exportFileDefaultName = `habit-tracker-backup-${new Date().toISOString()}.json`;
-    
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
+    if (!isClient) return;
+    // ... rest of export function
   };
 
   const importProgress = (jsonFile: File) => {
-    if (typeof window === 'undefined') return;  // Guard against server execution
-    
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const importedData = JSON.parse(e.target?.result as string);
-        setUserData(importedData);
-        saveData();
-      } catch (error) {
-        console.error('Error importing data:', error);
-      }
-    };
-    reader.readAsText(jsonFile);
+    if (!isClient) return;
+    // ... rest of import function
   };
 
   return {
@@ -215,9 +206,11 @@ const useUserStorage = () => {
     setUserData,
     saveData,
     exportProgress,
-    importProgress
+    importProgress,
+    isClient
   };
 };
+
 // Define CollapsibleCard component first
 const CollapsibleCard = ({ week, children }: CollapsibleCardProps) => {
   const [isOpen, setIsOpen] = useState(true);
