@@ -246,7 +246,7 @@ interface DataManagementProps {
   onImport: (file: File) => void;
 }
 
-const DataManagement = ({ userId, onExport, onImport }: DataManagementProps) => {
+const DataManagement = ({ userId, onExport, onImport, onReset }: DataManagementProps & { onReset: () => void }) => {
   const copyUserId = () => {
     navigator.clipboard.writeText(userId);
   };
@@ -285,11 +285,44 @@ const DataManagement = ({ userId, onExport, onImport }: DataManagementProps) => 
               }}
             />
           </label>
+
+          <button
+            onClick={onReset}
+            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Reset Progress
+          </button>
         </div>
       </div>
     </Card>
   );
 };
+
+const resetProgress = useCallback(() => {
+    if (window.confirm('Are you sure you want to reset all progress? This cannot be undone.')) {
+      // Reset saved data
+      setSavedData({});
+      localStorage.removeItem('habitProgress');
+
+      // Reset user data to initial state
+      const initialUserData = {
+        currentStreak: 0,
+        longestStreak: 0,
+        totalPoints: 0,
+        completedHabits: 0,
+        achievements: ACHIEVEMENTS.map(achievement => ({
+          ...achievement,
+          unlocked: false,
+          unlockedAt: undefined
+        })),
+        weeklyProgress: {},
+        lastUpdated: new Date().toISOString()
+      };
+      
+      setUserData(initialUserData);
+      localStorage.setItem(`habit_tracker_${userId}`, JSON.stringify(initialUserData));
+    }
+  }, [userId]);
 
 const HabitProgram = () => {
   // Initialize user storage
@@ -831,7 +864,7 @@ const programs = {
     ]
   }
 } as const;
-return (
+ return (
     <div className="bg-gray-900 p-12 max-w-4xl mx-auto min-h-screen">
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2">
@@ -845,8 +878,8 @@ return (
         userId={userId}
         onExport={exportProgress}
         onImport={importProgress}
+        onReset={resetProgress}
       />
-
       {/* Progress Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <Card className="bg-gray-800 p-4">
