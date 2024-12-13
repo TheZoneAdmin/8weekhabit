@@ -183,28 +183,32 @@ const DataManagement = ({ userId, onExport, onImport, onReset }: {
   };
 
   return (
-    <Card className="bg-gray-800 p-6 mb-6">
+    <Card className="bg-gray-800 p-3 sm:p-4 mb-6"> {/* Responsive padding */}
       <div className="text-white">
-        <div className="flex items-center justify-between p-4 bg-gray-700 rounded-lg mb-4">
-          <span className="font-mono">Your ID: {userId}</span>
+        {/* ID Container */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-2 sm:p-3 bg-gray-700 rounded-lg mb-3">
+          <span className="font-mono text-xs sm:text-sm break-all mb-2 sm:mb-0 sm:mr-2 w-full sm:w-auto">
+            Your ID: {userId}
+          </span>
           <button
             onClick={copyUserId}
-            className="text-[#CCBA78] hover:text-[#CCBA78]/80 p-2"
+            className="text-[#CCBA78] hover:text-[#CCBA78]/80 p-1 sm:p-2 text-sm whitespace-nowrap"
           >
             Copy ID
           </button>
         </div>
 
-        <div className="flex gap-4">
+        {/* Buttons Container */}
+        <div className="grid grid-cols-3 gap-1 sm:gap-2 w-full text-center">
           <button
             onClick={onExport}
-            className="px-4 py-2 bg-[#CCBA78] text-gray-900 rounded hover:bg-[#CCBA78]/90"
+            className="px-2 sm:px-3 py-2 bg-[#CCBA78] text-gray-900 rounded hover:bg-[#CCBA78]/90 text-xs sm:text-sm"
           >
-            Export Progress
+            Export
           </button>
           
-          <label className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 cursor-pointer">
-            Import Progress
+          <label className="px-2 sm:px-3 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 cursor-pointer text-xs sm:text-sm">
+            Import
             <input
               type="file"
               accept=".json"
@@ -219,9 +223,9 @@ const DataManagement = ({ userId, onExport, onImport, onReset }: {
 
           <button
             onClick={onReset}
-            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+            className="px-2 sm:px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-xs sm:text-sm"
           >
-            Reset Progress
+            Reset
           </button>
         </div>
       </div>
