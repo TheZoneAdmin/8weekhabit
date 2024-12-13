@@ -315,6 +315,8 @@ const useUserStorage = () => {
     userId,
     userData,
     setUserData,
+    savedData,
+    setSavedData,
     saveData,
     exportProgress,
     importProgress,
@@ -818,8 +820,7 @@ const HabitProgram = () => {
         localStorage.setItem(`habit_tracker_${userId}`, JSON.stringify(initialUserData));
       }
     }
-  }, [userId, setUserData]);
-
+  }, [userId, setUserData, setSavedData]);
   const handleCheckbox = (program: string, week: number, habitIndex: number, checked: boolean) => {
     setSavedData(prev => ({
       ...prev,
