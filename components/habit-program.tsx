@@ -113,8 +113,8 @@ const AchievementsPanel = ({ achievements, savedData }: {
           .flatMap(program => Object.values(program))
           .map(week => {
             const uniqueDates = new Set<string>();
-            Object.values(week || {}).forEach((habit: any) => {
-              (habit.completionDates || []).forEach(date => uniqueDates.add(date));
+            Object.values(week || {}).forEach((habit: { completionDates: string[] }) => {
+              (habit.completionDates || []).forEach((date: string) => uniqueDates.add(date));
             });
             return uniqueDates.size;
           })
@@ -125,7 +125,8 @@ const AchievementsPanel = ({ achievements, savedData }: {
         const totalCompletions = Object.values(savedData)
           .flatMap(program => Object.values(program))
           .flatMap(week => Object.values(week))
-          .reduce((total, habit: any) => total + (habit.completionDates?.length || 0), 0);
+          .reduce((total, habit: { completionDates: string[] }) => 
+            total + (habit.completionDates?.length || 0), 0);
         return (totalCompletions / 50) * 100;
 
       // Add other achievements...
@@ -133,7 +134,6 @@ const AchievementsPanel = ({ achievements, savedData }: {
         return 0;
     }
   };
-
   return (
     <Card className="bg-gray-800 border-none mb-8">
       <div className="p-6">
