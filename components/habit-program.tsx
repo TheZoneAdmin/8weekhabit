@@ -246,7 +246,12 @@ interface DataManagementProps {
   onImport: (file: File) => void;
 }
 
-const DataManagement = ({ userId, onExport, onImport, onReset }: DataManagementProps & { onReset: () => void }) => {
+const DataManagement = ({ userId, onExport, onImport, onReset }: {
+  userId: string;
+  onExport: () => void;
+  onImport: (file: File) => void;
+  onReset: () => void;
+}) => {
   const copyUserId = () => {
     navigator.clipboard.writeText(userId);
   };
@@ -297,13 +302,6 @@ const DataManagement = ({ userId, onExport, onImport, onReset }: DataManagementP
     </Card>
   );
 };
-
-const resetProgress = useCallback(() => {
-    if (window.confirm('Are you sure you want to reset all progress? This cannot be undone.')) {
-      // Reset saved data
-      setSavedData({});
-      localStorage.removeItem('habitProgress');
-
       // Reset user data to initial state
       const initialUserData = {
         currentStreak: 0,
@@ -326,17 +324,22 @@ const resetProgress = useCallback(() => {
 
 const HabitProgram = () => {
   // Initialize user storage
-  const { userId, userData, setUserData, saveData, exportProgress, importProgress } = useUserStorage();
+ const { userId, userData, setUserData, saveData, exportProgress, importProgress } = useUserStorage();
 
   // Original saved data state for habits
   const [savedData, setSavedData] = useState<SavedData>(() => {
-    const saved = localStorage.getItem('habitProgress');
-    return saved ? JSON.parse(saved) : {};
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('habitProgress');
+      return saved ? JSON.parse(saved) : {};
+    }
+    return {};
   });
 
   // Save habit progress
   useEffect(() => {
-    localStorage.setItem('habitProgress', JSON.stringify(savedData));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('habitProgress', JSON.stringify(savedData));
+    }
   }, [savedData]);
 
  const handleCheckbox = (program: string, week: number, habitIndex: number, checked: boolean) => {
@@ -350,6 +353,36 @@ const HabitProgram = () => {
       }
     }
   }));
+
+ const resetProgress = useCallback(() => {
+    if (window.confirm('Are you sure you want to reset all progress? This cannot be undone.')) {
+      // Reset saved data
+      setSavedData({});
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('habitProgress');
+      }
+
+      // Reset user data to initial state
+      const initialUserData = {
+        currentStreak: 0,
+        longestStreak: 0,
+        totalPoints: 0,
+        completedHabits: 0,
+        achievements: ACHIEVEMENTS.map(achievement => ({
+          ...achievement,
+          unlocked: false,
+          unlockedAt: undefined
+        })),
+        weeklyProgress: {},
+        lastUpdated: new Date().toISOString()
+      };
+      
+      setUserData(initialUserData);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`habit_tracker_${userId}`, JSON.stringify(initialUserData));
+      }
+    }
+  }, [userId, setUserData]);
 
   // Update total completed habits and points
   setUserData(prev => {
