@@ -69,7 +69,7 @@ const ACHIEVEMENTS: Achievement[] = [
     description: 'Complete all habits for one week',
     icon: 'trophy',
     condition: 'Complete 21 habits in a week (3 habits for 7 days)',
-    points: 100,
+    points: 210,  // 3 habits × 7 days × 10 points
     unlocked: false
   },
   {
@@ -78,7 +78,7 @@ const ACHIEVEMENTS: Achievement[] = [
     description: 'Maintain a 7-day streak',
     icon: 'fire',
     condition: 'Check in for 7 consecutive days',
-    points: 150,
+    points: 70,   // 1 habit minimum × 7 days × 10 points
     unlocked: false
   },
   {
@@ -87,7 +87,7 @@ const ACHIEVEMENTS: Achievement[] = [
     description: 'Complete 50 total habits',
     icon: 'award',
     condition: 'Complete any 50 habits',
-    points: 200,
+    points: 500,  // 50 habits × 10 points
     unlocked: false
   },
   {
@@ -96,7 +96,7 @@ const ACHIEVEMENTS: Achievement[] = [
     description: 'Complete an entire 8-week program',
     icon: 'crown',
     condition: 'Complete all habits in one program',
-    points: 500,
+    points: 1680, // 8 weeks × 3 habits × 7 days × 10 points
     unlocked: false
   }
 ];
