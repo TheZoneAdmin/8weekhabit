@@ -1,6 +1,6 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Dumbbell, Clock, Users, ChevronDown } from 'lucide-react';
+import { Dumbbell, Clock, Users, ChevronDown, Save, Upload, Link as LinkIcon } from 'lucide-react';
 import React, { useState, useEffect, useCallback } from 'react';
 import { Trophy, Award, Crown, Flame } from 'lucide-react';
 
@@ -55,7 +55,10 @@ interface Achievement {
 interface SavedData {
   [program: string]: {
     [week: number]: {
-      [habitIndex: number]: boolean;
+      [habitIndex: number]: {
+        completed: boolean;
+        completionDates: string[];
+      };
     };
   };
 }
@@ -65,7 +68,7 @@ const ACHIEVEMENTS: Achievement[] = [
     title: 'First Week Champion',
     description: 'Complete all habits for one week',
     icon: 'trophy',
-    condition: 'Complete 21 habits in a week',
+    condition: 'Complete 21 habits in a week (3 habits for 7 days)',
     points: 100,
     unlocked: false
   },
@@ -169,7 +172,6 @@ const CollapsibleCard = ({ week, children }: CollapsibleCardProps) => {
     </Card>
   );
 };
-
 const DataManagement = ({ userId, onExport, onImport, onReset }: {
   userId: string;
   onExport: () => void;
@@ -226,8 +228,8 @@ const DataManagement = ({ userId, onExport, onImport, onReset }: {
     </Card>
   );
 };
+
 const useUserStorage = () => {
-  // Initial empty state that's safe for SSR
   const [userId, setUserId] = useState<string>('');
   const [isClient, setIsClient] = useState(false);
   const [savedData, setSavedData] = useState<SavedData>({});
@@ -241,11 +243,9 @@ const useUserStorage = () => {
     lastUpdated: new Date().toISOString()
   });
 
-  // Run only on client-side after mount
   useEffect(() => {
     setIsClient(true);
     
-    // Initialize userId
     let existingId = localStorage.getItem('habit_tracker_user_id');
     if (!existingId) {
       existingId = crypto.randomUUID();
@@ -253,13 +253,11 @@ const useUserStorage = () => {
     }
     setUserId(existingId);
 
-    // Load saved data
     const saved = localStorage.getItem(`habit_tracker_${existingId}`);
     if (saved) {
       setUserData(JSON.parse(saved));
     }
 
-    // Load habit progress
     const savedProgress = localStorage.getItem('habitProgress');
     if (savedProgress) {
       setSavedData(JSON.parse(savedProgress));
@@ -323,6 +321,163 @@ const useUserStorage = () => {
     isClient
   };
 };
+const HabitProgram = () => {
+  const { 
+    userId, 
+    userData, 
+    setUserData, 
+    savedData,
+    setSavedData,
+    saveData, 
+    exportProgress, 
+    importProgress 
+  } = useUserStorage();
+
+  // Save habit progress
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('habitProgress', JSON.stringify(savedData));
+    }
+  }, [savedData]);
+
+  const resetProgress = useCallback(() => {
+    if (window.confirm('Are you sure you want to reset all progress? This cannot be undone.')) {
+      setSavedData({});
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('habitProgress');
+      }
+
+      const initialUserData = {
+        currentStreak: 0,
+        longestStreak: 0,
+        totalPoints: 0,
+        completedHabits: 0,
+        achievements: ACHIEVEMENTS.map(achievement => ({
+          ...achievement,
+          unlocked: false,
+          unlockedAt: undefined
+        })),
+        weeklyProgress: {},
+        lastUpdated: new Date().toISOString()
+      };
+      
+      setUserData(initialUserData);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`habit_tracker_${userId}`, JSON.stringify(initialUserData));
+      }
+    }
+  }, [userId, setUserData, setSavedData]);
+
+  const handleCheckbox = (program: string, week: number, habitIndex: number, checked: boolean) => {
+    const today = new Date().toISOString().split('T')[0];
+
+    setSavedData(prev => {
+      const currentHabit = prev[program]?.[week]?.[habitIndex] || { completed: false, completionDates: [] };
+      
+      if (checked) {
+        const updatedDates = currentHabit.completionDates?.includes(today)
+          ? currentHabit.completionDates
+          : [...(currentHabit.completionDates || []), today];
+
+        return {
+          ...prev,
+          [program]: {
+            ...prev[program],
+            [week]: {
+              ...prev[program]?.[week],
+              [habitIndex]: {
+                completed: true,
+                completionDates: updatedDates
+              }
+            }
+          }
+        };
+      } else {
+        return {
+          ...prev,
+          [program]: {
+            ...prev[program],
+            [week]: {
+              ...prev[program]?.[week],
+              [habitIndex]: {
+                completed: false,
+                completionDates: (currentHabit.completionDates || []).filter(date => date !== today)
+              }
+            }
+          }
+        };
+      }
+    });
+
+    setUserData(prev => {
+      // Count completions for the week
+      const getCompletionsForWeek = (weekData: any) => {
+        const uniqueDates = new Set<string>();
+        Object.values(weekData || {}).forEach((habit: any) => {
+          (habit.completionDates || []).forEach((date: string) => uniqueDates.add(date));
+        });
+        return uniqueDates.size;
+      };
+
+      // Calculate total completions
+      const totalCompletions = Object.values(savedData)
+        .flatMap(program => Object.values(program))
+        .flatMap(week => Object.values(week))
+        .reduce((total, habit: any) => total + (habit.completionDates?.length || 0), 0) + (checked ? 1 : -1);
+
+      // Update achievements
+      const updatedAchievements = prev.achievements.map(achievement => {
+        if (achievement.unlocked) return achievement;
+
+        switch (achievement.id) {
+          case 'first-week':
+            // Check for 21 completions in any week (3 habits * 7 days)
+            const hasCompletedWeek = Object.values(savedData).some(program => 
+              Object.values(program).some(week => getCompletionsForWeek(week) >= 21)
+            );
+            if (hasCompletedWeek) {
+              return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
+            }
+            break;
+
+          case 'habit-warrior':
+            if (totalCompletions >= 50) {
+              return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
+            }
+            break;
+
+          case 'program-master':
+            // Check if any program has all weeks with all habits completed for 7 days
+            const hasCompletedProgram = Object.entries(savedData).some(([_, programData]) => {
+              const weeks = Object.entries(programData);
+              if (weeks.length !== 8) return false;
+              
+              return weeks.every(([_, weekData]) => {
+                const habits = Object.values(weekData);
+                return habits.length === 3 && habits.every((habit: any) => 
+                  habit.completionDates?.length >= 7
+                );
+              });
+            });
+            
+            if (hasCompletedProgram) {
+              return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
+            }
+            break;
+        }
+        return achievement;
+      });
+
+      return {
+        ...prev,
+        completedHabits: totalCompletions,
+        totalPoints: totalCompletions * 10,
+        achievements: updatedAchievements
+      };
+    });
+
+    saveData();
+  };
 const programs = {
   strength: {
     title: "Strength & Growth Habits",
@@ -772,132 +927,7 @@ hybrid: {
     ]
   }
 } as const;
-const HabitProgram = () => {
-  // Initialize user storage
-  const { userId, userData, setUserData, saveData, exportProgress, importProgress } = useUserStorage();
-
-  // Original saved data state for habits
-  const [savedData, setSavedData] = useState<SavedData>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('habitProgress');
-      return saved ? JSON.parse(saved) : {};
-    }
-    return {};
-  });
-
-  // Save habit progress
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('habitProgress', JSON.stringify(savedData));
-    }
-  }, [savedData]);
-
-  const resetProgress = useCallback(() => {
-    if (window.confirm('Are you sure you want to reset all progress? This cannot be undone.')) {
-      // Reset saved data
-      setSavedData({});
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('habitProgress');
-      }
-
-      // Reset user data to initial state
-      const initialUserData = {
-        currentStreak: 0,
-        longestStreak: 0,
-        totalPoints: 0,
-        completedHabits: 0,
-        achievements: ACHIEVEMENTS.map(achievement => ({
-          ...achievement,
-          unlocked: false,
-          unlockedAt: undefined
-        })),
-        weeklyProgress: {},
-        lastUpdated: new Date().toISOString()
-      };
-      
-      setUserData(initialUserData);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(`habit_tracker_${userId}`, JSON.stringify(initialUserData));
-      }
-    }
-  }, [userId, setUserData, setSavedData]);
-  const handleCheckbox = (program: string, week: number, habitIndex: number, checked: boolean) => {
-    setSavedData(prev => ({
-      ...prev,
-      [program]: {
-        ...prev[program],
-        [week]: {
-          ...prev[program]?.[week],
-          [habitIndex]: checked
-        }
-      }
-    }));
-
-    // Update total completed habits and points
-    setUserData(prev => {
-      const completedHabits = Object.values(savedData)
-        .flatMap(program => Object.values(program))
-        .flatMap(week => Object.values(week))
-        .filter(Boolean).length + (checked ? 1 : -1);
-
-      // Calculate points (10 points per completed habit)
-      const totalPoints = completedHabits * 10;
-
-      // Check for achievements
-      const updatedAchievements = prev.achievements.map(achievement => {
-        if (achievement.unlocked) return achievement;
-
-        switch (achievement.id) {
-          case 'first-week':
-            // Check if any week has all habits completed (3 habits per week)
-            const hasCompletedWeek = Object.values(savedData).some(program => 
-              Object.values(program).some(week => 
-                Object.values(week).filter(Boolean).length === 3));
-            if (hasCompletedWeek) {
-              return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
-            }
-            break;
-
-          case 'habit-warrior':
-            if (completedHabits >= 50) {
-              return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
-            }
-            break;
-
-          case 'program-master':
-            // Check if any program has all weeks (8) with all habits (3 per week) completed
-            const hasCompletedProgram = Object.entries(savedData).some(([_, programData]) => {
-              // Check if we have all 8 weeks
-              const weeks = Object.entries(programData);
-              if (weeks.length !== 8) return false;
-              
-              // Check if each week has all 3 habits completed
-              return weeks.every(([_, weekData]) => {
-                const habits = Object.values(weekData);
-                return habits.length === 3 && habits.every(Boolean);
-              });
-            });
-            
-            if (hasCompletedProgram) {
-              return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
-            }
-            break;
-        }
-        return achievement;
-      });
-
-      return {
-        ...prev,
-        completedHabits,
-        totalPoints,
-        achievements: updatedAchievements
-      };
-    });
-
-    saveData();
-  };
-
-  return (
+return (
     <div className="bg-gray-900 p-12 max-w-4xl mx-auto min-h-screen">
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2">
@@ -983,12 +1013,17 @@ const HabitProgram = () => {
                           <input 
                             type="checkbox" 
                             className="w-5 h-5 rounded border-[#CCBA78] accent-[#CCBA78]"
-                            checked={savedData[key]?.[week.week]?.[idx] || false}
+                            checked={savedData[key]?.[week.week]?.[idx]?.completionDates?.includes(
+                              new Date().toISOString().split('T')[0]
+                            ) || false}
                             onChange={(e) => handleCheckbox(key, week.week, idx, e.target.checked)}
                           />
                           <div>
                             <p className="font-medium">{habit.habit}</p>
                             <p className="text-gray-400 text-sm mt-1">{habit.example}</p>
+                            <p className="text-gray-400 text-xs mt-1">
+                              Completed {savedData[key]?.[week.week]?.[idx]?.completionDates?.length || 0} times
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -1005,3 +1040,4 @@ const HabitProgram = () => {
 };
 
 export default HabitProgram;
+
