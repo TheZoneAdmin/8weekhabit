@@ -1,6 +1,6 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Dumbbell, Clock, Users, ChevronDown, Save, Upload, Link as LinkIcon } from 'lucide-react';
+import { Dumbbell, Clock, Users, ChevronDown } from 'lucide-react';
 import React, { useState, useEffect, useCallback } from 'react';
 import { Trophy, Award, Crown, Flame } from 'lucide-react';
 
@@ -97,6 +97,7 @@ const ACHIEVEMENTS: Achievement[] = [
     unlocked: false
   }
 ];
+
 const AchievementsPanel = ({ achievements }: { achievements: Achievement[] }) => {
   return (
     <Card className="bg-gray-800 border-none mb-8">
@@ -141,77 +142,7 @@ const AchievementsPanel = ({ achievements }: { achievements: Achievement[] }) =>
     </Card>
   );
 };
-const useUserStorage = () => {
-  // Initial empty state that's safe for SSR
-  const [userId, setUserId] = useState<string>('');
-  const [isClient, setIsClient] = useState(false);
-  const [savedData, setSavedData] = useState<SavedData>({});
-  const [userData, setUserData] = useState<UserProgress>({
-    currentStreak: 0,
-    longestStreak: 0,
-    totalPoints: 0,
-    completedHabits: 0,
-    achievements: ACHIEVEMENTS,
-    weeklyProgress: {},
-    lastUpdated: new Date().toISOString()
-  });
 
-  // Run only on client-side after mount
-  useEffect(() => {
-    setIsClient(true);
-    
-    // Initialize userId
-    let existingId = localStorage.getItem('habit_tracker_user_id');
-    if (!existingId) {
-      existingId = crypto.randomUUID();
-      localStorage.setItem('habit_tracker_user_id', existingId);
-    }
-    setUserId(existingId);
-
-    // Load saved data
-    const saved = localStorage.getItem(`habit_tracker_${existingId}`);
-    if (saved) {
-      setUserData(JSON.parse(saved));
-    }
-
-    // Load habit progress
-    const savedProgress = localStorage.getItem('habitProgress');
-    if (savedProgress) {
-      setSavedData(JSON.parse(savedProgress));
-    }
-  }, []);
-
-  const saveData = useCallback(() => {
-    if (!isClient) return;
-    localStorage.setItem(`habit_tracker_${userId}`, JSON.stringify({
-      ...userData,
-      lastUpdated: new Date().toISOString()
-    }));
-  }, [userData, userId, isClient]);
-
-  // Rest of your functions
-  const exportProgress = () => {
-    if (!isClient) return;
-    // ... rest of export function
-  };
-
-  const importProgress = (jsonFile: File) => {
-    if (!isClient) return;
-    // ... rest of import function
-  };
-
-  return {
-    userId,
-    userData,
-    setUserData,
-    saveData,
-    exportProgress,
-    importProgress,
-    isClient
-  };
-};
-
-// Define CollapsibleCard component first
 const CollapsibleCard = ({ week, children }: CollapsibleCardProps) => {
   const [isOpen, setIsOpen] = useState(true);
   
@@ -238,13 +169,6 @@ const CollapsibleCard = ({ week, children }: CollapsibleCardProps) => {
     </Card>
   );
 };
-
-// Define DataManagement component
-interface DataManagementProps {
-  userId: string;
-  onExport: () => void;
-  onImport: (file: File) => void;
-}
 
 const DataManagement = ({ userId, onExport, onImport, onReset }: {
   userId: string;
@@ -302,152 +226,101 @@ const DataManagement = ({ userId, onExport, onImport, onReset }: {
     </Card>
   );
 };
-      // Reset user data to initial state
-      const initialUserData = {
-        currentStreak: 0,
-        longestStreak: 0,
-        totalPoints: 0,
-        completedHabits: 0,
-        achievements: ACHIEVEMENTS.map(achievement => ({
-          ...achievement,
-          unlocked: false,
-          unlockedAt: undefined
-        })),
-        weeklyProgress: {},
-        lastUpdated: new Date().toISOString()
-      };
-      
-      setUserData(initialUserData);
-      localStorage.setItem(`habit_tracker_${userId}`, JSON.stringify(initialUserData));
-    }
-  }, [userId]);
-
-const HabitProgram = () => {
-  // Initialize user storage
- const { userId, userData, setUserData, saveData, exportProgress, importProgress } = useUserStorage();
-
-  // Original saved data state for habits
-  const [savedData, setSavedData] = useState<SavedData>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('habitProgress');
-      return saved ? JSON.parse(saved) : {};
-    }
-    return {};
+const useUserStorage = () => {
+  // Initial empty state that's safe for SSR
+  const [userId, setUserId] = useState<string>('');
+  const [isClient, setIsClient] = useState(false);
+  const [savedData, setSavedData] = useState<SavedData>({});
+  const [userData, setUserData] = useState<UserProgress>({
+    currentStreak: 0,
+    longestStreak: 0,
+    totalPoints: 0,
+    completedHabits: 0,
+    achievements: ACHIEVEMENTS,
+    weeklyProgress: {},
+    lastUpdated: new Date().toISOString()
   });
 
-  // Save habit progress
+  // Run only on client-side after mount
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('habitProgress', JSON.stringify(savedData));
+    setIsClient(true);
+    
+    // Initialize userId
+    let existingId = localStorage.getItem('habit_tracker_user_id');
+    if (!existingId) {
+      existingId = crypto.randomUUID();
+      localStorage.setItem('habit_tracker_user_id', existingId);
     }
-  }, [savedData]);
+    setUserId(existingId);
 
- const handleCheckbox = (program: string, week: number, habitIndex: number, checked: boolean) => {
-  setSavedData(prev => ({
-    ...prev,
-    [program]: {
-      ...prev[program],
-      [week]: {
-        ...prev[program]?.[week],
-        [habitIndex]: checked
-      }
+    // Load saved data
+    const saved = localStorage.getItem(`habit_tracker_${existingId}`);
+    if (saved) {
+      setUserData(JSON.parse(saved));
     }
-  }));
 
- const resetProgress = useCallback(() => {
-    if (window.confirm('Are you sure you want to reset all progress? This cannot be undone.')) {
-      // Reset saved data
-      setSavedData({});
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('habitProgress');
-      }
-
-      // Reset user data to initial state
-      const initialUserData = {
-        currentStreak: 0,
-        longestStreak: 0,
-        totalPoints: 0,
-        completedHabits: 0,
-        achievements: ACHIEVEMENTS.map(achievement => ({
-          ...achievement,
-          unlocked: false,
-          unlockedAt: undefined
-        })),
-        weeklyProgress: {},
-        lastUpdated: new Date().toISOString()
-      };
-      
-      setUserData(initialUserData);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(`habit_tracker_${userId}`, JSON.stringify(initialUserData));
-      }
+    // Load habit progress
+    const savedProgress = localStorage.getItem('habitProgress');
+    if (savedProgress) {
+      setSavedData(JSON.parse(savedProgress));
     }
-  }, [userId, setUserData]);
+  }, []);
 
-  // Update total completed habits and points
-  setUserData(prev => {
-    const completedHabits = Object.values(savedData)
-      .flatMap(program => Object.values(program))
-      .flatMap(week => Object.values(week))
-      .filter(Boolean).length + (checked ? 1 : -1);
+  const saveData = useCallback(() => {
+    if (!isClient) return;
+    localStorage.setItem(`habit_tracker_${userId}`, JSON.stringify({
+      ...userData,
+      lastUpdated: new Date().toISOString()
+    }));
+  }, [userData, userId, isClient]);
 
-    // Calculate points (10 points per completed habit)
-    const totalPoints = completedHabits * 10;
-
-    // Check for achievements
-    const updatedAchievements = prev.achievements.map(achievement => {
-      if (achievement.unlocked) return achievement;
-
-      switch (achievement.id) {
-        case 'first-week':
-          // Check if any week has all habits completed (3 habits per week)
-          const hasCompletedWeek = Object.values(savedData).some(program => 
-            Object.values(program).some(week => 
-              Object.values(week).filter(Boolean).length === 3));
-          if (hasCompletedWeek) {
-            return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
-          }
-          break;
-
-        case 'habit-warrior':
-          if (completedHabits >= 50) {
-            return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
-          }
-          break;
-
-        case 'program-master':
-          // Check if any program has all weeks (8) with all habits (3 per week) completed
-          const hasCompletedProgram = Object.entries(savedData).some(([_, programData]) => {
-            // Check if we have all 8 weeks
-            const weeks = Object.entries(programData);
-            if (weeks.length !== 8) return false;
-            
-            // Check if each week has all 3 habits completed
-            return weeks.every(([_, weekData]) => {
-              const habits = Object.values(weekData);
-              return habits.length === 3 && habits.every(Boolean);
-            });
-          });
-          
-          if (hasCompletedProgram) {
-            return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
-          }
-          break;
-      }
-      return achievement;
-    });
-
-    return {
-      ...prev,
-      completedHabits,
-      totalPoints,
-      achievements: updatedAchievements
+  const exportProgress = () => {
+    if (!isClient) return;
+    const data = {
+      userData,
+      savedData
     };
-  });
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `habit-tracker-export-${new Date().toISOString()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
-  saveData();
+  const importProgress = (jsonFile: File) => {
+    if (!isClient) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const data = JSON.parse(content);
+        if (data.userData && data.savedData) {
+          setUserData(data.userData);
+          setSavedData(data.savedData);
+          localStorage.setItem(`habit_tracker_${userId}`, JSON.stringify(data.userData));
+          localStorage.setItem('habitProgress', JSON.stringify(data.savedData));
+        }
+      } catch (error) {
+        console.error('Failed to import data:', error);
+      }
+    };
+    reader.readAsText(jsonFile);
+  };
+
+  return {
+    userId,
+    userData,
+    setUserData,
+    saveData,
+    exportProgress,
+    importProgress,
+    isClient
+  };
 };
-  
 const programs = {
   strength: {
     title: "Strength & Growth Habits",
@@ -598,7 +471,7 @@ const programs = {
       }
     ]
   },
-  hybrid: {
+hybrid: {
     title: "Functional Fitness Habits",
     weeks: [
       {
@@ -897,7 +770,133 @@ const programs = {
     ]
   }
 } as const;
- return (
+const HabitProgram = () => {
+  // Initialize user storage
+  const { userId, userData, setUserData, saveData, exportProgress, importProgress } = useUserStorage();
+
+  // Original saved data state for habits
+  const [savedData, setSavedData] = useState<SavedData>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('habitProgress');
+      return saved ? JSON.parse(saved) : {};
+    }
+    return {};
+  });
+
+  // Save habit progress
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('habitProgress', JSON.stringify(savedData));
+    }
+  }, [savedData]);
+
+  const resetProgress = useCallback(() => {
+    if (window.confirm('Are you sure you want to reset all progress? This cannot be undone.')) {
+      // Reset saved data
+      setSavedData({});
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('habitProgress');
+      }
+
+      // Reset user data to initial state
+      const initialUserData = {
+        currentStreak: 0,
+        longestStreak: 0,
+        totalPoints: 0,
+        completedHabits: 0,
+        achievements: ACHIEVEMENTS.map(achievement => ({
+          ...achievement,
+          unlocked: false,
+          unlockedAt: undefined
+        })),
+        weeklyProgress: {},
+        lastUpdated: new Date().toISOString()
+      };
+      
+      setUserData(initialUserData);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`habit_tracker_${userId}`, JSON.stringify(initialUserData));
+      }
+    }
+  }, [userId, setUserData]);
+
+  const handleCheckbox = (program: string, week: number, habitIndex: number, checked: boolean) => {
+    setSavedData(prev => ({
+      ...prev,
+      [program]: {
+        ...prev[program],
+        [week]: {
+          ...prev[program]?.[week],
+          [habitIndex]: checked
+        }
+      }
+    }));
+
+    // Update total completed habits and points
+    setUserData(prev => {
+      const completedHabits = Object.values(savedData)
+        .flatMap(program => Object.values(program))
+        .flatMap(week => Object.values(week))
+        .filter(Boolean).length + (checked ? 1 : -1);
+
+      // Calculate points (10 points per completed habit)
+      const totalPoints = completedHabits * 10;
+
+      // Check for achievements
+      const updatedAchievements = prev.achievements.map(achievement => {
+        if (achievement.unlocked) return achievement;
+
+        switch (achievement.id) {
+          case 'first-week':
+            // Check if any week has all habits completed (3 habits per week)
+            const hasCompletedWeek = Object.values(savedData).some(program => 
+              Object.values(program).some(week => 
+                Object.values(week).filter(Boolean).length === 3));
+            if (hasCompletedWeek) {
+              return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
+            }
+            break;
+
+          case 'habit-warrior':
+            if (completedHabits >= 50) {
+              return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
+            }
+            break;
+
+          case 'program-master':
+            // Check if any program has all weeks (8) with all habits (3 per week) completed
+            const hasCompletedProgram = Object.entries(savedData).some(([_, programData]) => {
+              // Check if we have all 8 weeks
+              const weeks = Object.entries(programData);
+              if (weeks.length !== 8) return false;
+              
+              // Check if each week has all 3 habits completed
+              return weeks.every(([_, weekData]) => {
+                const habits = Object.values(weekData);
+                return habits.length === 3 && habits.every(Boolean);
+              });
+            });
+            
+            if (hasCompletedProgram) {
+              return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
+            }
+            break;
+        }
+        return achievement;
+      });
+
+      return {
+        ...prev,
+        completedHabits,
+        totalPoints,
+        achievements: updatedAchievements
+      };
+    });
+
+    saveData();
+  };
+
+  return (
     <div className="bg-gray-900 p-12 max-w-4xl mx-auto min-h-screen">
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2">
@@ -913,6 +912,7 @@ const programs = {
         onImport={importProgress}
         onReset={resetProgress}
       />
+
       {/* Progress Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <Card className="bg-gray-800 p-4">
@@ -942,7 +942,9 @@ const programs = {
           </div>
         </Card>
       </div>
-<AchievementsPanel achievements={userData.achievements} />
+
+      <AchievementsPanel achievements={userData.achievements} />
+
       <Tabs defaultValue="strength">
         <TabsList className="grid grid-cols-3 gap-4 mb-8">
           <TabsTrigger 
