@@ -62,6 +62,17 @@ interface SavedData {
     };
   };
 }
+// Add to interfaces
+interface CustomHabit {
+  id: string;
+  habit: string;
+  example: string;
+  category: string;
+  frequency: 'daily' | 'weekly';
+  targetValue?: number;
+  unit?: string;
+  created: string;
+}
 const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'first-week',
@@ -100,7 +111,124 @@ const ACHIEVEMENTS: Achievement[] = [
     unlocked: false
   }
 ];
+const CustomHabitManager = ({ savedData, setSavedData }: { 
+  savedData: SavedData;
+  setSavedData: (data: SavedData) => void;
+}) => {
+  const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState({
+    habit: '',
+    example: '',
+    frequency: 'daily' as const,
+    category: ''
+  });
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const newHabit: CustomHabit = {
+      ...formData,
+      id: crypto.randomUUID(),
+      created: new Date().toISOString()
+    };
+
+    // Add to savedData structure
+    setSavedData(prev => ({
+      ...prev,
+      custom: {
+        ...prev.custom,
+        [newHabit.id]: {
+          completed: false,
+          completionDates: [],
+          ...newHabit
+        }
+      }
+    }));
+
+    setShowForm(false);
+    setFormData({ habit: '', example: '', frequency: 'daily', category: '' });
+  };
+
+  return (
+    <Card className="bg-gray-800 mb-8">
+      <div className="p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-[#CCBA78] text-xl font-semibold">Custom Habits</h3>
+          <button
+            onClick={() => setShowForm(true)}
+            className="px-4 py-2 bg-[#CCBA78] text-gray-900 rounded hover:bg-[#CCBA78]/90"
+          >
+            Add Custom Habit
+          </button>
+        </div>
+
+        {showForm && (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <input
+              type="text"
+              placeholder="Habit name"
+              value={formData.habit}
+              onChange={e => setFormData(prev => ({ ...prev, habit: e.target.value }))}
+              className="w-full bg-gray-700 border-gray-600 rounded p-2 text-white"
+              required
+            />
+            <textarea
+              placeholder="Example/Notes"
+              value={formData.example}
+              onChange={e => setFormData(prev => ({ ...prev, example: e.target.value }))}
+              className="w-full bg-gray-700 border-gray-600 rounded p-2 text-white"
+              required
+            />
+            <select
+              value={formData.frequency}
+              onChange={e => setFormData(prev => ({ ...prev, frequency: e.target.value as 'daily' | 'weekly' }))}
+              className="w-full bg-gray-700 border-gray-600 rounded p-2 text-white"
+            >
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+            </select>
+            <input
+              type="text"
+              placeholder="Category"
+              value={formData.category}
+              onChange={e => setFormData(prev => ({ ...prev, category: e.target.value }))}
+              className="w-full bg-gray-700 border-gray-600 rounded p-2 text-white"
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowForm(false)}
+                className="px-4 py-2 bg-gray-700 text-white rounded"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-[#CCBA78] text-gray-900 rounded"
+              >
+                Add Habit
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* Display existing custom habits */}
+        <div className="mt-4 space-y-4">
+          {Object.entries(savedData.custom || {}).map(([id, habit]) => (
+            <div key={id} className="p-4 bg-gray-700 rounded">
+              <h4 className="font-medium text-white">{habit.habit}</h4>
+              <p className="text-sm text-gray-400">{habit.example}</p>
+              <div className="mt-2 flex justify-between text-sm">
+                <span className="text-gray-400">{habit.frequency}</span>
+                <span className="text-gray-400">{habit.category}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </Card>
+  );
+};
 const AchievementsPanel = ({ achievements, savedData }: { 
   achievements: Achievement[],
   savedData: SavedData 
@@ -1026,6 +1154,7 @@ return (
       </div>
 
   <AchievementsPanel achievements={userData.achievements} savedData={savedData} />
+<CustomHabitManager savedData={savedData} setSavedData={setSavedData} />
 
       <Tabs defaultValue="strength">
         <TabsList className="grid grid-cols-3 gap-4 mb-8">
