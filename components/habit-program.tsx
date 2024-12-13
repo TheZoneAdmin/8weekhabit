@@ -61,18 +61,23 @@ interface SavedData {
       };
     };
   };
+  custom?: {
+    [id: string]: CustomHabitData;
+  };
 }
-// Add to interfaces
-interface CustomHabit {
+
+// Add to interfaces first:
+interface CustomHabitData {
+  completed: boolean;
+  completionDates: string[];
   id: string;
   habit: string;
   example: string;
   category: string;
   frequency: 'daily' | 'weekly';
-  targetValue?: number;
-  unit?: string;
   created: string;
 }
+
 const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'first-week',
@@ -126,22 +131,20 @@ const CustomHabitManager = ({ savedData, setSavedData }: {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    const newHabit: CustomHabit = {
+    const newHabit: CustomHabitData = {
       ...formData,
       id: crypto.randomUUID(),
-      created: new Date().toISOString()
+      created: new Date().toISOString(),
+      completed: false,
+      completionDates: []
     };
 
-    // Add to savedData structure
-    setSavedData(prev => ({
+    // Now with proper typing
+    setSavedData((prev: SavedData) => ({
       ...prev,
       custom: {
         ...prev.custom,
-        [newHabit.id]: {
-          completed: false,
-          completionDates: [],
-          ...newHabit
-        }
+        [newHabit.id]: newHabit
       }
     }));
 
