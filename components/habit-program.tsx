@@ -334,23 +334,36 @@ const HabitProgram = () => {
 
       switch (achievement.id) {
         case 'first-week':
-          // Check if any week has all habits completed
-          if (Object.values(savedData).some(program => 
+          // Check if any week has all habits completed (3 habits per week)
+          const hasCompletedWeek = Object.values(savedData).some(program => 
             Object.values(program).some(week => 
-              Object.values(week).filter(Boolean).length >= 3))) {
+              Object.values(week).filter(Boolean).length === 3));
+          if (hasCompletedWeek) {
             return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
           }
           break;
+
         case 'habit-warrior':
           if (completedHabits >= 50) {
             return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
           }
           break;
+
         case 'program-master':
-          // Check if any program has all habits completed
-          if (Object.values(savedData).some(program => 
-            Object.values(program).every(week => 
-              Object.values(week).every(Boolean)))) {
+          // Check if any program has all weeks (8) with all habits (3 per week) completed
+          const hasCompletedProgram = Object.entries(savedData).some(([_, programData]) => {
+            // Check if we have all 8 weeks
+            const weeks = Object.entries(programData);
+            if (weeks.length !== 8) return false;
+            
+            // Check if each week has all 3 habits completed
+            return weeks.every(([_, weekData]) => {
+              const habits = Object.values(weekData);
+              return habits.length === 3 && habits.every(Boolean);
+            });
+          });
+          
+          if (hasCompletedProgram) {
             return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
           }
           break;
