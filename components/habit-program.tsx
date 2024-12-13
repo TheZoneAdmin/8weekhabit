@@ -101,7 +101,39 @@ const ACHIEVEMENTS: Achievement[] = [
   }
 ];
 
-const AchievementsPanel = ({ achievements }: { achievements: Achievement[] }) => {
+const AchievementsPanel = ({ achievements, savedData }: { 
+  achievements: Achievement[],
+  savedData: SavedData 
+}) => {
+  const calculateProgress = (achievement: Achievement) => {
+    switch (achievement.id) {
+      case 'first-week':
+        // Count max completions in any week
+        const maxWeekCompletions = Object.values(savedData)
+          .flatMap(program => Object.values(program))
+          .map(week => {
+            const uniqueDates = new Set<string>();
+            Object.values(week || {}).forEach((habit: any) => {
+              (habit.completionDates || []).forEach(date => uniqueDates.add(date));
+            });
+            return uniqueDates.size;
+          })
+          .reduce((max, curr) => Math.max(max, curr), 0);
+        return (maxWeekCompletions / 21) * 100;
+
+      case 'habit-warrior':
+        const totalCompletions = Object.values(savedData)
+          .flatMap(program => Object.values(program))
+          .flatMap(week => Object.values(week))
+          .reduce((total, habit: any) => total + (habit.completionDates?.length || 0), 0);
+        return (totalCompletions / 50) * 100;
+
+      // Add other achievements...
+      default:
+        return 0;
+    }
+  };
+
   return (
     <Card className="bg-gray-800 border-none mb-8">
       <div className="p-6">
@@ -138,6 +170,21 @@ const AchievementsPanel = ({ achievements }: { achievements: Achievement[] }) =>
                   {achievement.points} points
                 </span>
               </div>
+              
+              {/* Add progress bar */}
+              {!achievement.unlocked && (
+                <div className="mt-2">
+                  <div className="w-full bg-gray-600 rounded-full h-2">
+                    <div
+                      className="bg-[#CCBA78] h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min(calculateProgress(achievement), 100)}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1 text-right">
+                    {Math.round(calculateProgress(achievement))}%
+                  </p>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -978,7 +1025,7 @@ return (
         </Card>
       </div>
 
-      <AchievementsPanel achievements={userData.achievements} />
+  <AchievementsPanel achievements={userData.achievements} savedData={savedData} />
 
       <Tabs defaultValue="strength">
         <TabsList className="grid grid-cols-3 gap-4 mb-8">
