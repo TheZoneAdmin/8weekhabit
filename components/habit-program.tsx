@@ -410,71 +410,71 @@ const HabitProgram = () => {
     });
 
     setUserData(prev => {
-      // Count completions for the week
-      const getCompletionsForWeek = (weekData: any) => {
-        const uniqueDates = new Set<string>();
-        Object.values(weekData || {}).forEach((habit: any) => {
-          (habit.completionDates || []).forEach((date: string) => uniqueDates.add(date));
-        });
-        return uniqueDates.size;
-      };
-
-      // Calculate total completions
-      const totalCompletions = Object.values(savedData)
-        .flatMap(program => Object.values(program))
-        .flatMap(week => Object.values(week))
-        .reduce((total, habit: any) => total + (habit.completionDates?.length || 0), 0) + (checked ? 1 : -1);
-
-      // Update achievements
-      const updatedAchievements = prev.achievements.map(achievement => {
-        if (achievement.unlocked) return achievement;
-
-        switch (achievement.id) {
-          case 'first-week':
-            // Check for 21 completions in any week (3 habits * 7 days)
-            const hasCompletedWeek = Object.values(savedData).some(program => 
-              Object.values(program).some(week => getCompletionsForWeek(week) >= 21)
-            );
-            if (hasCompletedWeek) {
-              return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
-            }
-            break;
-
-          case 'habit-warrior':
-            if (totalCompletions >= 50) {
-              return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
-            }
-            break;
-
-          case 'program-master':
-            // Check if any program has all weeks with all habits completed for 7 days
-            const hasCompletedProgram = Object.entries(savedData).some(([_, programData]) => {
-              const weeks = Object.entries(programData);
-              if (weeks.length !== 8) return false;
-              
-              return weeks.every(([_, weekData]) => {
-                const habits = Object.values(weekData);
-                return habits.length === 3 && habits.every((habit: any) => 
-                  habit.completionDates?.length >= 7
-                );
-              });
-            });
-            
-            if (hasCompletedProgram) {
-              return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
-            }
-            break;
-        }
-        return achievement;
-      });
-
-      return {
-        ...prev,
-        completedHabits: totalCompletions,
-        totalPoints: totalCompletions * 10,
-        achievements: updatedAchievements
-      };
+  // Count completions for the week
+  const getCompletionsForWeek = (weekData: any) => {
+    const uniqueDates = new Set<string>();
+    Object.values(weekData || {}).forEach((habit: any) => {
+      (habit.completionDates || []).forEach((date: string) => uniqueDates.add(date));
     });
+    return uniqueDates.size;
+  };
+
+  // Calculate total completions from all saved data
+  const totalCompletions = Object.values(savedData)
+    .flatMap(program => Object.values(program))
+    .flatMap(week => Object.values(week))
+    .reduce((total, habit: any) => total + (habit.completionDates?.length || 0), 0);
+
+  // Update achievements
+  const updatedAchievements = prev.achievements.map(achievement => {
+    if (achievement.unlocked) return achievement;
+
+    switch (achievement.id) {
+      case 'first-week':
+        // Check for 21 completions in any week (3 habits * 7 days)
+        const hasCompletedWeek = Object.values(savedData).some(program => 
+          Object.values(program).some(week => getCompletionsForWeek(week) >= 21)
+        );
+        if (hasCompletedWeek) {
+          return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
+        }
+        break;
+
+      case 'habit-warrior':
+        if (totalCompletions >= 50) {
+          return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
+        }
+        break;
+
+      case 'program-master':
+        // Check if any program has all habits completed for 7 days
+        const hasCompletedProgram = Object.entries(savedData).some(([_, programData]) => {
+          const weeks = Object.entries(programData);
+          if (weeks.length !== 8) return false;
+          
+          return weeks.every(([_, weekData]) => {
+            const habits = Object.values(weekData);
+            return habits.length === 3 && habits.every((habit: any) => 
+              habit.completionDates?.length >= 7
+            );
+          });
+        });
+        
+        if (hasCompletedProgram) {
+          return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
+        }
+        break;
+    }
+    return achievement;
+  });
+
+  return {
+    ...prev,
+    completedHabits: totalCompletions,
+    totalPoints: totalCompletions * 10,
+    achievements: updatedAchievements
+  };
+});
 
     saveData();
   };
