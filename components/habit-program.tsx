@@ -619,7 +619,6 @@ const calculateAchievementProgress = (achievement: Achievement, savedData: Saved
         .map(week => {
           const uniqueDates = new Set<string>();
           Object.values(week || {}).forEach((habit) => {
-            // Type guard to ensure habit is HabitCompletion
             if (habit && typeof habit === 'object' && 'completionDates' in habit) {
               (habit as HabitCompletion).completionDates.forEach(date => uniqueDates.add(date));
             }
@@ -637,7 +636,12 @@ const calculateAchievementProgress = (achievement: Achievement, savedData: Saved
       const totalCompletions = Object.values(savedData.programs)
         .flatMap(program => Object.values(program))
         .flatMap(week => Object.values(week))
-        .reduce((total, habit) => total + habit.completionDates.length, 0);
+        .reduce((total, habit) => {
+          if (habit && typeof habit === 'object' && 'completionDates' in habit) {
+            return total + (habit as HabitCompletion).completionDates.length;
+          }
+          return total;
+        }, 0);
       return (totalCompletions / 50) * 100;
 
     case 'program-master':
@@ -646,7 +650,12 @@ const calculateAchievementProgress = (achievement: Achievement, savedData: Saved
           Object.values(program)
             .reduce((total, week) => 
               total + Object.values(week)
-                .filter(habit => habit.completionDates.length >= 7).length, 0)
+                .filter(habit => {
+                  if (habit && typeof habit === 'object' && 'completionDates' in habit) {
+                    return (habit as HabitCompletion).completionDates.length >= 7;
+                  }
+                  return false;
+                }).length, 0)
         )
         .reduce((max, curr) => Math.max(max, curr), 0);
       return (programCompletions / (8 * 3 * 7)) * 100;
