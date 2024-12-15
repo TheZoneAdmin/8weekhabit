@@ -575,7 +575,7 @@ const calculateStreak = (savedData: SavedData): number => {
     Object.values(savedData.programs)
       .flatMap(program => Object.values(program))
       .flatMap(week => Object.values(week))
-      .flatMap(habit => habit.completionDates)
+      .flatMap(habit => (habit as HabitCompletion).completionDates || [])
   )).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
 
   if (allDates.length === 0) return 0;
