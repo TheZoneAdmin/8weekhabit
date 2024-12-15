@@ -612,6 +612,16 @@ const calculateStreak = (savedData: SavedData): number => {
 
 // Achievement Progress Calculation Helper
 const calculateAchievementProgress = (achievement: Achievement, savedData: SavedData): number => {
+  // Type guard function to check if an object is a HabitCompletion
+  const isHabitCompletion = (obj: unknown): obj is HabitCompletion => {
+    return (
+      typeof obj === 'object' && 
+      obj !== null && 
+      'completionDates' in obj && 
+      Array.isArray((obj as HabitCompletion).completionDates)
+    );
+  };
+
   switch (achievement.id) {
     case 'first-week':
       const maxWeekCompletions = Object.values(savedData.programs)
@@ -619,8 +629,8 @@ const calculateAchievementProgress = (achievement: Achievement, savedData: Saved
         .map(week => {
           const uniqueDates = new Set<string>();
           Object.values(week || {}).forEach((habit) => {
-            if (habit && typeof habit === 'object' && 'completionDates' in habit) {
-              (habit as HabitCompletion).completionDates.forEach(date => uniqueDates.add(date));
+            if (isHabitCompletion(habit)) {
+              habit.completionDates.forEach(date => uniqueDates.add(date));
             }
           });
           return uniqueDates.size;
@@ -637,8 +647,8 @@ const calculateAchievementProgress = (achievement: Achievement, savedData: Saved
         .flatMap(program => Object.values(program))
         .flatMap(week => Object.values(week))
         .reduce((total, habit) => {
-          if (habit && typeof habit === 'object' && 'completionDates' in habit) {
-            return total + (habit as HabitCompletion).completionDates.length;
+          if (isHabitCompletion(habit)) {
+            return total + habit.completionDates.length;
           }
           return total;
         }, 0);
@@ -650,12 +660,8 @@ const calculateAchievementProgress = (achievement: Achievement, savedData: Saved
           Object.values(program)
             .reduce((total, week) => 
               total + Object.values(week)
-                .filter(habit => {
-                  if (habit && typeof habit === 'object' && 'completionDates' in habit) {
-                    return (habit as HabitCompletion).completionDates.length >= 7;
-                  }
-                  return false;
-                }).length, 0)
+                .filter(habit => isHabitCompletion(habit) && habit.completionDates.length >= 7)
+                .length, 0)
         )
         .reduce((max, curr) => Math.max(max, curr), 0);
       return (programCompletions / (8 * 3 * 7)) * 100;
