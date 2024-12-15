@@ -618,8 +618,11 @@ const calculateAchievementProgress = (achievement: Achievement, savedData: Saved
         .flatMap(program => Object.values(program))
         .map(week => {
           const uniqueDates = new Set<string>();
-          Object.values(week || {}).forEach((habit: HabitCompletion) => {
-            habit.completionDates.forEach(date => uniqueDates.add(date));
+          Object.values(week || {}).forEach((habit) => {
+            // Type guard to ensure habit is HabitCompletion
+            if (habit && typeof habit === 'object' && 'completionDates' in habit) {
+              (habit as HabitCompletion).completionDates.forEach(date => uniqueDates.add(date));
+            }
           });
           return uniqueDates.size;
         })
