@@ -569,15 +569,14 @@ const ACHIEVEMENTS: Achievement[] = [
   }
 ];
 
-// Helper function to calculate streaks
 const calculateStreak = (savedData: SavedData): number => {
   // Get all unique dates from all habits, sorted newest to oldest
-  const allDates = [...new Set(
+  const allDates = Array.from(new Set(
     Object.values(savedData.programs)
       .flatMap(program => Object.values(program))
       .flatMap(week => Object.values(week))
       .flatMap(habit => habit.completionDates)
-  )].sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+  )).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
 
   if (allDates.length === 0) return 0;
 
