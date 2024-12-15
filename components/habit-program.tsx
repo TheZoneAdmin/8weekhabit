@@ -220,6 +220,54 @@ const AchievementsPanel = ({ achievements, savedData }: {
     </Card>
   );
 };
+// Add this function to calculate streak
+const calculateStreak = (savedData: SavedData): number => {
+  // Get all unique dates from all habits, sorted newest to oldest
+  const allDates = [...new Set(
+    Object.values(savedData.programs)
+      .flatMap(program => Object.values(program))
+      .flatMap(week => Object.values(week))
+      .flatMap(habit => habit.completionDates)
+  )].sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+
+  if (allDates.length === 0) return 0;
+
+  let streak = 1;
+  const today = new Date().toISOString().split('T')[0];
+  
+  // If no check-in today, streak is broken
+  if (allDates[0] !== today) return 0;
+
+  // Count consecutive days
+  for (let i = 1; i < allDates.length; i++) {
+    const currentDate = new Date(allDates[i - 1]);
+    const prevDate = new Date(allDates[i]);
+    
+    const diffTime = Math.abs(currentDate.getTime() - prevDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 1) {
+      streak++;
+    } else {
+      break;
+    }
+  }
+
+  return streak;
+};
+
+// Modify the achievement check in handleCheckbox
+case 'streak-master':
+  const currentStreak = calculateStreak(savedData);
+  if (currentStreak >= 7) {
+    return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
+  }
+  break;
+
+// Add streak progress calculation to AchievementsPanel
+case 'streak-master':
+  const streak = calculateStreak(savedData);
+  return (streak / 7) * 100;
 const CollapsibleCard = ({ week, children }: CollapsibleCardProps) => {
   const [isOpen, setIsOpen] = useState(true);
   
