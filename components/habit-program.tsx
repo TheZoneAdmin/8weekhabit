@@ -3,6 +3,30 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Dumbbell, Clock, Users, ChevronDown, Save, Upload, Link as LinkIcon } from 'lucide-react';
 import React, { useState, useEffect, useCallback } from 'react';
 import { Trophy, Award, Crown, Flame } from 'lucide-react';
+import { Home, Calendar, Settings, Plus } from 'lucide-react';
+import { Check, Info, CheckCircle, XCircle } from 'lucide-react';
+ 
+useEffect(() => {
+    let touchStart = 0;
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStart = e.touches[0].clientY;
+    };
+    const handleTouchMove = (e: TouchEvent) => {
+      const touchEnd = e.touches[0].clientY;
+      if (window.scrollY === 0 && touchEnd > touchStart + 100) {
+        // Refresh data
+        window.location.reload();
+      }
+    };
+    
+    document.addEventListener('touchstart', handleTouchStart);
+    document.addEventListener('touchmove', handleTouchMove);
+    
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
+    };
+  }, []);
 
 interface Habit {
   habit: string;
@@ -62,6 +86,125 @@ interface SavedData {
     };
   };
 }
+
+const [showToast, setShowToast] = useState(false);
+const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
+const [showInfo, setShowInfo] = useState(false);
+const handleQuickAdd = () => {
+    // Implement quick add functionality
+    console.log('Quick add clicked');
+  };
+
+const Toast = ({ message, type = 'success' }: { message: string; type?: 'success' | 'error' }) => (
+  <div className={`fixed bottom-20 left-4 right-4 md:left-auto md:right-8 md:w-auto 
+    ${type === 'success' ? 'bg-green-800' : 'bg-red-800'} 
+    text-white p-4 rounded-lg shadow-lg z-50 animate-slide-up`}
+  >
+    <div className="flex items-center gap-2">
+      {type === 'success' ? 
+        <CheckCircle className="w-5 h-5" /> : 
+        <XCircle className="w-5 h-5" />
+      }
+      <p className="text-sm">{message}</p>
+    </div>
+  </div>
+
+const SwipeableHabit = ({ habit, onComplete, onInfo }: {
+  habit: Habit;
+  onComplete: () => void;
+  onInfo: () => void;
+}) => {
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
+  const [swiping, setSwiping] = useState(false);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX);
+    setSwiping(true);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    setSwiping(false);
+    if (touchStart - touchEnd > 100) { // Swipe left
+      onComplete();
+    } else if (touchEnd - touchStart > 100) { // Swipe right
+      onInfo();
+    }
+  };
+
+  const swipeOffset = swiping ? Math.max(-100, Math.min(100, touchEnd - touchStart)) : 0;
+
+  return (
+    <div 
+      className="relative overflow-hidden touch-pan-y"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      <div 
+        className="bg-gray-800 p-4 transition-transform"
+        style={{ transform: `translateX(${swipeOffset}px)` }}
+      >
+        <div className="flex items-start gap-3">
+          <div className="flex-1">
+            <p className="text-sm font-medium text-white">{habit.habit}</p>
+            <p className="text-xs text-gray-400 mt-1">{habit.example}</p>
+          </div>
+        </div>
+      </div>
+      <div className="absolute inset-y-0 left-0 flex items-center justify-center px-4 text-green-500 bg-green-900 bg-opacity-50">
+        <Check className="w-5 h-5" />
+      </div>
+      <div className="absolute inset-y-0 right-0 flex items-center justify-center px-4 text-blue-500 bg-blue-900 bg-opacity-50">
+        <Info className="w-5 h-5" />
+      </div>
+    </div>
+  );
+};
+
+const HabitInfoSheet = ({ habit, isOpen, onClose }: {
+  habit: Habit;
+  isOpen: boolean;
+  onClose: () => void;
+}) => (
+  <div
+    className={`fixed inset-0 bg-black bg-opacity-50 z-50 transition-opacity ${
+      isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+    }`}
+    onClick={onClose}
+  >
+    <div 
+      className={`fixed bottom-0 left-0 right-0 bg-gray-800 rounded-t-xl p-4 transition-transform transform ${
+        isOpen ? 'translate-y-0' : 'translate-y-full'
+      }`}
+      onClick={e => e.stopPropagation()}
+    >
+      <div className="w-12 h-1 bg-gray-600 rounded-full mx-auto mb-4" />
+      <h3 className="text-lg font-semibold text-white mb-2">{habit.habit}</h3>
+      <p className="text-sm text-gray-400 mb-4">{habit.example}</p>
+      <div className="space-y-4">
+        <div className="bg-gray-700 rounded-lg p-4">
+          <h4 className="text-sm font-medium text-white mb-2">Tips</h4>
+          <ul className="text-sm text-gray-400 space-y-2">
+            <li>• Start small and build consistency</li>
+            <li>• Track your progress daily</li>
+            <li>• Celebrate small wins</li>
+          </ul>
+        </div>
+        <button
+          className="w-full bg-[#CCBA78] text-gray-900 rounded-lg py-3 font-medium"
+          onClick={onClose}
+        >
+          Got it
+        </button>
+      </div>
+    </div>
+  </div>
+);
 
 const calculateStreak = (savedData: SavedData): { currentStreak: number; longestStreak: number } => {
   // Get all unique completion dates across all habits
@@ -421,18 +564,21 @@ const useUserStorage = () => {
     isClient
   };
 };
-const HabitProgram = () => {
-  const { 
-    userId, 
-    userData, 
-    setUserData, 
-    savedData,
-    setSavedData,
-    saveData, 
-    exportProgress, 
-    importProgress 
-  } = useUserStorage();
+const { 
+  userId, 
+  userData, 
+  setUserData, 
+  savedData,
+  setSavedData,
+  saveData, 
+  exportProgress, 
+  importProgress 
+} = useUserStorage();
 
+// Add these new state variables
+const [showToast, setShowToast] = useState(false);
+const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
+const [showInfo, setShowInfo] = useState(false);
   // Save habit progress
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -1040,28 +1186,40 @@ hybrid: {
   }
 } as const;
 return (
-    <div className="bg-gray-900 p-12 max-w-4xl mx-auto min-h-screen">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">
+    <div className="bg-gray-900 p-4 pb-24 sm:p-8 md:p-12 max-w-4xl mx-auto min-h-screen">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-4xl font-bold mb-2">
           <span className="text-[#CCBA78]">Transform</span>
           <span className="text-white"> Your Habits</span>
         </h1>
-        <h2 className="text-white text-xl">8-Week Journey to Better Health</h2>
+        <h2 className="text-white text-lg sm:text-xl">8-Week Journey to Better Health</h2>
       </div>
-
       <DataManagement 
         userId={userId}
         onExport={exportProgress}
         onImport={importProgress}
         onReset={resetProgress}
       />
+{showToast && (
+  <Toast message="Habit completed! Keep it up! 🎉" />
+)}
 
+{selectedHabit && (
+  <HabitInfoSheet
+    habit={selectedHabit}
+    isOpen={showInfo}
+    onClose={() => {
+      setShowInfo(false);
+      setSelectedHabit(null);
+    }}
+  />
+)}
       {/* Progress Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <Card className="bg-gray-800 p-4">
+      <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-6 sm:mb-8">
+        <Card className="bg-gray-800 p-3 sm:p-4">
           <div className="text-white">
-            <p className="text-sm opacity-70">Current Streak</p>
-            <p className="text-2xl font-bold">{userData.currentStreak} days</p>
+            <p className="text-xs sm:text-sm opacity-70">Current Streak</p>
+            <p className="text-lg sm:text-2xl font-bold">{userData.currentStreak} days</p>
           </div>
         </Card>
         <Card className="bg-gray-800 p-4">
@@ -1088,30 +1246,36 @@ return (
 
   <AchievementsPanel achievements={userData.achievements} savedData={savedData} />
 
-      <Tabs defaultValue="strength">
-        <TabsList className="grid grid-cols-3 gap-4 mb-8">
-          <TabsTrigger 
-            value="strength" 
-            className="bg-[#CCBA78] text-gray-900 data-[state=active]:bg-opacity-90 px-6 py-3 rounded font-medium"
-          >
-            <Dumbbell className="w-5 h-5 mr-2" />
-            Strength
-          </TabsTrigger>
-          <TabsTrigger 
-            value="hybrid" 
-            className="bg-[#CCBA78] text-gray-900 data-[state=active]:bg-opacity-90 px-6 py-3 rounded font-medium"
-          >
-            <Clock className="w-5 h-5 mr-2" />
-            Hybrid
-          </TabsTrigger>
-          <TabsTrigger 
-            value="cardio" 
-            className="bg-[#CCBA78] text-gray-900 data-[state=active]:bg-opacity-90 px-6 py-3 rounded font-medium"
-          >
-            <Users className="w-5 h-5 mr-2" />
-            Classes
-          </TabsTrigger>
-        </TabsList>
+<Tabs defaultValue="strength" className="mb-20 sm:mb-0">
+  <TabsList className="grid grid-cols-3 gap-2 sm:gap-4 mb-6 sm:mb-8">
+    <TabsTrigger 
+      value="strength" 
+      className="bg-[#CCBA78] text-gray-900 data-[state=active]:bg-opacity-90 px-2 sm:px-6 py-2 sm:py-3 rounded font-medium text-xs sm:text-base"
+    >
+      <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2">
+        <Dumbbell className="w-4 h-4 sm:w-5 sm:h-5" />
+        <span>Strength</span>
+      </div>
+    </TabsTrigger>
+    <TabsTrigger 
+      value="hybrid" 
+      className="bg-[#CCBA78] text-gray-900 data-[state=active]:bg-opacity-90 px-2 sm:px-6 py-2 sm:py-3 rounded font-medium text-xs sm:text-base"
+    >
+      <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2">
+        <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
+        <span>Hybrid</span>
+      </div>
+    </TabsTrigger>
+    <TabsTrigger 
+      value="cardio" 
+      className="bg-[#CCBA78] text-gray-900 data-[state=active]:bg-opacity-90 px-2 sm:px-6 py-2 sm:py-3 rounded font-medium text-xs sm:text-base"
+    >
+      <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2">
+        <Users className="w-4 h-4 sm:w-5 sm:h-5" />
+        <span>Classes</span>
+      </div>
+    </TabsTrigger>
+  </TabsList>
 
         {Object.entries(programs).map(([key, program]) => (
           <TabsContent key={key} value={key}>
@@ -1120,26 +1284,20 @@ return (
                 <CollapsibleCard key={week.week} week={week}>
                   <div className="space-y-4">
                     {week.habits.map((habit, idx) => (
-                      <div key={idx} className="group">
-                        <div className="flex items-center space-x-4 text-white">
-                          <input 
-                            type="checkbox" 
-                            className="w-5 h-5 rounded border-[#CCBA78] accent-[#CCBA78]"
-                            checked={savedData[key]?.[week.week]?.[idx]?.completionDates?.includes(
-                              new Date().toISOString().split('T')[0]
-                            ) || false}
-                            onChange={(e) => handleCheckbox(key, week.week, idx, e.target.checked)}
-                          />
-                          <div>
-                            <p className="font-medium">{habit.habit}</p>
-                            <p className="text-gray-400 text-sm mt-1">{habit.example}</p>
-                            <p className="text-gray-400 text-xs mt-1">
-                              Completed {savedData[key]?.[week.week]?.[idx]?.completionDates?.length || 0} times
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+  <SwipeableHabit 
+    key={idx} 
+    habit={habit} 
+    onComplete={() => {
+      handleCheckbox(key, week.week, idx, true);
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 2000);
+    }}
+    onInfo={() => {
+      setSelectedHabit(habit);
+      setShowInfo(true);
+    }}
+  />
+))}
                   </div>
                 </CollapsibleCard>
               ))}
@@ -1147,6 +1305,30 @@ return (
           </TabsContent>
         ))}
       </Tabs>
+    <div className="fixed bottom-0 left-0 right-0 bg-gray-800 border-t border-gray-700 p-2 md:hidden">
+        <div className="flex justify-around">
+          <button className="p-2 text-[#CCBA78]">
+            <Home className="w-6 h-6" />
+            <span className="text-xs">Home</span>
+          </button>
+          <button className="p-2 text-gray-400">
+            <Calendar className="w-6 h-6" />
+            <span className="text-xs">Progress</span>
+          </button>
+          <button className="p-2 text-gray-400">
+            <Settings className="w-6 h-6" />
+            <span className="text-xs">Settings</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Quick Add Button */}
+      <button 
+        className="fixed bottom-20 right-4 bg-[#CCBA78] rounded-full p-4 shadow-lg md:hidden" 
+        onClick={() => handleQuickAdd()}
+      >
+        <Plus className="w-6 h-6 text-gray-900" />
+      </button>
     </div>
   );
 };
