@@ -4,6 +4,9 @@ import { Dumbbell, Clock, Users, ChevronDown, Save, Upload, Link as LinkIcon } f
 import React, { useState, useEffect, useCallback } from 'react';
 import { Trophy, Award, Crown, Flame } from 'lucide-react';
 import { Home, Calendar, Settings, Plus } from 'lucide-react';
+import { Toast } from "@/components/ui/toast";
+import { SwipeableHabit } from "@/components/ui/swipeable-habit";
+import { HabitInfoSheet } from "@/components/ui/habit-info-sheet";
 import { Check, Info, CheckCircle, XCircle } from 'lucide-react';
  
 useEffect(() => {
