@@ -3,34 +3,11 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Dumbbell, Clock, Users, ChevronDown, Save, Upload, Link as LinkIcon } from 'lucide-react';
 import React, { useState, useEffect, useCallback } from 'react';
 import { Trophy, Award, Crown, Flame } from 'lucide-react';
-import { Home, Calendar, Settings, Plus } from 'lucide-react';
+import { Home, Calendar, Settings, Plus, Check, Info, CheckCircle, XCircle } from 'lucide-react';
 import { Toast } from "@/components/ui/toast";
 import { SwipeableHabit } from "@/components/ui/swipeable-habit";
 import { HabitInfoSheet } from "@/components/ui/habit-info-sheet";
-import { Check, Info, CheckCircle, XCircle } from 'lucide-react';
  
-useEffect(() => {
-    let touchStart = 0;
-    const handleTouchStart = (e: TouchEvent) => {
-      touchStart = e.touches[0].clientY;
-    };
-    const handleTouchMove = (e: TouchEvent) => {
-      const touchEnd = e.touches[0].clientY;
-      if (window.scrollY === 0 && touchEnd > touchStart + 100) {
-        // Refresh data
-        window.location.reload();
-      }
-    };
-    
-    document.addEventListener('touchstart', handleTouchStart);
-    document.addEventListener('touchmove', handleTouchMove);
-    
-    return () => {
-      document.removeEventListener('touchstart', handleTouchStart);
-      document.removeEventListener('touchmove', handleTouchMove);
-    };
-  }, []);
-
 interface Habit {
   habit: string;
   example: string;
@@ -90,125 +67,6 @@ interface SavedData {
   };
 }
 
-const [showToast, setShowToast] = useState(false);
-const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
-const [showInfo, setShowInfo] = useState(false);
-const handleQuickAdd = () => {
-    // Implement quick add functionality
-    console.log('Quick add clicked');
-  };
-
-const Toast = ({ message, type = 'success' }: { message: string; type?: 'success' | 'error' }) => (
-  <div className={`fixed bottom-20 left-4 right-4 md:left-auto md:right-8 md:w-auto 
-    ${type === 'success' ? 'bg-green-800' : 'bg-red-800'} 
-    text-white p-4 rounded-lg shadow-lg z-50 animate-slide-up`}
-  >
-    <div className="flex items-center gap-2">
-      {type === 'success' ? 
-        <CheckCircle className="w-5 h-5" /> : 
-        <XCircle className="w-5 h-5" />
-      }
-      <p className="text-sm">{message}</p>
-    </div>
-  </div>
-
-const SwipeableHabit = ({ habit, onComplete, onInfo }: {
-  habit: Habit;
-  onComplete: () => void;
-  onInfo: () => void;
-}) => {
-  const [touchStart, setTouchStart] = useState(0);
-  const [touchEnd, setTouchEnd] = useState(0);
-  const [swiping, setSwiping] = useState(false);
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStart(e.targetTouches[0].clientX);
-    setSwiping(true);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchEnd = () => {
-    setSwiping(false);
-    if (touchStart - touchEnd > 100) { // Swipe left
-      onComplete();
-    } else if (touchEnd - touchStart > 100) { // Swipe right
-      onInfo();
-    }
-  };
-
-  const swipeOffset = swiping ? Math.max(-100, Math.min(100, touchEnd - touchStart)) : 0;
-
-  return (
-    <div 
-      className="relative overflow-hidden touch-pan-y"
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-    >
-      <div 
-        className="bg-gray-800 p-4 transition-transform"
-        style={{ transform: `translateX(${swipeOffset}px)` }}
-      >
-        <div className="flex items-start gap-3">
-          <div className="flex-1">
-            <p className="text-sm font-medium text-white">{habit.habit}</p>
-            <p className="text-xs text-gray-400 mt-1">{habit.example}</p>
-          </div>
-        </div>
-      </div>
-      <div className="absolute inset-y-0 left-0 flex items-center justify-center px-4 text-green-500 bg-green-900 bg-opacity-50">
-        <Check className="w-5 h-5" />
-      </div>
-      <div className="absolute inset-y-0 right-0 flex items-center justify-center px-4 text-blue-500 bg-blue-900 bg-opacity-50">
-        <Info className="w-5 h-5" />
-      </div>
-    </div>
-  );
-};
-
-const HabitInfoSheet = ({ habit, isOpen, onClose }: {
-  habit: Habit;
-  isOpen: boolean;
-  onClose: () => void;
-}) => (
-  <div
-    className={`fixed inset-0 bg-black bg-opacity-50 z-50 transition-opacity ${
-      isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-    }`}
-    onClick={onClose}
-  >
-    <div 
-      className={`fixed bottom-0 left-0 right-0 bg-gray-800 rounded-t-xl p-4 transition-transform transform ${
-        isOpen ? 'translate-y-0' : 'translate-y-full'
-      }`}
-      onClick={e => e.stopPropagation()}
-    >
-      <div className="w-12 h-1 bg-gray-600 rounded-full mx-auto mb-4" />
-      <h3 className="text-lg font-semibold text-white mb-2">{habit.habit}</h3>
-      <p className="text-sm text-gray-400 mb-4">{habit.example}</p>
-      <div className="space-y-4">
-        <div className="bg-gray-700 rounded-lg p-4">
-          <h4 className="text-sm font-medium text-white mb-2">Tips</h4>
-          <ul className="text-sm text-gray-400 space-y-2">
-            <li>• Start small and build consistency</li>
-            <li>• Track your progress daily</li>
-            <li>• Celebrate small wins</li>
-          </ul>
-        </div>
-        <button
-          className="w-full bg-[#CCBA78] text-gray-900 rounded-lg py-3 font-medium"
-          onClick={onClose}
-        >
-          Got it
-        </button>
-      </div>
-    </div>
-  </div>
-);
-
 const calculateStreak = (savedData: SavedData): { currentStreak: number; longestStreak: number } => {
   // Get all unique completion dates across all habits
   const allDates = new Set<string>();
@@ -261,10 +119,10 @@ const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'first-week',
     title: 'First Week Champion',
-    description: 'Complete all habits for one week',
+    description: 'Complete all s for one week',
     icon: 'trophy',
-    condition: 'Complete 21 habits in a week (3 habits for 7 days)',
-    points: 210,  // 3 habits × 7 days × 10 points
+    condition: 'Complete 21 s in a week (3 s for 7 days)',
+    points: 210,  // 3 s × 7 days × 10 points
     unlocked: false
   },
   {
@@ -273,7 +131,7 @@ const ACHIEVEMENTS: Achievement[] = [
     description: 'Maintain a 7-day streak',
     icon: 'fire',
     condition: 'Check in for 7 consecutive days',
-    points: 70,   // 1 habit minimum × 7 days × 10 points
+    points: 70,   // 1  minimum × 7 days × 10 points
     unlocked: false
   },
   {
@@ -567,22 +425,52 @@ const useUserStorage = () => {
     isClient
   };
 };
+const HabitProgram = () => {
+  // Storage hook
 const { 
-  userId, 
-  userData, 
-  setUserData, 
-  savedData,
-  setSavedData,
-  saveData, 
-  exportProgress, 
-  importProgress 
-} = useUserStorage();
+    userId, 
+    userData, 
+    setUserData, 
+    savedData,
+    setSavedData,
+    saveData, 
+    exportProgress, 
+    importProgress 
+  } = useUserStorage();
 
-// Add these new state variables
-const [showToast, setShowToast] = useState(false);
-const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
-const [showInfo, setShowInfo] = useState(false);
-  // Save habit progress
+  // Mobile interaction states
+  const [showToast, setShowToast] = useState(false);
+  const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
+  const [showInfo, setShowInfo] = useState(false);
+
+  // Pull-to-refresh effect
+  useEffect(() => {
+    let touchStart = 0;
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStart = e.touches[0].clientY;
+    };
+    const handleTouchMove = (e: TouchEvent) => {
+      const touchEnd = e.touches[0].clientY;
+      if (window.scrollY === 0 && touchEnd > touchStart + 100) {
+        // Refresh data
+        window.location.reload();
+      }
+    };
+    
+    document.addEventListener('touchstart', handleTouchStart);
+    document.addEventListener('touchmove', handleTouchMove);
+    
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
+    };
+  }, []);
+
+const handleQuickAdd = () => {
+    // Implement quick add functionality
+    console.log('Quick add clicked');
+  };
+  // Save progress effect
   useEffect(() => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('habitProgress', JSON.stringify(savedData));
