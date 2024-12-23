@@ -116,15 +116,15 @@ const calculateStreak = (savedData: SavedData): { currentStreak: number; longest
 };
 
 const ACHIEVEMENTS: Achievement[] = [
-  {
+ {
     id: 'first-week',
     title: 'First Week Champion',
-    description: 'Complete all s for one week',
+    description: 'Complete all s for one week', // Change to 'habits'
     icon: 'trophy',
-    condition: 'Complete 21 s in a week (3 s for 7 days)',
-    points: 210,  // 3 s × 7 days × 10 points
+    condition: 'Complete 21 s in a week (3 s for 7 days)', // Change to 'habits'
+    points: 210,  // 3 habits × 7 days × 10 points
     unlocked: false
-  },
+},
   {
     id: 'streak-master',
     title: 'Streak Master',
@@ -443,6 +443,29 @@ const {
   const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
   const [showInfo, setShowInfo] = useState(false);
 
+useEffect(() => {
+  if (typeof window !== 'undefined' && savedData && Object.keys(savedData).length > 0) {
+    const { currentStreak, longestStreak } = calculateStreak(savedData);
+    
+    setUserData(prev => {
+      const updatedAchievements = prev.achievements.map(achievement => {
+        if (achievement.unlocked) return achievement;
+
+        if (achievement.id === 'streak-master' && currentStreak >= 7) {
+          return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
+        }
+        return achievement;
+      });
+
+      return {
+        ...prev,
+        currentStreak,
+        longestStreak,
+        achievements: updatedAchievements
+      };
+    });
+  }
+}, [savedData]);
   // Pull-to-refresh effect
   useEffect(() => {
     let touchStart = 0;
