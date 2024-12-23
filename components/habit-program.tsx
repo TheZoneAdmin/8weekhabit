@@ -66,7 +66,14 @@ interface SavedData {
     };
   };
 }
-
+const [showOnboarding, setShowOnboarding] = useState(() => {
+  // Check localStorage on initial load, default to true if no preference saved
+  if (typeof window !== 'undefined') {
+    const savedPreference = localStorage.getItem('showOnboarding');
+    return savedPreference === null ? true : savedPreference === 'true';
+  }
+  return true;
+});
 const calculateStreak = (savedData: SavedData): { currentStreak: number; longestStreak: number } => {
   // Get all unique completion dates across all habits
   const allDates = new Set<string>();
@@ -442,7 +449,20 @@ const {
   const [showToast, setShowToast] = useState(false);
   const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
   const [showInfo, setShowInfo] = useState(false);
+ // Add the new state and effect here
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const savedPreference = localStorage.getItem('showOnboarding');
+      return savedPreference === null ? true : savedPreference === 'true';
+    }
+    return true;
+  });
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('showOnboarding', showOnboarding.toString());
+    }
+  }, [showOnboarding]);
 useEffect(() => {
   if (typeof window !== 'undefined' && savedData && Object.keys(savedData).length > 0) {
     const { currentStreak, longestStreak } = calculateStreak(savedData);
@@ -1108,7 +1128,59 @@ return (
         </h1>
         <h2 className="text-white text-lg sm:text-xl">8-Week Journey to Better Health</h2>
       </div>
-      <DataManagement 
+      <div className="bg-gray-800 rounded-lg mb-6 overflow-hidden">
+  <button 
+    onClick={() => setShowOnboarding(!showOnboarding)}
+    className="w-full p-4 flex justify-between items-center text-[#CCBA78] hover:bg-gray-700 transition-colors"
+  >
+    <h3 className="text-xl font-semibold">Welcome to Your 8-Week Journey!</h3>
+    <ChevronDown 
+      className={`w-5 h-5 transform transition-transform duration-200 ${
+        showOnboarding ? 'rotate-180' : ''
+      }`}
+    />
+  </button>
+  
+  {showOnboarding && (
+    <div className="p-6 border-t border-gray-700">
+      <div className="space-y-4 text-gray-200">
+        <p>Choose your path:</p>
+        <ul className="list-disc pl-5 space-y-2">
+          <li><span className="text-[#CCBA78] font-medium">Strength & Growth</span> - Perfect for building muscle and strength through structured workouts</li>
+          <li><span className="text-[#CCBA78] font-medium">Functional Fitness</span> - Ideal for overall fitness, combining strength and cardio</li>
+          <li><span className="text-[#CCBA78] font-medium">Group Classes</span> - Great for those who prefer guided workouts and community support</li>
+        </ul>
+
+        <div className="mt-6">
+          <p className="font-medium text-[#CCBA78] mb-2">How it works:</p>
+          <ul className="list-disc pl-5 space-y-2">
+            <li>Track 3 daily habits each week</li>
+            <li>Check off completed habits daily</li>
+            <li>Build streaks for consistency</li>
+            <li>Earn achievements as you progress</li>
+            <li>See your total completion tally grow</li>
+          </ul>
+        </div>
+
+        <div className="mt-6">
+          <p className="font-medium text-[#CCBA78] mb-2">Tips for success:</p>
+          <ul className="list-disc pl-5 space-y-2">
+            <li>Start with the habits that feel most manageable</li>
+            <li>Focus on consistency over perfection</li>
+            <li>Use the example suggestions as guidelines</li>
+            <li>Adjust the habits to fit your schedule</li>
+            <li>Check in daily to maintain your streak</li>
+          </ul>
+        </div>
+
+        <p className="mt-6 text-sm italic">Need help? Reach out to any staff member for guidance on your journey!</p>
+      </div>
+    </div>
+  )}
+</div>
+
+
+<DataManagement 
         userId={userId}
         onExport={exportProgress}
         onImport={importProgress}
