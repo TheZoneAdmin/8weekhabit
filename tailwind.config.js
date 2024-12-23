@@ -1,4 +1,5 @@
-/** @type {import('tailwindcss').Config} */
+Ah, I see the issue. The error is from the Tailwind configuration trying to use the typography plugin but it's not installed. Let me show you a corrected tailwind.config.js:
+typescriptCopy/** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: ["class"],
   content: [
@@ -6,7 +7,7 @@ module.exports = {
     './components/**/*.{ts,tsx}',
     './app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}',
-	],
+  ],
   theme: {
     container: {
       center: true,
@@ -119,6 +120,5 @@ module.exports = {
   },
   plugins: [
     require("tailwindcss-animate"),
-    require("@tailwindcss/typography"),
   ],
 }
