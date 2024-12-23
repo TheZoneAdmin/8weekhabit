@@ -1197,53 +1197,34 @@ return (
               {program.weeks.map((week) => (
                 <CollapsibleCard key={week.week} week={week}>
                   <div className="space-y-4">
-                    {week.habits.map((habit, idx) => (
-  <SwipeableHabit 
-    key={idx} 
-    habit={habit} 
-    onComplete={() => {
-      handleCheckbox(key, week.week, idx, true);
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 2000);
-    }}
-    onInfo={() => {
-      setSelectedHabit(habit);
-      setShowInfo(true);
-    }}
-  />
-))}
-                  </div>
+              {week.habits.map((habit, idx) => (
+  <div key={idx} className="group">
+    <div className="flex items-center space-x-4 text-white">
+      <input 
+        type="checkbox" 
+        className="w-5 h-5 rounded border-[#CCBA78] accent-[#CCBA78]"
+        checked={savedData[key]?.[week.week]?.[idx]?.completionDates?.includes(
+          new Date().toISOString().split('T')[0]
+        ) || false}
+        onChange={(e) => handleCheckbox(key, week.week, idx, e.target.checked)}
+      />
+      <div>
+        <p className="font-medium">{habit.habit}</p>
+        <p className="text-gray-400 text-sm mt-1">{habit.example}</p>
+        <p className="text-gray-400 text-xs mt-1">
+          Completed {savedData[key]?.[week.week]?.[idx]?.completionDates?.length || 0} times
+        </p>
+      </div>
+    </div>
+  </div>
+))}              </div>
                 </CollapsibleCard>
               ))}
             </div>
           </TabsContent>
         ))}
       </Tabs>
-    <div className="fixed bottom-0 left-0 right-0 bg-gray-800 border-t border-gray-700 p-2 md:hidden">
-        <div className="flex justify-around">
-          <button className="p-2 text-[#CCBA78]">
-            <Home className="w-6 h-6" />
-            <span className="text-xs">Home</span>
-          </button>
-          <button className="p-2 text-gray-400">
-            <Calendar className="w-6 h-6" />
-            <span className="text-xs">Progress</span>
-          </button>
-          <button className="p-2 text-gray-400">
-            <Settings className="w-6 h-6" />
-            <span className="text-xs">Settings</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Quick Add Button */}
-      <button 
-        className="fixed bottom-20 right-4 bg-[#CCBA78] rounded-full p-4 shadow-lg md:hidden" 
-        onClick={() => handleQuickAdd()}
-      >
-        <Plus className="w-6 h-6 text-gray-900" />
-      </button>
-    </div>
+   </div>
   );
 };
 
