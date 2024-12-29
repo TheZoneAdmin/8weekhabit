@@ -66,15 +66,7 @@ interface SavedData {
     };
   };
 }
-const [showOnboarding, setShowOnboarding] = useState(() => {
-  
-  if (typeof window !== 'undefined') {
-    const savedPreference = localStorage.getItem('showOnboarding');
-    return savedPreference === null ? true : savedPreference === 'true';
-  }
-  return true;
-});
-const calculateStreak = (savedData: SavedData): { currentStreak: number; longestStreak: number } => {
+
  
   const allDates = new Set<string>();
   Object.values(savedData).forEach(program => 
