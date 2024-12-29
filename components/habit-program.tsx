@@ -7,7 +7,7 @@ import { Home, Calendar, Settings, Plus, Check, Info, CheckCircle, XCircle } fro
 import { Toast } from "@/components/ui/toast";
 import { SwipeableHabit } from "@/components/ui/swipeable-habit";
 import { HabitInfoSheet } from "@/components/ui/habit-info-sheet";
- 
+
 interface Habit {
   habit: string;
   example: string;
@@ -66,8 +66,7 @@ interface SavedData {
     };
   };
 }
-
- 
+const calculateStreak = (savedData: SavedData): { currentStreak: number; longestStreak: number } => {
   const allDates = new Set<string>();
   Object.values(savedData).forEach(program => 
     Object.values(program).forEach(week => 
@@ -77,7 +76,6 @@ interface SavedData {
     )
   );
 
-  
   const sortedDates = Array.from(allDates).sort();
   if (sortedDates.length === 0) {
     return { currentStreak: 0, longestStreak: 0 };
@@ -87,13 +85,11 @@ interface SavedData {
   let currentStreak = 0;
   let longestStreak = 0;
   let streak = 0;
-  
- 
+
   for (let i = 0; i < sortedDates.length; i++) {
     const currentDate = new Date(sortedDates[i]);
     const previousDate = i > 0 ? new Date(sortedDates[i - 1]) : currentDate;
     
-  
     const diffDays = Math.floor((currentDate.getTime() - previousDate.getTime()) / (1000 * 60 * 60 * 24));
     
     if (i === 0 || diffDays === 1) {
@@ -103,7 +99,6 @@ interface SavedData {
     }
     
     longestStreak = Math.max(longestStreak, streak);
-    
     
     const diffFromToday = Math.floor((new Date(today).getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
     if (diffFromToday <= 1) {
@@ -115,22 +110,22 @@ interface SavedData {
 };
 
 const ACHIEVEMENTS: Achievement[] = [
- {
+  {
     id: 'first-week',
     title: 'First Week Champion',
-    description: 'Complete all s for one week', 
+    description: 'Complete all habits for one week',
     icon: 'trophy',
-    condition: 'Complete 21 s in a week (3 s for 7 days)', 
-    points: 210,  
+    condition: 'Complete 21 habits in a week (3 habits for 7 days)',
+    points: 210,
     unlocked: false
-},
+  },
   {
     id: 'streak-master',
     title: 'Streak Master',
     description: 'Maintain a 7-day streak',
     icon: 'fire',
     condition: 'Check in for 7 consecutive days',
-    points: 70,   
+    points: 70,
     unlocked: false
   },
   {
@@ -139,7 +134,7 @@ const ACHIEVEMENTS: Achievement[] = [
     description: 'Complete 50 total habits',
     icon: 'award',
     condition: 'Complete any 50 habits',
-    points: 500,  
+    points: 500,
     unlocked: false
   },
   {
@@ -148,11 +143,10 @@ const ACHIEVEMENTS: Achievement[] = [
     description: 'Complete an entire 8-week program',
     icon: 'crown',
     condition: 'Complete all habits in one program',
-    points: 1680, 
+    points: 1680,
     unlocked: false
   }
 ];
-
 const AchievementsPanel = ({ achievements, savedData }: { 
   achievements: Achievement[],
   savedData: SavedData 
@@ -160,7 +154,6 @@ const AchievementsPanel = ({ achievements, savedData }: {
   const calculateProgress = (achievement: Achievement) => {
     switch (achievement.id) {
       case 'first-week':
-        
         const maxWeekCompletions = Object.values(savedData)
           .flatMap(program => Object.values(program))
           .map(week => {
@@ -181,11 +174,11 @@ const AchievementsPanel = ({ achievements, savedData }: {
             total + (habit.completionDates?.length || 0), 0);
         return (totalCompletions / 50) * 100;
 
-      
       default:
         return 0;
     }
   };
+
   return (
     <Card className="bg-gray-800 border-none mb-8">
       <div className="p-6">
@@ -223,7 +216,6 @@ const AchievementsPanel = ({ achievements, savedData }: {
                 </span>
               </div>
               
-              {/* Add progress bar */}
               {!achievement.unlocked && (
                 <div className="mt-2">
                   <div className="w-full bg-gray-600 rounded-full h-2">
@@ -245,32 +237,6 @@ const AchievementsPanel = ({ achievements, savedData }: {
   );
 };
 
-const CollapsibleCard = ({ week, children }: CollapsibleCardProps) => {
-  const [isOpen, setIsOpen] = useState(true);
-  
-  return (
-    <Card className="bg-gray-800 border-none">
-      <div 
-        className="flex items-center justify-between p-6 cursor-pointer hover:bg-gray-700 transition-colors"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        <h3 className="text-[#CCBA78] text-lg font-semibold flex items-center">
-          Week {week.week} - {week.focus}
-        </h3>
-        <ChevronDown 
-          className={`w-5 h-5 text-[#CCBA78] transform transition-transform duration-200 ${
-            isOpen ? 'rotate-180' : ''
-          }`} 
-        />
-      </div>
-      {isOpen && (
-        <CardContent className="p-6 pt-0 border-t border-gray-700">
-          {children}
-        </CardContent>
-      )}
-    </Card>
-  );
-};
 const DataManagement = ({ userId, onExport, onImport, onReset }: {
   userId: string;
   onExport: () => void;
@@ -282,9 +248,8 @@ const DataManagement = ({ userId, onExport, onImport, onReset }: {
   };
 
   return (
-    <Card className="bg-gray-800 p-3 sm:p-4 mb-6"> {/* Responsive padding */}
+    <Card className="bg-gray-800 p-3 sm:p-4 mb-6">
       <div className="text-white">
-        {/* ID Container */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-2 sm:p-3 bg-gray-700 rounded-lg mb-3">
           <span className="font-mono text-xs sm:text-sm break-all mb-2 sm:mb-0 sm:mr-2 w-full sm:w-auto">
             Your ID: {userId}
@@ -297,7 +262,6 @@ const DataManagement = ({ userId, onExport, onImport, onReset }: {
           </button>
         </div>
 
-        {/* Buttons Container */}
         <div className="grid grid-cols-3 gap-1 sm:gap-2 w-full text-center">
           <button
             onClick={onExport}
@@ -328,6 +292,32 @@ const DataManagement = ({ userId, onExport, onImport, onReset }: {
           </button>
         </div>
       </div>
+    </Card>
+  );
+};
+const CollapsibleCard = ({ week, children }: CollapsibleCardProps) => {
+  const [isOpen, setIsOpen] = useState(true);
+  
+  return (
+    <Card className="bg-gray-800 border-none">
+      <div 
+        className="flex items-center justify-between p-6 cursor-pointer hover:bg-gray-700 transition-colors"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <h3 className="text-[#CCBA78] text-lg font-semibold flex items-center">
+          Week {week.week} - {week.focus}
+        </h3>
+        <ChevronDown 
+          className={`w-5 h-5 text-[#CCBA78] transform transition-transform duration-200 ${
+            isOpen ? 'rotate-180' : ''
+          }`} 
+        />
+      </div>
+      {isOpen && (
+        <CardContent className="p-6 pt-0 border-t border-gray-700">
+          {children}
+        </CardContent>
+      )}
     </Card>
   );
 };
@@ -425,8 +415,7 @@ const useUserStorage = () => {
   };
 };
 const HabitProgram = () => {
-
-const { 
+  const { 
     userId, 
     userData, 
     setUserData, 
@@ -437,11 +426,9 @@ const {
     importProgress 
   } = useUserStorage();
 
-  
   const [showToast, setShowToast] = useState(false);
   const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
   const [showInfo, setShowInfo] = useState(false);
- 
   const [showOnboarding, setShowOnboarding] = useState(() => {
     if (typeof window !== 'undefined') {
       const savedPreference = localStorage.getItem('showOnboarding');
@@ -455,30 +442,30 @@ const {
       localStorage.setItem('showOnboarding', showOnboarding.toString());
     }
   }, [showOnboarding]);
-useEffect(() => {
-  if (typeof window !== 'undefined' && savedData && Object.keys(savedData).length > 0) {
-    const { currentStreak, longestStreak } = calculateStreak(savedData);
-    
-    setUserData(prev => {
-      const updatedAchievements = prev.achievements.map(achievement => {
-        if (achievement.unlocked) return achievement;
 
-        if (achievement.id === 'streak-master' && currentStreak >= 7) {
-          return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
-        }
-        return achievement;
+  useEffect(() => {
+    if (typeof window !== 'undefined' && savedData && Object.keys(savedData).length > 0) {
+      const { currentStreak, longestStreak } = calculateStreak(savedData);
+      
+      setUserData(prev => {
+        const updatedAchievements = prev.achievements.map(achievement => {
+          if (achievement.unlocked) return achievement;
+          if (achievement.id === 'streak-master' && currentStreak >= 7) {
+            return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
+          }
+          return achievement;
+        });
+
+        return {
+          ...prev,
+          currentStreak,
+          longestStreak,
+          achievements: updatedAchievements
+        };
       });
+    }
+  }, [savedData, setUserData]);
 
-      return {
-        ...prev,
-        currentStreak,
-        longestStreak,
-        achievements: updatedAchievements
-      };
-    });
-  }
-}, [savedData]);
- 
   useEffect(() => {
     let touchStart = 0;
     const handleTouchStart = (e: TouchEvent) => {
@@ -487,7 +474,6 @@ useEffect(() => {
     const handleTouchMove = (e: TouchEvent) => {
       const touchEnd = e.touches[0].clientY;
       if (window.scrollY === 0 && touchEnd > touchStart + 100) {
-       
         window.location.reload();
       }
     };
@@ -501,18 +487,12 @@ useEffect(() => {
     };
   }, []);
 
-const handleQuickAdd = () => {
-    
-    console.log('Quick add clicked');
-  };
- 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('habitProgress', JSON.stringify(savedData));
     }
   }, [savedData]);
-
-  const resetProgress = useCallback(() => {
+const resetProgress = useCallback(() => {
     if (window.confirm('Are you sure you want to reset all progress? This cannot be undone.')) {
       setSavedData({});
       if (typeof window !== 'undefined') {
@@ -581,84 +561,77 @@ const handleQuickAdd = () => {
       }
     });
 
- 
-setUserData(prev => {
-  
-  const getCompletionsForWeek = (weekData: any) => {
-    const uniqueDates = new Set<string>();
-    Object.values(weekData || {}).forEach((habit: any) => {
-      (habit.completionDates || []).forEach((date: string) => uniqueDates.add(date));
-    });
-    return uniqueDates.size;
-  };
-
-  
-  const totalCompletions = Object.values(savedData)
-    .flatMap(program => Object.values(program))
-    .flatMap(week => Object.values(week))
-    .reduce((total, habit: any) => total + (habit.completionDates?.length || 0), 0);
-
-  
-  const { currentStreak, longestStreak } = calculateStreak(savedData);
-
- 
-  const updatedAchievements = prev.achievements.map(achievement => {
-    if (achievement.unlocked) return achievement;
-
-    switch (achievement.id) {
-      case 'streak-master':
-        if (currentStreak >= 7) {
-          return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
-        }
-        break;
-
-      case 'first-week':
-       
-        const hasCompletedWeek = Object.values(savedData).some(program => 
-          Object.values(program).some(week => getCompletionsForWeek(week) >= 21)
-        );
-        if (hasCompletedWeek) {
-          return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
-        }
-        break;
-
-      case 'habit-warrior':
-        if (totalCompletions >= 50) {
-          return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
-        }
-        break;
-
-      case 'program-master':
-        
-        const hasCompletedProgram = Object.entries(savedData).some(([_, programData]) => {
-          const weeks = Object.entries(programData);
-          if (weeks.length !== 8) return false;
-          
-          return weeks.every(([_, weekData]) => {
-            const habits = Object.values(weekData);
-            return habits.length === 3 && habits.every((habit: any) => 
-              habit.completionDates?.length >= 7
-            );
-          });
+    setUserData(prev => {
+      const getCompletionsForWeek = (weekData: any) => {
+        const uniqueDates = new Set<string>();
+        Object.values(weekData || {}).forEach((habit: any) => {
+          (habit.completionDates || []).forEach((date: string) => uniqueDates.add(date));
         });
-        
-        if (hasCompletedProgram) {
-          return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
-        }
-        break;
-    }
-    return achievement;
-  });
+        return uniqueDates.size;
+      };
 
-  return {
-    ...prev,
-    currentStreak,
-    longestStreak,
-    completedHabits: totalCompletions,
-    totalPoints: totalCompletions * 10,
-    achievements: updatedAchievements
-  };
-});
+      const totalCompletions = Object.values(savedData)
+        .flatMap(program => Object.values(program))
+        .flatMap(week => Object.values(week))
+        .reduce((total, habit: any) => total + (habit.completionDates?.length || 0), 0);
+
+      const { currentStreak, longestStreak } = calculateStreak(savedData);
+
+      const updatedAchievements = prev.achievements.map(achievement => {
+        if (achievement.unlocked) return achievement;
+
+        switch (achievement.id) {
+          case 'streak-master':
+            if (currentStreak >= 7) {
+              return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
+            }
+            break;
+
+          case 'first-week':
+            const hasCompletedWeek = Object.values(savedData).some(program => 
+              Object.values(program).some(week => getCompletionsForWeek(week) >= 21)
+            );
+            if (hasCompletedWeek) {
+              return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
+            }
+            break;
+
+          case 'habit-warrior':
+            if (totalCompletions >= 50) {
+              return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
+            }
+            break;
+
+          case 'program-master':
+            const hasCompletedProgram = Object.entries(savedData).some(([_, programData]) => {
+              const weeks = Object.entries(programData);
+              if (weeks.length !== 8) return false;
+              
+              return weeks.every(([_, weekData]) => {
+                const habits = Object.values(weekData);
+                return habits.length === 3 && habits.every((habit: any) => 
+                  habit.completionDates?.length >= 7
+                );
+              });
+            });
+            
+            if (hasCompletedProgram) {
+              return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
+            }
+            break;
+        }
+        return achievement;
+      });
+
+      return {
+        ...prev,
+        currentStreak,
+        longestStreak,
+        completedHabits: totalCompletions,
+        totalPoints: totalCompletions * 10,
+        achievements: updatedAchievements
+      };
+    });
 
     saveData();
   };
@@ -812,7 +785,7 @@ const programs = {
       }
     ]
   },
-hybrid: {
+  hybrid: {
     title: "Functional Fitness Habits",
     weeks: [
       {
@@ -1120,79 +1093,80 @@ return (
         </h1>
         <h2 className="text-white text-lg sm:text-xl">8-Week Journey to Better Health</h2>
       </div>
+
       <div className="bg-gray-800 rounded-lg mb-6 overflow-hidden">
-  <button 
-    onClick={() => setShowOnboarding(!showOnboarding)}
-    className="w-full p-4 flex justify-between items-center text-[#CCBA78] hover:bg-gray-700 transition-colors"
-  >
-    <h3 className="text-xl font-semibold">Welcome to Your 8-Week Journey!</h3>
-    <ChevronDown 
-      className={`w-5 h-5 transform transition-transform duration-200 ${
-        showOnboarding ? 'rotate-180' : ''
-      }`}
-    />
-  </button>
-  
-  {showOnboarding && (
-    <div className="p-6 border-t border-gray-700">
-      <div className="space-y-4 text-gray-200">
-        <p>Choose your path:</p>
-        <ul className="list-disc pl-5 space-y-2">
-          <li><span className="text-[#CCBA78] font-medium">Strength & Growth</span> - Perfect for building muscle and strength through structured workouts</li>
-          <li><span className="text-[#CCBA78] font-medium">Functional Fitness</span> - Ideal for overall fitness, combining strength and cardio</li>
-          <li><span className="text-[#CCBA78] font-medium">Group Classes</span> - Great for those who prefer guided workouts and community support</li>
-        </ul>
+        <button 
+          onClick={() => setShowOnboarding(!showOnboarding)}
+          className="w-full p-4 flex justify-between items-center text-[#CCBA78] hover:bg-gray-700 transition-colors"
+        >
+          <h3 className="text-xl font-semibold">Welcome to Your 8-Week Journey!</h3>
+          <ChevronDown 
+            className={`w-5 h-5 transform transition-transform duration-200 ${
+              showOnboarding ? 'rotate-180' : ''
+            }`}
+          />
+        </button>
+        
+        {showOnboarding && (
+          <div className="p-6 border-t border-gray-700">
+            <div className="space-y-4 text-gray-200">
+              <p>Choose your path:</p>
+              <ul className="list-disc pl-5 space-y-2">
+                <li><span className="text-[#CCBA78] font-medium">Strength & Growth</span> - Perfect for building muscle and strength through structured workouts</li>
+                <li><span className="text-[#CCBA78] font-medium">Functional Fitness</span> - Ideal for overall fitness, combining strength and cardio</li>
+                <li><span className="text-[#CCBA78] font-medium">Group Classes</span> - Great for those who prefer guided workouts and community support</li>
+              </ul>
 
-        <div className="mt-6">
-          <p className="font-medium text-[#CCBA78] mb-2">How it works:</p>
-          <ul className="list-disc pl-5 space-y-2">
-            <li>Track 3 daily habits each week</li>
-            <li>Check off completed habits daily</li>
-            <li>Build streaks for consistency</li>
-            <li>Earn achievements as you progress</li>
-            <li>See your total completion tally grow</li>
-          </ul>
-        </div>
+              <div className="mt-6">
+                <p className="font-medium text-[#CCBA78] mb-2">How it works:</p>
+                <ul className="list-disc pl-5 space-y-2">
+                  <li>Track 3 daily habits each week</li>
+                  <li>Check off completed habits daily</li>
+                  <li>Build streaks for consistency</li>
+                  <li>Earn achievements as you progress</li>
+                  <li>See your total completion tally grow</li>
+                </ul>
+              </div>
 
-        <div className="mt-6">
-          <p className="font-medium text-[#CCBA78] mb-2">Tips for success:</p>
-          <ul className="list-disc pl-5 space-y-2">
-            <li>Start with the habits that feel most manageable</li>
-            <li>Focus on consistency over perfection</li>
-            <li>Use the example suggestions as guidelines</li>
-            <li>Adjust the habits to fit your schedule</li>
-            <li>Check in daily to maintain your streak</li>
-          </ul>
-        </div>
+              <div className="mt-6">
+                <p className="font-medium text-[#CCBA78] mb-2">Tips for success:</p>
+                <ul className="list-disc pl-5 space-y-2">
+                  <li>Start with the habits that feel most manageable</li>
+                  <li>Focus on consistency over perfection</li>
+                  <li>Use the example suggestions as guidelines</li>
+                  <li>Adjust the habits to fit your schedule</li>
+                  <li>Check in daily to maintain your streak</li>
+                </ul>
+              </div>
 
-        <p className="mt-6 text-sm italic">Need help? Reach out to any staff member for guidance on your journey!</p>
+              <p className="mt-6 text-sm italic">Need help? Reach out to any staff member for guidance on your journey!</p>
+            </div>
+          </div>
+        )}
       </div>
-    </div>
-  )}
-</div>
 
-
-<DataManagement 
+      <DataManagement 
         userId={userId}
         onExport={exportProgress}
         onImport={importProgress}
         onReset={resetProgress}
       />
-{showToast && (
-  <Toast message="Habit completed! Keep it up! 🎉" />
-)}
 
-{selectedHabit && (
-  <HabitInfoSheet
-    habit={selectedHabit}
-    isOpen={showInfo}
-    onClose={() => {
-      setShowInfo(false);
-      setSelectedHabit(null);
-    }}
-  />
-)}
-      {/* Progress Stats */}
+      {showToast && (
+        <Toast message="Habit completed! Keep it up! 🎉" />
+      )}
+
+      {selectedHabit && (
+        <HabitInfoSheet
+          habit={selectedHabit}
+          isOpen={showInfo}
+          onClose={() => {
+            setShowInfo(false);
+            setSelectedHabit(null);
+          }}
+        />
+      )}
+
       <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-6 sm:mb-8">
         <Card className="bg-gray-800 p-3 sm:p-4">
           <div className="text-white">
@@ -1222,38 +1196,38 @@ return (
         </Card>
       </div>
 
-  <AchievementsPanel achievements={userData.achievements} savedData={savedData} />
+      <AchievementsPanel achievements={userData.achievements} savedData={savedData} />
 
-<Tabs defaultValue="strength" className="mb-20 sm:mb-0">
-  <TabsList className="grid grid-cols-3 gap-2 sm:gap-4 mb-6 sm:mb-8">
-    <TabsTrigger 
-      value="strength" 
-      className="bg-[#CCBA78] text-gray-900 data-[state=active]:bg-opacity-90 px-2 sm:px-6 py-2 sm:py-3 rounded font-medium text-xs sm:text-base"
-    >
-      <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2">
-        <Dumbbell className="w-4 h-4 sm:w-5 sm:h-5" />
-        <span>Strength</span>
-      </div>
-    </TabsTrigger>
-    <TabsTrigger 
-      value="hybrid" 
-      className="bg-[#CCBA78] text-gray-900 data-[state=active]:bg-opacity-90 px-2 sm:px-6 py-2 sm:py-3 rounded font-medium text-xs sm:text-base"
-    >
-      <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2">
-        <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
-        <span>Hybrid</span>
-      </div>
-    </TabsTrigger>
-    <TabsTrigger 
-      value="cardio" 
-      className="bg-[#CCBA78] text-gray-900 data-[state=active]:bg-opacity-90 px-2 sm:px-6 py-2 sm:py-3 rounded font-medium text-xs sm:text-base"
-    >
-      <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2">
-        <Users className="w-4 h-4 sm:w-5 sm:h-5" />
-        <span>Classes</span>
-      </div>
-    </TabsTrigger>
-  </TabsList>
+      <Tabs defaultValue="strength" className="mb-20 sm:mb-0">
+        <TabsList className="grid grid-cols-3 gap-2 sm:gap-4 mb-6 sm:mb-8">
+          <TabsTrigger 
+            value="strength" 
+            className="bg-[#CCBA78] text-gray-900 data-[state=active]:bg-opacity-90 px-2 sm:px-6 py-2 sm:py-3 rounded font-medium text-xs sm:text-base"
+          >
+            <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2">
+              <Dumbbell className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span>Strength</span>
+            </div>
+          </TabsTrigger>
+          <TabsTrigger 
+            value="hybrid" 
+            className="bg-[#CCBA78] text-gray-900 data-[state=active]:bg-opacity-90 px-2 sm:px-6 py-2 sm:py-3 rounded font-medium text-xs sm:text-base"
+          >
+            <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2">
+              <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span>Hybrid</span>
+            </div>
+          </TabsTrigger>
+          <TabsTrigger 
+            value="cardio" 
+            className="bg-[#CCBA78] text-gray-900 data-[state=active]:bg-opacity-90 px-2 sm:px-6 py-2 sm:py-3 rounded font-medium text-xs sm:text-base"
+          >
+            <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2">
+              <Users className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span>Classes</span>
+            </div>
+          </TabsTrigger>
+        </TabsList>
 
         {Object.entries(programs).map(([key, program]) => (
           <TabsContent key={key} value={key}>
@@ -1261,35 +1235,36 @@ return (
               {program.weeks.map((week) => (
                 <CollapsibleCard key={week.week} week={week}>
                   <div className="space-y-4">
-              {week.habits.map((habit, idx) => (
-  <div key={idx} className="group">
-    <div className="flex items-center space-x-4 text-white">
-      <input 
-        type="checkbox" 
-        className="w-5 h-5 rounded border-[#CCBA78] accent-[#CCBA78]"
-        checked={savedData[key]?.[week.week]?.[idx]?.completionDates?.includes(
-          new Date().toISOString().split('T')[0]
-        ) || false}
-        onChange={(e) => handleCheckbox(key, week.week, idx, e.target.checked)}
-      />
-      <div>
-        <p className="font-medium">{habit.habit}</p>
-        <p className="text-gray-400 text-sm mt-1">{habit.example}</p>
-        <p className="text-gray-400 text-xs mt-1">
-          Completed {savedData[key]?.[week.week]?.[idx]?.completionDates?.length || 0} times
-        </p>
-      </div>
-    </div>
-  </div>
-))}              </div>
+                    {week.habits.map((habit, idx) => (
+                      <div key={idx} className="group">
+                        <div className="flex items-center space-x-4 text-white">
+                          <input 
+                            type="checkbox" 
+                            className="w-5 h-5 rounded border-[#CCBA78] accent-[#CCBA78]"
+                            checked={savedData[key]?.[week.week]?.[idx]?.completionDates?.includes(
+                              new Date().toISOString().split('T')[0]
+                            ) || false}
+                            onChange={(e) => handleCheckbox(key, week.week, idx, e.target.checked)}
+                          />
+                          <div>
+                            <p className="font-medium">{habit.habit}</p>
+                            <p className="text-gray-400 text-sm mt-1">{habit.example}</p>
+                            <p className="text-gray-400 text-xs mt-1">
+                              Completed {savedData[key]?.[week.week]?.[idx]?.completionDates?.length || 0} times
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </CollapsibleCard>
               ))}
             </div>
           </TabsContent>
         ))}
       </Tabs>
-   </div>
+    </div>
   );
-};
+}
 
 export default HabitProgram;
