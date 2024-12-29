@@ -67,7 +67,7 @@ interface SavedData {
   };
 }
 const [showOnboarding, setShowOnboarding] = useState(() => {
-  // Check localStorage on initial load, default to true if no preference saved
+  
   if (typeof window !== 'undefined') {
     const savedPreference = localStorage.getItem('showOnboarding');
     return savedPreference === null ? true : savedPreference === 'true';
@@ -75,7 +75,7 @@ const [showOnboarding, setShowOnboarding] = useState(() => {
   return true;
 });
 const calculateStreak = (savedData: SavedData): { currentStreak: number; longestStreak: number } => {
-  // Get all unique completion dates across all habits
+ 
   const allDates = new Set<string>();
   Object.values(savedData).forEach(program => 
     Object.values(program).forEach(week => 
@@ -85,7 +85,7 @@ const calculateStreak = (savedData: SavedData): { currentStreak: number; longest
     )
   );
 
-  // Convert to array and sort dates
+  
   const sortedDates = Array.from(allDates).sort();
   if (sortedDates.length === 0) {
     return { currentStreak: 0, longestStreak: 0 };
@@ -96,12 +96,12 @@ const calculateStreak = (savedData: SavedData): { currentStreak: number; longest
   let longestStreak = 0;
   let streak = 0;
   
-  // Calculate streaks
+ 
   for (let i = 0; i < sortedDates.length; i++) {
     const currentDate = new Date(sortedDates[i]);
     const previousDate = i > 0 ? new Date(sortedDates[i - 1]) : currentDate;
     
-    // Check if dates are consecutive
+  
     const diffDays = Math.floor((currentDate.getTime() - previousDate.getTime()) / (1000 * 60 * 60 * 24));
     
     if (i === 0 || diffDays === 1) {
@@ -112,7 +112,7 @@ const calculateStreak = (savedData: SavedData): { currentStreak: number; longest
     
     longestStreak = Math.max(longestStreak, streak);
     
-    // Update current streak if we're at today or yesterday
+    
     const diffFromToday = Math.floor((new Date(today).getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
     if (diffFromToday <= 1) {
       currentStreak = streak;
@@ -126,10 +126,10 @@ const ACHIEVEMENTS: Achievement[] = [
  {
     id: 'first-week',
     title: 'First Week Champion',
-    description: 'Complete all s for one week', // Change to 'habits'
+    description: 'Complete all s for one week', 
     icon: 'trophy',
-    condition: 'Complete 21 s in a week (3 s for 7 days)', // Change to 'habits'
-    points: 210,  // 3 habits × 7 days × 10 points
+    condition: 'Complete 21 s in a week (3 s for 7 days)', 
+    points: 210,  
     unlocked: false
 },
   {
@@ -138,7 +138,7 @@ const ACHIEVEMENTS: Achievement[] = [
     description: 'Maintain a 7-day streak',
     icon: 'fire',
     condition: 'Check in for 7 consecutive days',
-    points: 70,   // 1  minimum × 7 days × 10 points
+    points: 70,   
     unlocked: false
   },
   {
@@ -147,7 +147,7 @@ const ACHIEVEMENTS: Achievement[] = [
     description: 'Complete 50 total habits',
     icon: 'award',
     condition: 'Complete any 50 habits',
-    points: 500,  // 50 habits × 10 points
+    points: 500,  
     unlocked: false
   },
   {
@@ -156,7 +156,7 @@ const ACHIEVEMENTS: Achievement[] = [
     description: 'Complete an entire 8-week program',
     icon: 'crown',
     condition: 'Complete all habits in one program',
-    points: 1680, // 8 weeks × 3 habits × 7 days × 10 points
+    points: 1680, 
     unlocked: false
   }
 ];
@@ -168,7 +168,7 @@ const AchievementsPanel = ({ achievements, savedData }: {
   const calculateProgress = (achievement: Achievement) => {
     switch (achievement.id) {
       case 'first-week':
-        // Count max completions in any week
+        
         const maxWeekCompletions = Object.values(savedData)
           .flatMap(program => Object.values(program))
           .map(week => {
@@ -189,7 +189,7 @@ const AchievementsPanel = ({ achievements, savedData }: {
             total + (habit.completionDates?.length || 0), 0);
         return (totalCompletions / 50) * 100;
 
-      // Add other achievements...
+      
       default:
         return 0;
     }
@@ -433,7 +433,7 @@ const useUserStorage = () => {
   };
 };
 const HabitProgram = () => {
-  // Storage hook
+
 const { 
     userId, 
     userData, 
@@ -445,11 +445,11 @@ const {
     importProgress 
   } = useUserStorage();
 
-  // Mobile interaction states
+  
   const [showToast, setShowToast] = useState(false);
   const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
   const [showInfo, setShowInfo] = useState(false);
- // Add the new state and effect here
+ 
   const [showOnboarding, setShowOnboarding] = useState(() => {
     if (typeof window !== 'undefined') {
       const savedPreference = localStorage.getItem('showOnboarding');
@@ -486,7 +486,7 @@ useEffect(() => {
     });
   }
 }, [savedData]);
-  // Pull-to-refresh effect
+ 
   useEffect(() => {
     let touchStart = 0;
     const handleTouchStart = (e: TouchEvent) => {
@@ -495,7 +495,7 @@ useEffect(() => {
     const handleTouchMove = (e: TouchEvent) => {
       const touchEnd = e.touches[0].clientY;
       if (window.scrollY === 0 && touchEnd > touchStart + 100) {
-        // Refresh data
+       
         window.location.reload();
       }
     };
@@ -510,10 +510,10 @@ useEffect(() => {
   }, []);
 
 const handleQuickAdd = () => {
-    // Implement quick add functionality
+    
     console.log('Quick add clicked');
   };
-  // Save progress effect
+ 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('habitProgress', JSON.stringify(savedData));
@@ -589,9 +589,9 @@ const handleQuickAdd = () => {
       }
     });
 
-   // Update the setUserData callback in handleCheckbox
+ 
 setUserData(prev => {
-  // Count completions for the week
+  
   const getCompletionsForWeek = (weekData: any) => {
     const uniqueDates = new Set<string>();
     Object.values(weekData || {}).forEach((habit: any) => {
@@ -600,16 +600,16 @@ setUserData(prev => {
     return uniqueDates.size;
   };
 
-  // Calculate total completions from all saved data
+  
   const totalCompletions = Object.values(savedData)
     .flatMap(program => Object.values(program))
     .flatMap(week => Object.values(week))
     .reduce((total, habit: any) => total + (habit.completionDates?.length || 0), 0);
 
-  // Calculate streaks
+  
   const { currentStreak, longestStreak } = calculateStreak(savedData);
 
-  // Update achievements
+ 
   const updatedAchievements = prev.achievements.map(achievement => {
     if (achievement.unlocked) return achievement;
 
@@ -621,7 +621,7 @@ setUserData(prev => {
         break;
 
       case 'first-week':
-        // Check for 21 completions in any week (3 habits * 7 days)
+       
         const hasCompletedWeek = Object.values(savedData).some(program => 
           Object.values(program).some(week => getCompletionsForWeek(week) >= 21)
         );
@@ -637,7 +637,7 @@ setUserData(prev => {
         break;
 
       case 'program-master':
-        // Check if any program has all habits completed for 7 days
+        
         const hasCompletedProgram = Object.entries(savedData).some(([_, programData]) => {
           const weeks = Object.entries(programData);
           if (weeks.length !== 8) return false;
