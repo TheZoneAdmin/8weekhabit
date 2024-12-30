@@ -1,12 +1,13 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Dumbbell, Clock, Users, ChevronDown, Save, Upload, Link as LinkIcon } from 'lucide-react';
+import { Dumbbell, Clock, Users, ChevronDown, Save, Upload, Link as LinkIcon, Share2, Facebook } from 'lucide-react';
 import React, { useState, useEffect, useCallback } from 'react';
 import { Trophy, Award, Crown, Flame } from 'lucide-react';
 import { Home, Calendar, Settings, Plus, Check, Info, CheckCircle, XCircle } from 'lucide-react';
 import { Toast } from "@/components/ui/toast";
 import { SwipeableHabit } from "@/components/ui/swipeable-habit";
 import { HabitInfoSheet } from "@/components/ui/habit-info-sheet";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 interface Habit {
   habit: string;
@@ -151,6 +152,9 @@ const AchievementsPanel = ({ achievements, savedData }: {
   achievements: Achievement[],
   savedData: SavedData 
 }) => {
+  const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
+  const [showShareDialog, setShowShareDialog] = useState(false);
+
   const calculateProgress = (achievement: Achievement) => {
     switch (achievement.id) {
       case 'first-week':
@@ -179,6 +183,15 @@ const AchievementsPanel = ({ achievements, savedData }: {
     }
   };
 
+  const shareToFacebook = () => {
+    if (!selectedAchievement) return;
+    
+    const shareText = `🏆 Just unlocked "${selectedAchievement.title}" in my fitness journey!\n\n${selectedAchievement.description}\n\nJoin me in building better habits!`;
+    const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}&quote=${encodeURIComponent(shareText)}`;
+    window.open(url, '_blank', 'width=600,height=400');
+    setShowShareDialog(false);
+  };
+
   return (
     <Card className="bg-gray-800 border-none mb-8">
       <div className="p-6">
@@ -193,18 +206,33 @@ const AchievementsPanel = ({ achievements, savedData }: {
                   : 'bg-gray-700 bg-opacity-50'
               }`}
             >
-              <div className="flex items-center gap-3">
-                {achievement.icon === 'trophy' && <Trophy className={`w-5 h-5 ${achievement.unlocked ? 'text-[#CCBA78]' : 'text-gray-400'}`} />}
-                {achievement.icon === 'fire' && <Flame className={`w-5 h-5 ${achievement.unlocked ? 'text-[#CCBA78]' : 'text-gray-400'}`} />}
-                {achievement.icon === 'award' && <Award className={`w-5 h-5 ${achievement.unlocked ? 'text-[#CCBA78]' : 'text-gray-400'}`} />}
-                {achievement.icon === 'crown' && <Crown className={`w-5 h-5 ${achievement.unlocked ? 'text-[#CCBA78]' : 'text-gray-400'}`} />}
-                <div>
-                  <h4 className={`font-semibold ${achievement.unlocked ? 'text-[#CCBA78]' : 'text-gray-300'}`}>
-                    {achievement.title}
-                  </h4>
-                  <p className="text-sm text-gray-400">{achievement.description}</p>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {achievement.icon === 'trophy' && <Trophy className={`w-5 h-5 ${achievement.unlocked ? 'text-[#CCBA78]' : 'text-gray-400'}`} />}
+                  {achievement.icon === 'fire' && <Flame className={`w-5 h-5 ${achievement.unlocked ? 'text-[#CCBA78]' : 'text-gray-400'}`} />}
+                  {achievement.icon === 'award' && <Award className={`w-5 h-5 ${achievement.unlocked ? 'text-[#CCBA78]' : 'text-gray-400'}`} />}
+                  {achievement.icon === 'crown' && <Crown className={`w-5 h-5 ${achievement.unlocked ? 'text-[#CCBA78]' : 'text-gray-400'}`} />}
+                  <div>
+                    <h4 className={`font-semibold ${achievement.unlocked ? 'text-[#CCBA78]' : 'text-gray-300'}`}>
+                      {achievement.title}
+                    </h4>
+                    <p className="text-sm text-gray-400">{achievement.description}</p>
+                  </div>
                 </div>
+                {achievement.unlocked && (
+                  <button
+                    onClick={() => {
+                      setSelectedAchievement(achievement);
+                      setShowShareDialog(true);
+                    }}
+                    className="p-2 text-[#CCBA78] hover:bg-gray-700 rounded-full transition-colors"
+                    title="Share achievement"
+                  >
+                    <Share2 className="w-5 h-5" />
+                  </button>
+                )}
               </div>
+
               <div className="mt-2 flex justify-between items-center">
                 <span className="text-sm text-gray-400">
                   {achievement.unlocked 
@@ -233,10 +261,47 @@ const AchievementsPanel = ({ achievements, savedData }: {
           ))}
         </div>
       </div>
+
+      <AlertDialog open={showShareDialog} onOpenChange={setShowShareDialog}>
+        <AlertDialogContent className="bg-gray-800 text-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-[#CCBA78]">
+              Share Achievement
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-300">
+              Celebrate your success by sharing this achievement with your fitness community!
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          
+          {selectedAchievement && (
+            <div className="my-4 p-4 bg-gray-700 rounded-lg">
+              <h3 className="text-lg font-semibold text-[#CCBA78] mb-2">
+                {selectedAchievement.title}
+              </h3>
+              <p className="text-gray-300 mb-2">{selectedAchievement.description}</p>
+              <p className="text-sm text-gray-400">
+                Unlocked: {new Date(selectedAchievement.unlockedAt || '').toLocaleDateString()}
+              </p>
+            </div>
+          )}
+
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel className="bg-gray-700 text-white hover:bg-gray-600">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={shareToFacebook}
+              className="bg-[#1877F2] hover:bg-[#1877F2]/90 text-white flex items-center gap-2"
+            >
+              <Facebook className="w-4 h-4" />
+              Share to Facebook
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 };
-
 const DataManagement = ({ userId, onExport, onImport, onReset }: {
   userId: string;
   onExport: () => void;
@@ -295,6 +360,7 @@ const DataManagement = ({ userId, onExport, onImport, onReset }: {
     </Card>
   );
 };
+
 const CollapsibleCard = ({ week, children }: CollapsibleCardProps) => {
   const [isOpen, setIsOpen] = useState(true);
   
@@ -321,7 +387,6 @@ const CollapsibleCard = ({ week, children }: CollapsibleCardProps) => {
     </Card>
   );
 };
-
 const useUserStorage = () => {
   const [userId, setUserId] = useState<string>('');
   const [isClient, setIsClient] = useState(false);
@@ -414,6 +479,7 @@ const useUserStorage = () => {
     isClient
   };
 };
+
 const HabitProgram = () => {
   const { 
     userId, 
@@ -436,8 +502,7 @@ const HabitProgram = () => {
     }
     return true;
   });
-
-  useEffect(() => {
+useEffect(() => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('showOnboarding', showOnboarding.toString());
     }
@@ -492,7 +557,8 @@ const HabitProgram = () => {
       localStorage.setItem('habitProgress', JSON.stringify(savedData));
     }
   }, [savedData]);
-const resetProgress = useCallback(() => {
+
+  const resetProgress = useCallback(() => {
     if (window.confirm('Are you sure you want to reset all progress? This cannot be undone.')) {
       setSavedData({});
       if (typeof window !== 'undefined') {
@@ -560,8 +626,7 @@ const resetProgress = useCallback(() => {
         };
       }
     });
-
-    setUserData(prev => {
+setUserData(prev => {
       const getCompletionsForWeek = (weekData: any) => {
         const uniqueDates = new Set<string>();
         Object.values(weekData || {}).forEach((habit: any) => {
@@ -1084,7 +1149,7 @@ const programs = {
     ]
   }
 } as const;
-return (
+  return (
     <div className="bg-gray-900 p-4 pb-24 sm:p-8 md:p-12 max-w-4xl mx-auto min-h-screen">
       <div className="mb-6 sm:mb-8">
         <h1 className="text-2xl sm:text-4xl font-bold mb-2">
@@ -1093,8 +1158,7 @@ return (
         </h1>
         <h2 className="text-white text-lg sm:text-xl">8-Week Journey to Better Health</h2>
       </div>
-
-      <div className="bg-gray-800 rounded-lg mb-6 overflow-hidden">
+<div className="bg-gray-800 rounded-lg mb-6 overflow-hidden">
         <button 
           onClick={() => setShowOnboarding(!showOnboarding)}
           className="w-full p-4 flex justify-between items-center text-[#CCBA78] hover:bg-gray-700 transition-colors"
@@ -1197,8 +1261,7 @@ return (
       </div>
 
       <AchievementsPanel achievements={userData.achievements} savedData={savedData} />
-
-      <Tabs defaultValue="strength" className="mb-20 sm:mb-0">
+<Tabs defaultValue="strength" className="mb-20 sm:mb-0">
         <TabsList className="grid grid-cols-3 gap-2 sm:gap-4 mb-6 sm:mb-8">
           <TabsTrigger 
             value="strength" 
@@ -1265,6 +1328,6 @@ return (
       </Tabs>
     </div>
   );
-}
+};
 
 export default HabitProgram;
