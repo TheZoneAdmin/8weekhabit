@@ -645,7 +645,7 @@ const programs = {
         habits: [
           {
             habit: "Learn gym layout and equipment",
-            example: "Example: Tour gym, learn where machines are, practice rack/weight setup"
+            example: "Example: Book induction, learn where machines are, practice rack/weight setup"
           },
           {
             habit: "Practice gym etiquette",
@@ -681,15 +681,15 @@ const programs = {
         habits: [
           {
             habit: "Establish pre-workout routine",
-            example: "Example: Pack gym bag night before, 5min walking warmup"
+            example: "Example: Pack gym bag night before,Create playlist, 5min walking warmup"
           },
           {
             habit: "Focus on protein intake",
-            example: "Example: Add protein to breakfast, post-workout protein shake"
+            example: "Example: Add protein to breakfast"
           },
           {
             habit: "Practice proper breathing",
-            example: "Example: Breathe out on exertion, in on return movement"
+            example: "Example: Breathe out on contraction, in on return movement"
           }
         ]
       },
@@ -699,11 +699,11 @@ const programs = {
         habits: [
           {
             habit: "Learn stretching basics",
-            example: "Example: 5min post-workout stretch focusing on worked muscles"
+            example: "Example: 5min daily stretch focusing on worked muscles or tight points"
           },
           {
             habit: "Monitor workout recovery",
-            example: "Example: Note muscle soreness levels, adjust next workout if needed"
+            example: "Example: Note muscle soreness levels, adjust next workout volume if needed"
           },
           {
             habit: "Prioritize sleep",
@@ -717,7 +717,7 @@ const programs = {
         habits: [
           {
             habit: "Plan pre-workout meals",
-            example: "Example: Light meal 1-2 hours before gym (sandwich, fruit)"
+            example: "Example: Light meal 1-2 hours before gym (oats with whey or yoghurt and nut bowl)"
           },
           {
             habit: "Stay hydrated",
@@ -735,11 +735,11 @@ const programs = {
         habits: [
           {
             habit: "Record exercise form",
-            example: "Example: Video one main exercise per workout, check form"
+            example: "Example: Video one main exercise per workout, check form with a coach"
           },
           {
             habit: "Learn weight increases",
-            example: "Example: When exercise feels easy, add smallest weight increment"
+            example: "Example: When you hit top end of rep ranges, add smallest weight increment"
           },
           {
             habit: "Practice mind-muscle connection",
@@ -812,7 +812,7 @@ const programs = {
         habits: [
           {
             habit: "Try beginner bodyweight exercises",
-            example: "Example: Wall pushups, assisted squats, modified planks"
+            example: "Example: Modified pushups, Assisted squats, modified chin up"
           },
           {
             habit: "Practice good posture",
@@ -837,7 +837,7 @@ const programs = {
             example: "Example: 5min each on bike, treadmill, elliptical"
           },
           {
-            habit: "Monitor breathing rate",
+            habit: "Zone 2 champ",
             example: "Example: Maintain conversation pace for most activity"
           }
         ]
@@ -887,7 +887,7 @@ const programs = {
             example: "Example: Try swimming, dancing, or recreational sports"
           },
           {
-            habit: "Add weekend activity",
+            habit: "Add a weekend activity",
             example: "Example: Nature walk, bike ride, active housework"
           },
           {
@@ -909,7 +909,7 @@ const programs = {
             example: "Example: Walking meetups, active family time"
           },
           {
-            habit: "Prepare for weather",
+            habit: "Prepare for the weather",
             example: "Example: Indoor backup plans, appropriate gear"
           }
         ]
@@ -946,8 +946,8 @@ const programs = {
             example: "Example: Locate lockers, water, classes, learn check-in"
           },
           {
-            habit: "Try beginner classes",
-            example: "Example: Intro yoga, basic cycling, beginner dance"
+            habit: "Try first class",
+            example: "Example: Weight training to learn form and technique"
           },
           {
             habit: "Meet instructors",
@@ -961,7 +961,7 @@ const programs = {
         habits: [
           {
             habit: "Learn class setup",
-            example: "Example: Proper bike setup, mat placement, equipment needed"
+            example: "Example: Proper station setup, mat placement, equipment needed"
           },
           {
             habit: "Practice modifications",
@@ -979,10 +979,10 @@ const programs = {
         habits: [
           {
             habit: "Learn basic moves",
-            example: "Example: Common yoga poses, cycling positions, basic steps"
+            example: "Example: Common class movements, cardio equipment, basic steps"
           },
           {
-            habit: "Find comfortable spot",
+            habit: "Find a comfortable spot",
             example: "Example: Middle-back of room to see others and mirror"
           },
           {
@@ -1000,8 +1000,8 @@ const programs = {
             example: "Example: Take breaks when needed, modify intense parts"
           },
           {
-            habit: "Listen to body",
-            example: "Example: Note energy levels, adjust intensity accordingly"
+            habit: "Listen to the body",
+            example: "Example: Note energy levels, adjust the intensity accordingly"
           },
           {
             habit: "Stay hydrated",
@@ -1015,7 +1015,7 @@ const programs = {
         habits: [
           {
             habit: "Try different formats",
-            example: "Example: Sample 2-3 different beginner-friendly classes"
+            example: "Example: Sample 2-3 different classes"
           },
           {
             habit: "Note preferences",
@@ -1023,7 +1023,7 @@ const programs = {
           },
           {
             habit: "Build class schedule",
-            example: "Example: Pick 2-3 regular classes that fit schedule"
+            example: "Example: Pick 2-3 regular classes that fit your schedule"
           }
         ]
       },
@@ -1033,7 +1033,7 @@ const programs = {
         habits: [
           {
             habit: "Meet class regulars",
-            example: "Example: Say hi to neighbors, join pre-class chat"
+            example: "Example: Say hi to neighbours, join pre-class chat"
           },
           {
             habit: "Share experiences",
@@ -1041,7 +1041,7 @@ const programs = {
           },
           {
             habit: "Give feedback",
-            example: "Example: Thank instructor, note helpful cues"
+            example: "Example: Thank instructor, note helpful cues ask for guidance"
           }
         ]
       },
@@ -1051,7 +1051,7 @@ const programs = {
         habits: [
           {
             habit: "Try regular modifications",
-            example: "Example: Full pushup instead of knee, add small weights"
+            example: "Example: Full pushup instead of knee, add small weights to movement"
           },
           {
             habit: "Track improvements",
@@ -1059,7 +1059,7 @@ const programs = {
           },
           {
             habit: "Set class goals",
-            example: "Example: Complete full class, try front row, new move"
+            example: "Example: Complete full class, try front row, new progression"
           }
         ]
       },
@@ -1069,7 +1069,7 @@ const programs = {
         habits: [
           {
             habit: "Plan regular schedule",
-            example: "Example: Book next month's classes, set backup options"
+            example: "Example: Book next week's classes, set backup options"
           },
           {
             habit: "Review progress",
