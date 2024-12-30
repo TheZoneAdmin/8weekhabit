@@ -641,145 +641,145 @@ const programs = {
     weeks: [
       {
         week: 1,
-        focus: "Foundation",
+        focus: "Gym Basics",
         habits: [
           {
-            habit: "Track protein intake daily (1.6-2.2g/kg)",
-            example: "Example: 80kg person needs 128-176g protein. Track breakfast (30g), lunch (40g), dinner (40g), snacks (20g)"
+            habit: "Learn gym layout and equipment",
+            example: "Example: Tour gym, learn where machines are, practice rack/weight setup"
           },
           {
-            habit: "Plan 3 training days with rest between",
-            example: "Example: Monday/Wednesday/Friday training, Tuesday/Thursday/Weekend rest"
+            habit: "Practice gym etiquette",
+            example: "Example: Re-rack weights, wipe equipment, share during busy times"
           },
           {
-            habit: "Log exercises and weights used", 
-            example: "Example: Bench Press - 60kg x 8,8,8 reps, felt 7/10 difficulty"
+            habit: "Set consistent gym schedule",
+            example: "Example: Monday/Thursday 6pm, Saturday 10am - put in calendar"
           }
         ]
       },
       {
         week: 2,
-        focus: "Consistency",
+        focus: "Movement Foundations",
         habits: [
           {
-            habit: "Meal prep basics for 3 days/week",
-            example: "Example: Sunday prep - 6 chicken breasts, 3 cups rice, 600g vegetables"
+            habit: "Master bodyweight movements",
+            example: "Example: Perfect form on squats, pushups (modified ok), planks"
           },
           {
-            habit: "Establish pre-workout routine",
-            example: "Example: 10min mobility, 5min light cardio, 3 warm-up sets per exercise"
+            habit: "Learn basic machine exercises",
+            example: "Example: Leg press, chest press, lat pulldown with light weights"
           },
           {
-            habit: "Sleep 7-8 hours consistently",
-            example: "Example: Bed by 10:30pm, wake 6:30am, no screens after 10pm"
+            habit: "Record workouts simply",
+            example: "Example: Note exercises done and weights used in phone notes"
           }
         ]
       },
       {
         week: 3,
-        focus: "Progressive Loading",
+        focus: "Building Routine",
         habits: [
           {
-            habit: "Track progressive overload weekly",
-            example: "Example: Week 1 Squat: 80kg x 8, Week 2: 82.5kg x 8 or 80kg x 9"
+            habit: "Establish pre-workout routine",
+            example: "Example: Pack gym bag night before, 5min walking warmup"
           },
           {
-            habit: "Add post-workout recovery routine",
-            example: "Example: 10min stretching, protein shake, 10min walk, contrast shower"  
+            habit: "Focus on protein intake",
+            example: "Example: Add protein to breakfast, post-workout protein shake"
           },
           {
-            habit: "Plan meals around training days",
-            example: "Example: Training days +300 calories, extra 50g carbs pre/post workout"
+            habit: "Practice proper breathing",
+            example: "Example: Breathe out on exertion, in on return movement"
           }
         ]
       },
       {
         week: 4,
-        focus: "Recovery Focus",
+        focus: "Recovery Basics",
         habits: [
           {
-            habit: "Implement deload strategy",
-            example: "Example: Reduce weights by 40%, maintain form, focus on mind-muscle connection"
+            habit: "Learn stretching basics",
+            example: "Example: 5min post-workout stretch focusing on worked muscles"
           },
           {
-            habit: "Track sleep quality",
-            example: "Example: Rate 1-10: Falling asleep (8/10), Staying asleep (7/10), Morning energy (8/10)"
+            habit: "Monitor workout recovery",
+            example: "Example: Note muscle soreness levels, adjust next workout if needed"
           },
           {
-            habit: "Practice proper stretching",
-            example: "Example: 5min dynamic pre-workout, 10min static post-workout, focus on worked muscles"
+            habit: "Prioritize sleep",
+            example: "Example: Aim for 7+ hours, consistent bedtime routine"
           }
         ]
       },
       {
         week: 5,
-        focus: "Advanced Nutrition",
+        focus: "Simple Nutrition",
         habits: [
           {
-            habit: "Time carbs around workouts",
-            example: "Example: 50g carbs 2hrs pre-workout, 25g intra-workout, 50g post-workout"
+            habit: "Plan pre-workout meals",
+            example: "Example: Light meal 1-2 hours before gym (sandwich, fruit)"
           },
           {
-            habit: "Track macronutrient ratios",
-            example: "Example: Training days - 40% carbs, 30% protein, 30% fats. Rest days - 30/40/30"
+            habit: "Stay hydrated",
+            example: "Example: Water bottle at desk, during workout, and after"
           },
           {
-            habit: "Hydration strategy",
-            example: "Example: 500ml 2hrs pre-workout, 250ml every 15mins during, 1L post-workout"
+            habit: "Add healthy snacks",
+            example: "Example: Pack fruit, nuts, or protein bar for post-workout"
           }
         ]
       },
       {
         week: 6,
-        focus: "Performance",
+        focus: "Form Focus",
         habits: [
           {
-            habit: "Track strength progress metrics",
-            example: "Example: Monthly PR tests: Squat 100kg→105kg, Bench 80kg→82.5kg, Dead 120kg→125kg"
+            habit: "Record exercise form",
+            example: "Example: Video one main exercise per workout, check form"
           },
           {
-            habit: "Video form check weekly",
-            example: "Example: Record main lift side view, compare against previous week, note improvements"
+            habit: "Learn weight increases",
+            example: "Example: When exercise feels easy, add smallest weight increment"
           },
           {
-            habit: "Adjust training splits",
-            example: "Example: If shoulder recovery poor, move push day further from pull day"
+            habit: "Practice mind-muscle connection",
+            example: "Example: Focus on feeling target muscles working"
           }
         ]
       },
       {
         week: 7,
-        focus: "Lifestyle Integration",
+        focus: "Consistency",
         habits: [
           {
-            habit: "Balance social life with training",
-            example: "Example: Meal prep for social events, schedule morning workouts before events"
+            habit: "Plan for busy days",
+            example: "Example: Have backup shorter workout, morning/evening options"
           },
           {
-            habit: "Meal prep for busy days",
-            example: "Example: Prepare 3 meals + 2 snacks, pack shaker with protein powder separately"
+            habit: "Track workout completion",
+            example: "Example: Mark calendar for completed workouts, aim for 80%"
           },
           {
-            habit: "Stress management techniques",
-            example: "Example: 10min morning meditation, post-workout journaling, evening walking"
+            habit: "Prepare for obstacles",
+            example: "Example: Plan home workout if can't make gym, rainy day gear"
           }
         ]
       },
       {
         week: 8,
-        focus: "Long-term Planning",
+        focus: "Progress Check",
         habits: [
           {
-            habit: "Set new strength goals",
-            example: "Example: Next 12 weeks: Squat +10kg, Bench +5kg, Deadlift +15kg"
+            habit: "Review exercise progress",
+            example: "Example: Compare weights/reps to first week, note improvements"
           },
           {
-            habit: "Create next training block",
-            example: "Example: 4 weeks strength focus, 2 weeks volume, 1 week deload"
+            habit: "Set next month's schedule",
+            example: "Example: Plan next 4 weeks of workouts in calendar"
           },
           {
-            habit: "Review and adjust nutrition",
-            example: "Example: Adjust calories based on progress, fine-tune meal timing, plan next bulk/cut"
+            habit: "Celebrate achievements",
+            example: "Example: Note new exercises learned, consistency wins"
           }
         ]
       }
@@ -790,145 +790,145 @@ const programs = {
     weeks: [
       {
         week: 1,
-        focus: "Movement Quality",
+        focus: "Getting Started",
         habits: [
           {
-            habit: "Practice basic movement patterns",
-            example: "Example: Daily 10 air squats, 5 push-ups, 5 rows, overhead mobility drills"
+            habit: "Start daily walking",
+            example: "Example: 10min walks, gradually increase to 20min"
           },
           {
-            habit: "Track daily activity level",
-            example: "Example: Log steps (8k target), active minutes (45+), workout intensity (1-10)"
+            habit: "Learn basic stretches",
+            example: "Example: Simple morning stretches for major muscle groups"
           },
           {
-            habit: "Focus on workout form",
-            example: "Example: Video one movement per session, get coach feedback, implement cues"
+            habit: "Track daily movement",
+            example: "Example: Note daily steps, active minutes in phone"
           }
         ]
       },
       {
         week: 2,
-        focus: "Energy Systems",
+        focus: "Building Activity",
         habits: [
           {
-            habit: "Balance strength and cardio days",
-            example: "Example: Mon/Thu-Strength, Tue/Fri-HIIT, Wed-Steady State, Weekend-Active Recovery"
+            habit: "Try beginner bodyweight exercises",
+            example: "Example: Wall pushups, assisted squats, modified planks"
           },
           {
-            habit: "Monitor heart rate recovery",
-            example: "Example: Post-workout HR: 160bpm → 1min: 120bpm → 2min: 100bpm"
+            habit: "Practice good posture",
+            example: "Example: Shoulder blades back, chin tucked, core engaged"
           },
           {
-            habit: "Track daily energy levels",
-            example: "Example: Morning: 7/10, Pre-workout: 8/10, Post-workout: 6/10, Evening: 7/10"
+            habit: "Add movement breaks",
+            example: "Example: 5min stretch/walk every 2 hours of sitting"
           }
         ]
       },
       {
         week: 3,
-        focus: "Endurance Building",
+        focus: "Cardio Basics",
         habits: [
           {
-            habit: "Implement aerobic base training",
-            example: "Example: 30-45min steady state cardio 3x/week at 65-75% max HR"
+            habit: "Start interval walking",
+            example: "Example: Alternate 2min normal pace, 1min faster pace"
           },
           {
-            habit: "Progress HIIT intervals",
-            example: "Example: Week 1: 30s work/30s rest, Week 2: 40s work/20s rest"
+            habit: "Try different cardio machines",
+            example: "Example: 5min each on bike, treadmill, elliptical"
           },
           {
-            habit: "Track workout density",
-            example: "Example: Complete 100 reps in 10 mins week 1, aim for 8 mins week 2"
+            habit: "Monitor breathing rate",
+            example: "Example: Maintain conversation pace for most activity"
           }
         ]
       },
       {
         week: 4,
-        focus: "Skill Development",
+        focus: "Movement Skills",
         habits: [
           {
-            habit: "Master complex movements",
-            example: "Example: Practice handstand holds, muscle-ups progression, Olympic lifts"
+            habit: "Learn proper squat form",
+            example: "Example: Practice bodyweight squats with mirror check"
           },
           {
-            habit: "Implement mobility routine",
-            example: "Example: 15min daily mobility work focusing on shoulders, hips, and ankles"
+            habit: "Master plank position",
+            example: "Example: Hold modified plank 20sec, rest, repeat"
           },
           {
-            habit: "Track movement quality",
-            example: "Example: Film and assess one complex movement per session"
+            habit: "Practice balance exercises",
+            example: "Example: Single-leg stand, heel-to-toe walk"
           }
         ]
       },
       {
         week: 5,
-        focus: "Power Development",
+        focus: "Building Endurance",
         habits: [
           {
-            habit: "Add plyometric training",
-            example: "Example: Box jumps, med ball throws, sprint starts 2x/week"
+            habit: "Increase walking duration",
+            example: "Example: Build to 30min continuous walking"
           },
           {
-            habit: "Implement contrast training",
-            example: "Example: Heavy squat followed by jump squats, bench press to med ball throws"
+            habit: "Add light resistance",
+            example: "Example: Try resistance bands, light dumbbells"
           },
           {
-            habit: "Track explosive power",
-            example: "Example: Measure jump height, med ball throw distance, sprint times"
+            habit: "Practice recovery",
+            example: "Example: Gentle stretching on rest days"
           }
         ]
       },
       {
         week: 6,
-        focus: "Work Capacity",
+        focus: "Daily Movement",
         habits: [
           {
-            habit: "Increase training density",
-            example: "Example: Reduce rest periods by 10s each week, maintain movement quality"
+            habit: "Find enjoyable activities",
+            example: "Example: Try swimming, dancing, or recreational sports"
           },
           {
-            habit: "Track workout volume",
-            example: "Example: Total reps, sets, weight lifted per session"
+            habit: "Add weekend activity",
+            example: "Example: Nature walk, bike ride, active housework"
           },
           {
-            habit: "Implement complexes",
-            example: "Example: 5 exercises back-to-back, 3 rounds, minimal rest"
+            habit: "Track energy levels",
+            example: "Example: Note mood and energy before/after movement"
           }
         ]
       },
       {
         week: 7,
-        focus: "Sport Specificity",
+        focus: "Lifestyle Integration",
         habits: [
           {
-            habit: "Sport-specific conditioning",
-            example: "Example: Mirror sport movement patterns in training, match energy systems"
+            habit: "Create active routines",
+            example: "Example: Morning stretches, lunch walk, evening exercises"
           },
           {
-            habit: "Implement agility work",
-            example: "Example: Cone drills, ladder work, direction changes 2x/week"
+            habit: "Plan active social time",
+            example: "Example: Walking meetups, active family time"
           },
           {
-            habit: "Track sport performance",
-            example: "Example: Sport-specific tests monthly: sprints, agility course, vertical jump"
+            habit: "Prepare for weather",
+            example: "Example: Indoor backup plans, appropriate gear"
           }
         ]
       },
       {
         week: 8,
-        focus: "Performance Integration",
+        focus: "Moving Forward",
         habits: [
           {
-            habit: "Test key benchmarks",
-            example: "Example: Retest baseline metrics: max HR, work capacity, movement quality"
+            habit: "Review activity log",
+            example: "Example: Compare week 1 vs week 8 activity levels"
           },
           {
-            habit: "Design next phase",
-            example: "Example: Plan next 8 weeks based on progress and goals"
+            habit: "Plan next phase",
+            example: "Example: Choose activities to continue, new ones to try"
           },
           {
-            habit: "Set new performance targets",
-            example: "Example: Increase work capacity 10%, reduce rest periods 20%"
+            habit: "Set realistic goals",
+            example: "Example: Daily step goal, weekly activity minutes"
           }
         ]
       }
@@ -939,145 +939,145 @@ const programs = {
     weeks: [
       {
         week: 1,
-        focus: "Class Integration",
+        focus: "Class Introduction",
         habits: [
           {
-            habit: "Try different class formats",
-            example: "Example: Mon-Spin, Wed-HIIT, Fri-Yoga, track enjoyment and difficulty"
+            habit: "Tour fitness facility",
+            example: "Example: Locate lockers, water, classes, learn check-in"
           },
           {
-            habit: "Learn class terminology",
-            example: "Example: RPE scales, movement names, instructor cues"
+            habit: "Try beginner classes",
+            example: "Example: Intro yoga, basic cycling, beginner dance"
           },
           {
-            habit: "Set up equipment properly",
-            example: "Example: Bike setup, step height, weight selection guidelines"
+            habit: "Meet instructors",
+            example: "Example: Arrive early, introduce yourself, mention new"
           }
         ]
       },
       {
         week: 2,
-        focus: "Intensity Management",
+        focus: "Class Basics",
         habits: [
           {
-            habit: "Use heart rate zones",
-            example: "Example: Zone 2 for base classes, Zone 4 for HIIT portions"
+            habit: "Learn class setup",
+            example: "Example: Proper bike setup, mat placement, equipment needed"
           },
           {
-            habit: "Track perceived exertion",
-            example: "Example: Rate 1-10 each class segment, compare to actual HR"
+            habit: "Practice modifications",
+            example: "Example: Learn easier versions of moves, use lighter weights"
           },
           {
-            habit: "Learn modification options",
-            example: "Example: Low impact alternatives, weight adjustments, tempo changes"
+            habit: "Pack class essentials",
+            example: "Example: Water bottle, towel, appropriate clothes"
           }
         ]
       },
       {
         week: 3,
-        focus: "Technical Proficiency",
+        focus: "Building Comfort",
         habits: [
           {
-            habit: "Master class-specific moves",
-            example: "Example: Proper burpee form, spin transitions, yoga flows"
+            habit: "Learn basic moves",
+            example: "Example: Common yoga poses, cycling positions, basic steps"
           },
           {
-            habit: "Track movement progress",
-            example: "Example: Film one complex movement per week, get instructor feedback"
+            habit: "Find comfortable spot",
+            example: "Example: Middle-back of room to see others and mirror"
           },
           {
-            habit: "Implement instructor cues",
-            example: "Example: Note key form cues, apply in next class, seek feedback"
+            habit: "Use instructor cues",
+            example: "Example: Listen for form tips, rhythm cues, modifications"
           }
         ]
       },
       {
         week: 4,
-        focus: "Recovery Integration",
+        focus: "Energy Management",
         habits: [
           {
-            habit: "Balance class intensity",
-            example: "Example: 2 high intensity, 2 moderate, 1 recovery class per week"
+            habit: "Pace yourself",
+            example: "Example: Take breaks when needed, modify intense parts"
           },
           {
-            habit: "Implement active recovery",
-            example: "Example: Light yoga between intense classes, mobility work daily"
+            habit: "Listen to body",
+            example: "Example: Note energy levels, adjust intensity accordingly"
           },
           {
-            habit: "Track sleep quality",
-            example: "Example: Sleep score vs class performance, adjust schedule accordingly"
+            habit: "Stay hydrated",
+            example: "Example: Drink before, during, and after class"
           }
         ]
       },
       {
         week: 5,
-        focus: "Performance Progress",
+        focus: "Class Variety",
         habits: [
           {
-            habit: "Increase class difficulty",
-            example: "Example: Higher spin resistance, heavier weights, advanced movements"
+            habit: "Try different formats",
+            example: "Example: Sample 2-3 different beginner-friendly classes"
           },
           {
-            habit: "Track performance metrics",
-            example: "Example: Watts in spin, weights in strength, hold times in yoga"
+            habit: "Note preferences",
+            example: "Example: Track enjoyment, energy, difficulty of each class"
           },
           {
-            habit: "Set class-specific goals",
-            example: "Example: Lead pack in spin, full pushups in HIIT, crow pose in yoga"
+            habit: "Build class schedule",
+            example: "Example: Pick 2-3 regular classes that fit schedule"
           }
         ]
       },
       {
         week: 6,
-        focus: "Community Engagement",
+        focus: "Social Connection",
         habits: [
           {
-            habit: "Join class challenges",
-            example: "Example: Monthly distance challenge, workout streak, team events"
+            habit: "Meet class regulars",
+            example: "Example: Say hi to neighbors, join pre-class chat"
           },
           {
-            habit: "Connect with classmates",
-            example: "Example: Partner workouts, form check buddies, social events"
+            habit: "Share experiences",
+            example: "Example: Ask questions, share challenges with classmates"
           },
           {
-            habit: "Share progress journey",
-            example: "Example: Post achievements, join community boards, give feedback"
+            habit: "Give feedback",
+            example: "Example: Thank instructor, note helpful cues"
           }
         ]
       },
       {
         week: 7,
-        focus: "Advanced Techniques",
+        focus: "Progress Steps",
         habits: [
           {
-            habit: "Learn advanced variations",
-            example: "Example: Plyometric options, complex combinations, flow transitions"
+            habit: "Try regular modifications",
+            example: "Example: Full pushup instead of knee, add small weights"
           },
           {
-            habit: "Implement class combinations",
-            example: "Example: Spin+Strength, HIIT+Yoga, multiple class days"
+            habit: "Track improvements",
+            example: "Example: Note longer holds, better balance, more endurance"
           },
           {
-            habit: "Track advanced metrics",
-            example: "Example: Power output, complex movement mastery, endurance improvements"
+            habit: "Set class goals",
+            example: "Example: Complete full class, try front row, new move"
           }
         ]
       },
       {
         week: 8,
-        focus: "Lifestyle Integration",
+        focus: "Routine Building",
         habits: [
           {
-            habit: "Create sustainable schedule",
-            example: "Example: Plan next month's classes, balance work/life/fitness"
+            habit: "Plan regular schedule",
+            example: "Example: Book next month's classes, set backup options"
           },
           {
-            habit: "Set long-term goals",
-            example: "Example: Class instructor training, competition prep, performance targets"
+            habit: "Review progress",
+            example: "Example: Compare week 1 vs week 8 abilities and comfort"
           },
           {
-            habit: "Review and celebrate progress",
-            example: "Example: Compare before/after videos, metrics improvements, testimonial"
+            habit: "Celebrate wins",
+            example: "Example: Note new moves learned, classes completed"
           }
         ]
       }
