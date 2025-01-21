@@ -1008,11 +1008,11 @@ const programs = {
         habits: [
           {
             habit: "Pack class essentials bag",
-            example: "Prepare water, towel, clothes night before"
+            example: "Prepare water, towel, and clothes the night before"
           },
           {
             habit: "Arrive 10 minutes early",
-            example: "Set up equipment before class starts"
+            example: "Set up the equipment before class starts"
           },
           {
             habit: "Clean equipment after use",
@@ -1034,7 +1034,7 @@ const programs = {
           },
           {
             habit: "Track workout intensity",
-            example: "Rate perceived exertion 1-10"
+            example: "Rate perceived exertion 1-5"
           }
         ]
       },
@@ -1061,8 +1061,8 @@ const programs = {
         focus: "Class Intensity",
         habits: [
           {
-            habit: "Complete full class duration",
-            example: "Stay for entire scheduled time"
+            habit: "Maintain form",
+            example: "Keep solid form and technique even as fatigue builds"
           },
           {
             habit: "Monitor heart rate zones",
@@ -1080,7 +1080,7 @@ const programs = {
         habits: [
           {
             habit: "Try one new modification",
-            example: "Attempt harder version of one move"
+            example: "Attempt a harder version of one move"
           },
           {
             habit: "Meet intensity targets",
@@ -1097,8 +1097,8 @@ const programs = {
         focus: "Class Engagement",
         habits: [
           {
-            habit: "Participate in class warmup",
-            example: "Complete full warmup routine"
+            habit: "Introduce yourself to someone new",
+            example: "Learn one classmate's name and fitness goal"
           },
           {
             habit: "Stay for cooldown",
@@ -1133,12 +1133,12 @@ const programs = {
         focus: "Class Mastery",
         habits: [
           {
-            habit: "Complete full class protocol",
-            example: "Warmup, workout, cooldown done"
+            habit: "Lead by example in class",
+            example: "Show optimal form and technique, help a beginner"
           },
           {
-            habit: "Execute all movements properly",
-            example: "Maintain form throughout class"
+            habit: "Share progress milestones",
+            example: "Document and share one improvement from your journey"
           },
           {
             habit: "Record class achievements",
