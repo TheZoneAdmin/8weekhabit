@@ -77,7 +77,7 @@ const calculateStreak = (savedData: SavedData): { currentStreak: number; longest
     )
   );
 
-const checkProgramCompletion = (programData) => {
+const checkProgramCompletion = (programData: SavedData[string]): boolean => {
   const weeks = Object.values(programData);
   
   if (weeks.length !== 8) return false;
