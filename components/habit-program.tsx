@@ -603,118 +603,101 @@ useEffect(() => {
     }
   }, [userId, setUserData, setSavedData]);
 
-  const handleCheckbox = (program: string, week: number, habitIndex: number, checked: boolean) => {
+const handleCheckbox = (program: string, week: number, habitIndex: number, checked: boolean) => {
     const today = new Date().toISOString().split('T')[0];
 
     setSavedData(prev => {
-      const currentHabit = prev[program]?.[week]?.[habitIndex] || { completed: false, completionDates: [] };
-      
-      if (checked) {
-        const updatedDates = currentHabit.completionDates?.includes(today)
-          ? currentHabit.completionDates
-          : [...(currentHabit.completionDates || []), today];
-
-        return {
-          ...prev,
-          [program]: {
-            ...prev[program],
-            [week]: {
-              ...prev[program]?.[week],
-              [habitIndex]: {
-                completed: true,
-                completionDates: updatedDates
-              }
+      const updatedData = {
+        ...prev,
+        [program]: {
+          ...prev[program],
+          [week]: {
+            ...prev[program]?.[week],
+            [habitIndex]: {
+              completed: checked,
+              completionDates: checked 
+                ? [...(prev[program]?.[week]?.[habitIndex]?.completionDates || []), today]
+                : (prev[program]?.[week]?.[habitIndex]?.completionDates || []).filter(date => date !== today)
             }
           }
-        };
-      } else {
-        return {
-          ...prev,
-          [program]: {
-            ...prev[program],
-            [week]: {
-              ...prev[program]?.[week],
-              [habitIndex]: {
-                completed: false,
-                completionDates: (currentHabit.completionDates || []).filter(date => date !== today)
-              }
-            }
-          }
-        };
-      }
-    });
-
-    setUserData(prev => {
-      const getCompletionsForWeek = (weekData: any) => {
-        const uniqueDates = new Set<string>();
-        Object.values(weekData || {}).forEach((habit: any) => {
-          (habit.completionDates || []).forEach((date: string) => uniqueDates.add(date));
-        });
-        return uniqueDates.size;
+        }
       };
 
-      const totalCompletions = Object.values(savedData)
-        .flatMap(program => Object.values(program))
-        .flatMap(week => Object.values(week))
-        .reduce((total, habit: any) => total + (habit.completionDates?.length || 0), 0);
+      // Update user data with the new savedData state
+      setUserData(prevUserData => {
+        const getCompletionsForWeek = (weekData: any) => {
+          const uniqueDates = new Set<string>();
+          Object.values(weekData || {}).forEach((habit: any) => {
+            (habit.completionDates || []).forEach((date: string) => uniqueDates.add(date));
+          });
+          return uniqueDates.size;
+        };
 
-      const { currentStreak, longestStreak } = calculateStreak(savedData);
+        const totalCompletions = Object.values(updatedData)
+          .flatMap(program => Object.values(program))
+          .flatMap(week => Object.values(week))
+          .reduce((total, habit: any) => total + (habit.completionDates?.length || 0), 0);
 
-      const updatedAchievements = prev.achievements.map(achievement => {
-        if (achievement.unlocked) return achievement;
+        const { currentStreak, longestStreak } = calculateStreak(updatedData);
 
-        switch (achievement.id) {
-          case 'streak-master':
-            if (currentStreak >= 7) {
-              return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
-            }
-            break;
+        const updatedAchievements = prevUserData.achievements.map(achievement => {
+          if (achievement.unlocked) return achievement;
 
-          case 'first-week':
-            const hasCompletedWeek = Object.values(savedData).some(program => 
-              Object.values(program).some(week => getCompletionsForWeek(week) >= 21)
-            );
-            if (hasCompletedWeek) {
-              return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
-            }
-            break;
+          switch (achievement.id) {
+            case 'streak-master':
+              if (currentStreak >= 7) {
+                return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
+              }
+              break;
 
-          case 'habit-warrior':
-            if (totalCompletions >= 50) {
-              return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
-            }
-            break;
+            case 'first-week':
+              const hasCompletedWeek = Object.values(updatedData).some(program => 
+                Object.values(program).some(week => getCompletionsForWeek(week) >= 21)
+              );
+              if (hasCompletedWeek) {
+                return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
+              }
+              break;
 
-          case 'program-master':
-            const isAnyProgramComplete = Object.values(savedData)
-              .some(programData => checkProgramCompletion(programData));
-              
-            if (isAnyProgramComplete) {
-              return { 
-                ...achievement, 
-                unlocked: true, 
-                unlockedAt: new Date().toISOString() 
-              };
-            }
-            break;
-        }
-        return achievement;
+            case 'habit-warrior':
+              if (totalCompletions >= 50) {
+                return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
+              }
+              break;
+
+            case 'program-master':
+              const isAnyProgramComplete = Object.values(updatedData)
+                .some(programData => checkProgramCompletion(programData));
+                
+              if (isAnyProgramComplete) {
+                return { 
+                  ...achievement, 
+                  unlocked: true, 
+                  unlockedAt: new Date().toISOString() 
+                };
+              }
+              break;
+          }
+          return achievement;
+        });
+
+        return {
+          ...prevUserData,
+          currentStreak,
+          longestStreak,
+          completedHabits: totalCompletions,
+          totalPoints: totalCompletions * 10 + updatedAchievements
+            .filter(a => a.unlocked)
+            .reduce((sum, a) => sum + a.points, 0),
+          achievements: updatedAchievements
+        };
       });
 
-      return {
-        ...prev,
-        currentStreak,
-        longestStreak,
-        completedHabits: totalCompletions,
-        totalPoints: totalCompletions * 10 + updatedAchievements
-          .filter(a => a.unlocked)
-          .reduce((sum, a) => sum + a.points, 0),
-        achievements: updatedAchievements
-      };
+      return updatedData;
     });
 
     saveData();
-  };
+};
 const programs = {
   strength: {
     title: "Strength & Growth Track",
