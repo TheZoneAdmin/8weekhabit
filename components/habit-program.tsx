@@ -172,6 +172,7 @@ const ACHIEVEMENTS: Achievement[] = [
     points: 1680,
     unlocked: false
   }
+];
 const AchievementsPanel = ({ achievements, savedData }: { 
   achievements: Achievement[],
   savedData: SavedData 
