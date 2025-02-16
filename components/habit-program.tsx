@@ -629,7 +629,7 @@ const handleCheckbox = (program: string, week: number, habitIndex: number, check
           [habitIndex]: {
             completed: checked,
             completionDates: checked 
-              ? [...new Set([...(prev[program]?.[week]?.[habitIndex]?.completionDates || []), today])]
+              ? Array.from(new Set([...(prev[program]?.[week]?.[habitIndex]?.completionDates || []), today]))
               : (prev[program]?.[week]?.[habitIndex]?.completionDates || []).filter(date => date !== today)
           }
         }
