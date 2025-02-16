@@ -112,18 +112,30 @@ const calculateStreak = (savedData: SavedData): { currentStreak: number; longest
 };
 
 const checkProgramCompletion = (programData: SavedData[string]): boolean => {
+  // First verify we have all 8 weeks
   const weeks = Object.values(programData);
+  if (weeks.length !== 8) {
+    console.log('Program incomplete: Does not have 8 weeks', weeks.length);
+    return false;
+  }
   
-  if (weeks.length !== 8) return false;
-  
-  return weeks.every(weekData => {
+  // Check each week
+  return weeks.every((weekData, weekIndex) => {
     const habits = Object.values(weekData);
-    
-    if (habits.length !== 3) return false;
-    
-    return habits.every(habit => 
-      (habit.completionDates || []).length >= 7
-    );
+    if (habits.length !== 3) {
+      console.log(`Week ${weekIndex + 1} incomplete: Does not have 3 habits`, habits.length);
+      return false;
+    }
+
+    // Check each habit's completion dates
+    const allHabitsComplete = habits.every((habit, habitIndex) => {
+      const completions = new Set(habit.completionDates || []).size;
+      console.log(`Week ${weekIndex + 1}, Habit ${habitIndex + 1}: ${completions} completions`);
+      return completions >= 7;
+    });
+
+    console.log(`Week ${weekIndex + 1} status: ${allHabitsComplete ? 'Complete' : 'Incomplete'}`);
+    return allHabitsComplete;
   });
 };
 
@@ -604,99 +616,128 @@ useEffect(() => {
   }, [userId, setUserData, setSavedData]);
 
 const handleCheckbox = (program: string, week: number, habitIndex: number, checked: boolean) => {
-    const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toISOString().split('T')[0];
 
-    setSavedData(prev => {
-      const updatedData = {
-        ...prev,
-        [program]: {
-          ...prev[program],
-          [week]: {
-            ...prev[program]?.[week],
-            [habitIndex]: {
-              completed: checked,
-              completionDates: checked 
-                ? [...(prev[program]?.[week]?.[habitIndex]?.completionDates || []), today]
-                : (prev[program]?.[week]?.[habitIndex]?.completionDates || []).filter(date => date !== today)
-            }
+  setSavedData(prev => {
+    // Create updated data with new checkbox state
+    const updatedData = {
+      ...prev,
+      [program]: {
+        ...prev[program],
+        [week]: {
+          ...prev[program]?.[week],
+          [habitIndex]: {
+            completed: checked,
+            completionDates: checked 
+              ? [...new Set([...(prev[program]?.[week]?.[habitIndex]?.completionDates || []), today])]
+              : (prev[program]?.[week]?.[habitIndex]?.completionDates || []).filter(date => date !== today)
           }
         }
+      }
+    };
+
+    // Update user data with the new state
+    setUserData(prevUserData => {
+      const getCompletionsForWeek = (weekData: any) => {
+        const uniqueDates = new Set<string>();
+        Object.values(weekData || {}).forEach((habit: any) => {
+          (habit.completionDates || []).forEach((date: string) => uniqueDates.add(date));
+        });
+        const completions = uniqueDates.size;
+        console.log('Week completions:', completions);
+        return completions;
       };
 
-      // Update user data with the new savedData state
-      setUserData(prevUserData => {
-        const getCompletionsForWeek = (weekData: any) => {
-          const uniqueDates = new Set<string>();
-          Object.values(weekData || {}).forEach((habit: any) => {
-            (habit.completionDates || []).forEach((date: string) => uniqueDates.add(date));
-          });
-          return uniqueDates.size;
-        };
+      // Calculate total completions
+      const totalCompletions = Object.values(updatedData)
+        .flatMap(program => Object.values(program))
+        .flatMap(week => Object.values(week))
+        .reduce((total, habit: any) => {
+          const completions = (habit.completionDates || []).length;
+          return total + completions;
+        }, 0);
 
-        const totalCompletions = Object.values(updatedData)
-          .flatMap(program => Object.values(program))
-          .flatMap(week => Object.values(week))
-          .reduce((total, habit: any) => total + (habit.completionDates?.length || 0), 0);
+      console.log('Total completions:', totalCompletions);
 
-        const { currentStreak, longestStreak } = calculateStreak(updatedData);
+      const { currentStreak, longestStreak } = calculateStreak(updatedData);
 
-        const updatedAchievements = prevUserData.achievements.map(achievement => {
-          if (achievement.unlocked) return achievement;
+      // Update achievements
+      const updatedAchievements = prevUserData.achievements.map(achievement => {
+        if (achievement.unlocked) return achievement;
 
-          switch (achievement.id) {
-            case 'streak-master':
-              if (currentStreak >= 7) {
-                return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
-              }
-              break;
+        switch (achievement.id) {
+          case 'streak-master':
+            if (currentStreak >= 7) {
+              console.log('Unlocking Streak Master');
+              return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
+            }
+            break;
 
-            case 'first-week':
-              const hasCompletedWeek = Object.values(updatedData).some(program => 
-                Object.values(program).some(week => getCompletionsForWeek(week) >= 21)
-              );
-              if (hasCompletedWeek) {
-                return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
-              }
-              break;
+          case 'first-week':
+            const weeklyCompletions = Object.values(updatedData)
+              .flatMap(program => Object.values(program))
+              .map(getCompletionsForWeek)
+              .reduce((max, curr) => Math.max(max, curr), 0);
+            
+            console.log('Max weekly completions:', weeklyCompletions);
+            if (weeklyCompletions >= 21) {
+              console.log('Unlocking First Week Champion');
+              return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
+            }
+            break;
 
-            case 'habit-warrior':
-              if (totalCompletions >= 50) {
-                return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
-              }
-              break;
+          case 'habit-warrior':
+            if (totalCompletions >= 50) {
+              console.log('Unlocking Habit Warrior');
+              return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
+            }
+            break;
 
-            case 'program-master':
-              const isAnyProgramComplete = Object.values(updatedData)
-                .some(programData => checkProgramCompletion(programData));
-                
-              if (isAnyProgramComplete) {
-                return { 
-                  ...achievement, 
-                  unlocked: true, 
-                  unlockedAt: new Date().toISOString() 
-                };
-              }
-              break;
-          }
-          return achievement;
-        });
-
-        return {
-          ...prevUserData,
-          currentStreak,
-          longestStreak,
-          completedHabits: totalCompletions,
-          totalPoints: totalCompletions * 10 + updatedAchievements
-            .filter(a => a.unlocked)
-            .reduce((sum, a) => sum + a.points, 0),
-          achievements: updatedAchievements
-        };
+          case 'program-master':
+            const isAnyProgramComplete = Object.values(updatedData)
+              .some(programData => {
+                const isComplete = checkProgramCompletion(programData);
+                console.log('Program completion check:', isComplete);
+                return isComplete;
+              });
+              
+            if (isAnyProgramComplete) {
+              console.log('Unlocking Program Master');
+              return { 
+                ...achievement, 
+                unlocked: true, 
+                unlockedAt: new Date().toISOString() 
+              };
+            }
+            break;
+        }
+        return achievement;
       });
 
-      return updatedData;
+      // Calculate total points including base points and achievement points
+      const totalPoints = totalCompletions * 10 + updatedAchievements
+        .filter(a => a.unlocked)
+        .reduce((sum, a) => {
+          console.log(`Adding ${a.points} points for ${a.title}`);
+          return sum + a.points;
+        }, 0);
+
+      console.log('Final total points:', totalPoints);
+
+      return {
+        ...prevUserData,
+        currentStreak,
+        longestStreak,
+        completedHabits: totalCompletions,
+        totalPoints,
+        achievements: updatedAchievements
+      };
     });
 
-    saveData();
+    return updatedData;
+  });
+
+  saveData();
 };
 const programs = {
   strength: {
