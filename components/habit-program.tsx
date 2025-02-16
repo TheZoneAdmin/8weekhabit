@@ -163,15 +163,15 @@ const ACHIEVEMENTS: Achievement[] = [
     points: 500,
     unlocked: false
   },
- {
-  id: 'program-master',
-  title: 'Program Master',
-  description: 'Complete an entire 8-week program',
-  icon: 'crown',
-  condition: 'Complete all habits 7 times each (3 habits × 8 weeks × 7 completions)', // Updated text
-  points: 1680,
-  unlocked: false
-}
+  {
+    id: 'program-master',
+    title: 'Program Master',
+    description: 'Complete an entire 8-week program',
+    icon: 'crown',
+    condition: 'Complete all habits 7 times each (3 habits × 8 weeks × 7 completions)',
+    points: 1680,
+    unlocked: false
+  }
 const AchievementsPanel = ({ achievements, savedData }: { 
   achievements: Achievement[],
   savedData: SavedData 
