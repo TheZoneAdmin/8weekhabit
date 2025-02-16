@@ -112,14 +112,14 @@ const calculateStreak = (savedData: SavedData): { currentStreak: number; longest
 };
 
 const checkProgramCompletion = (programData: SavedData[string]): boolean => {
-  // First verify we have all 8 weeks
+  // Verify all 8 weeks exist
   const weeks = Object.values(programData);
   if (weeks.length !== 8) {
     console.log('Program incomplete: Does not have 8 weeks', weeks.length);
     return false;
   }
-  
-  // Check each week
+
+  // Check each week's habits
   return weeks.every((weekData, weekIndex) => {
     const habits = Object.values(weekData);
     if (habits.length !== 3) {
@@ -127,18 +127,14 @@ const checkProgramCompletion = (programData: SavedData[string]): boolean => {
       return false;
     }
 
-    // Check each habit's completion dates
-    const allHabitsComplete = habits.every((habit, habitIndex) => {
-      const completions = new Set(habit.completionDates || []).size;
+    // Check for 7 COMPLETIONS (not days) per habit
+    return habits.every((habit, habitIndex) => {
+      const completions = (habit.completionDates || []).length; // Changed from Set.size to array.length
       console.log(`Week ${weekIndex + 1}, Habit ${habitIndex + 1}: ${completions} completions`);
       return completions >= 7;
     });
-
-    console.log(`Week ${weekIndex + 1} status: ${allHabitsComplete ? 'Complete' : 'Incomplete'}`);
-    return allHabitsComplete;
   });
 };
-
 const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'first-week',
@@ -167,16 +163,15 @@ const ACHIEVEMENTS: Achievement[] = [
     points: 500,
     unlocked: false
   },
-  {
-    id: 'program-master',
-    title: 'Program Master',
-    description: 'Complete an entire 8-week program',
-    icon: 'crown',
-    condition: 'Complete all habits in one program',
-    points: 1680,
-    unlocked: false
-  }
-];
+ {
+  id: 'program-master',
+  title: 'Program Master',
+  description: 'Complete an entire 8-week program',
+  icon: 'crown',
+  condition: 'Complete all habits 7 times each (3 habits × 8 weeks × 7 completions)', // Updated text
+  points: 1680,
+  unlocked: false
+}
 const AchievementsPanel = ({ achievements, savedData }: { 
   achievements: Achievement[],
   savedData: SavedData 
