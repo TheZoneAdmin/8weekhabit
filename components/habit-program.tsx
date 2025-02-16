@@ -203,10 +203,7 @@ const AchievementsPanel = ({ achievements, savedData }: {
             total + (habit.completionDates?.length || 0), 0);
         return (totalCompletions / 50) * 100;
 
-      default:
-        return 0;
-    
-  case 'program-master':
+      case 'program-master':
         const totalNeededCompletions = 3 * 8 * 7; // 3 habits × 8 weeks × 7 completions
         const currentProgramCompletions = Object.values(savedData)
           .flatMap(program => Object.values(program))
@@ -222,7 +219,6 @@ const AchievementsPanel = ({ achievements, savedData }: {
         return 0;
     }
 };
-
   const shareToFacebook = () => {
     if (!selectedAchievement) return;
     
