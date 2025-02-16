@@ -205,8 +205,23 @@ const AchievementsPanel = ({ achievements, savedData }: {
 
       default:
         return 0;
+    
+  case 'program-master':
+        const totalNeededCompletions = 3 * 8 * 7; // 3 habits × 8 weeks × 7 completions
+        const currentProgramCompletions = Object.values(savedData)
+          .flatMap(program => Object.values(program))
+          .flatMap(week => Object.values(week))
+          .reduce((total, habit) => total + (habit.completionDates?.length || 0), 0);
+        return (currentProgramCompletions / totalNeededCompletions) * 100;
+
+      case 'streak-master':
+        const { currentStreak } = calculateStreak(savedData);
+        return (currentStreak / 7) * 100;
+
+      default:
+        return 0;
     }
-  };
+};
 
   const shareToFacebook = () => {
     if (!selectedAchievement) return;
