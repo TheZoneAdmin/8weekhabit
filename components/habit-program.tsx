@@ -219,14 +219,22 @@ const AchievementsPanel = ({ achievements, savedData }: {
         return 0;
     }
 };
-  const shareToFacebook = () => {
-    if (!selectedAchievement) return;
-    
-    const shareText = `🏆 Just unlocked "${selectedAchievement.title}" in my fitness journey!\n\n${selectedAchievement.description}\n\nJoin me in building better habits!`;
-    const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}&quote=${encodeURIComponent(shareText)}`;
-    window.open(url, '_blank', 'width=600,height=400');
-    setShowShareDialog(false);
-  };
+ const shareToFacebook = () => {
+  if (!selectedAchievement) return;
+  
+  const shareText = `🏆 Achievement Unlocked at The Zone Transformation Studio! 💪\n\n` +
+    `I just earned the "${selectedAchievement.title}" achievement in my fitness journey!\n\n` +
+    `${selectedAchievement.description}\n\n` +
+    `Join me at The Zone and start your own transformation journey. We're not just a gym - we're a community dedicated to helping you achieve your fitness goals.\n\n` +
+    `Located at: Clayhill Industrial Estate, Buildwas Rd, Neston CH64 3RU\n` +
+    `Book a session: 07719 302536\n\n` +
+    `#TheZoneTransformation #FitnessGoals #AchievementUnlocked #PersonalTraining`;
+
+  const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://thezonetransformation.com')}&quote=${encodeURIComponent(shareText)}`;
+  window.open(url, '_blank', 'width=600,height=400');
+  setShowShareDialog(false);
+};
+
 
   return (
     <Card className="bg-gray-800 border-none mb-8">
@@ -299,42 +307,70 @@ const AchievementsPanel = ({ achievements, savedData }: {
       </div>
 
       <AlertDialog open={showShareDialog} onOpenChange={setShowShareDialog}>
-        <AlertDialogContent className="bg-gray-800 text-white">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-[#CCBA78]">
-              Share Achievement
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-gray-300">
-              Celebrate your success by sharing this achievement with your fitness community!
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          
-          {selectedAchievement && (
-            <div className="my-4 p-4 bg-gray-700 rounded-lg">
-              <h3 className="text-lg font-semibold text-[#CCBA78] mb-2">
+  <AlertDialogContent className="bg-gray-800 text-white max-w-xl">
+    <AlertDialogHeader>
+      <AlertDialogTitle className="text-[#CCBA78] text-2xl">
+        Share Your Achievement
+      </AlertDialogTitle>
+      <AlertDialogDescription className="text-gray-300">
+        Celebrate your success and inspire others at The Zone Transformation Studio!
+      </AlertDialogDescription>
+    </AlertDialogHeader>
+    
+    {selectedAchievement && (
+      <div className="my-6 p-6 bg-gray-700 rounded-lg border border-[#CCBA78] relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-4 text-[#CCBA78] opacity-20 text-6xl font-bold">
+          THE ZONE
+        </div>
+        
+        <div className="relative z-10">
+          <div className="flex items-center gap-4 mb-4">
+            {selectedAchievement.icon === 'trophy' && <Trophy className="w-8 h-8 text-[#CCBA78]" />}
+            {selectedAchievement.icon === 'fire' && <Flame className="w-8 h-8 text-[#CCBA78]" />}
+            {selectedAchievement.icon === 'award' && <Award className="w-8 h-8 text-[#CCBA78]" />}
+            {selectedAchievement.icon === 'crown' && <Crown className="w-8 h-8 text-[#CCBA78]" />}
+            <div>
+              <h3 className="text-xl font-semibold text-[#CCBA78]">
                 {selectedAchievement.title}
               </h3>
-              <p className="text-gray-300 mb-2">{selectedAchievement.description}</p>
-              <p className="text-sm text-gray-400">
-                Unlocked: {new Date(selectedAchievement.unlockedAt || '').toLocaleDateString()}
-              </p>
+              <p className="text-gray-300 text-sm">Unlocked at The Zone Transformation Studio</p>
             </div>
-          )}
+          </div>
+          
+          <p className="text-gray-300 mb-4">{selectedAchievement.description}</p>
+          
+          <div className="flex justify-between items-center text-sm">
+            <span className="text-gray-400">
+              Unlocked: {new Date(selectedAchievement.unlockedAt || '').toLocaleDateString()}
+            </span>
+            <span className="text-[#CCBA78]">
+              {selectedAchievement.points} points
+            </span>
+          </div>
+        </div>
+      </div>
+    )}
 
-          <AlertDialogFooter className="gap-2">
-            <AlertDialogCancel className="bg-gray-700 text-white hover:bg-gray-600">
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={shareToFacebook}
-              className="bg-[#1877F2] hover:bg-[#1877F2]/90 text-white flex items-center gap-2"
-            >
-              <Facebook className="w-4 h-4" />
-              Share to Facebook
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+    <div className="mt-4 text-sm text-gray-400">
+      <p>Share your achievement and inspire others to join The Zone Transformation Studio!</p>
+      <p className="mt-2">📍 Clayhill Industrial Estate, Buildwas Rd, Neston CH64 3RU</p>
+      <p>📱 07719 302536</p>
+    </div>
+
+    <AlertDialogFooter className="gap-2 mt-6">
+      <AlertDialogCancel className="bg-gray-700 text-white hover:bg-gray-600">
+        Cancel
+      </AlertDialogCancel>
+      <AlertDialogAction 
+        onClick={shareToFacebook}
+        className="bg-[#1877F2] hover:bg-[#1877F2]/90 text-white flex items-center gap-2"
+      >
+        <Facebook className="w-4 h-4" />
+        Share to Facebook
+      </AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
     </Card>
   );
 };
