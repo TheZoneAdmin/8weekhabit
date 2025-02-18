@@ -219,22 +219,18 @@ const AchievementsPanel = ({ achievements, savedData }: {
         return 0;
     }
 };
- const shareToFacebook = () => {
+const shareToFacebook = () => {
   if (!selectedAchievement) return;
   
-  // Get the specific achievement page URL
-  const achievementUrl = `https://thezoneadmin.github.io/${selectedAchievement.id}.html`;
+  // Get the direct PNG URL
+  const imageUrl = `https://thezoneadmin.github.io/${selectedAchievement.id}.png`;
   
-  // Create the share text
   const shareText = `🏆 Achievement Unlocked at The Zone! 💪\n\n` +
-    `I just earned the "${selectedAchievement.title}" achievement for ${selectedAchievement.description.toLowerCase()}!\n\n` +
-    `Join me at The Zone and start your own transformation journey. We're not just a gym - we're a community dedicated to helping you achieve your fitness goals.\n\n` +
+    `I just earned the "${selectedAchievement.title}" achievement!\n\n` +
     `#TheZone #FitnessGoals #AchievementUnlocked`;
 
-  // Construct the Facebook share URL
-  const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(achievementUrl)}`;
+  const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(imageUrl)}`;
   
-  // Open the share dialog
   window.open(url, '_blank', 'width=600,height=400');
   setShowShareDialog(false);
 };
