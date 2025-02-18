@@ -222,15 +222,19 @@ const AchievementsPanel = ({ achievements, savedData }: {
  const shareToFacebook = () => {
   if (!selectedAchievement) return;
   
-  const shareText = `🏆 Achievement Unlocked at The Zone Transformation Studio! 💪\n\n` +
-    `I just earned the "${selectedAchievement.title}" achievement in my fitness journey!\n\n` +
-    `${selectedAchievement.description}\n\n` +
+  // Get the specific achievement page URL
+  const achievementUrl = `https://thezoneadmin.github.io/${selectedAchievement.id}.html`;
+  
+  // Create the share text
+  const shareText = `🏆 Achievement Unlocked at The Zone! 💪\n\n` +
+    `I just earned the "${selectedAchievement.title}" achievement for ${selectedAchievement.description.toLowerCase()}!\n\n` +
     `Join me at The Zone and start your own transformation journey. We're not just a gym - we're a community dedicated to helping you achieve your fitness goals.\n\n` +
-    `Located at: Clayhill Industrial Estate, Buildwas Rd, Neston CH64 3RU\n` +
-    `Book a session: 07719 302536\n\n` +
-    `#TheZoneTransformation #FitnessGoals #AchievementUnlocked #PersonalTraining`;
+    `#TheZone #FitnessGoals #AchievementUnlocked`;
 
-  const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://thezonetransformation.com')}&quote=${encodeURIComponent(shareText)}`;
+  // Construct the Facebook share URL
+  const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(achievementUrl)}`;
+  
+  // Open the share dialog
   window.open(url, '_blank', 'width=600,height=400');
   setShowShareDialog(false);
 };
