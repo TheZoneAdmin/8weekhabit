@@ -78,8 +78,126 @@ const ACHIEVEMENTS: Achievement[] = [ /* ... Full list including habit streaks .
 ];
 
 // --- Helper Functions (calculateStreak, calculateHabitStreak - same as before) ---
-const calculateStreak = (savedData: SavedData): { currentStreak: number; longestStreak: number } => { /* ... implementation ... */ };
-const calculateHabitStreak = (completionDates: string[]): { currentStreak: number; longestStreak: number } => { /* ... implementation ... */ };
+const calculateStreak = (savedData: SavedData): { currentStreak: number; longestStreak: number } => {
+  const allDates = new Set<string>();
+  Object.values(savedData).forEach(program =>
+    Object.values(program).forEach(week =>
+      Object.values(week).forEach(habit =>
+        (habit.completionDates || []).forEach(date => allDates.add(date))
+      )
+    )
+  );
+
+  const sortedDates = Array.from(allDates).sort();
+  if (sortedDates.length === 0) {
+    return { currentStreak: 0, longestStreak: 0 }; // Return for empty case
+  }
+
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  const todayStr = today.toISOString().split('T')[0];
+  const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+  let currentStreak = 0;
+  let longestStreak = 0;
+  let streak = 0;
+
+  // Calculate longest streak
+  for (let i = 0; i < sortedDates.length; i++) {
+    const currentDate = new Date(sortedDates[i]);
+    const previousDate = i > 0 ? new Date(sortedDates[i - 1]) : null;
+    let diffDays = 1;
+    if (previousDate) {
+       const utcCurrent = Date.UTC(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+       const utcPrevious = Date.UTC(previousDate.getFullYear(), previousDate.getMonth(), previousDate.getDate());
+       diffDays = Math.floor((utcCurrent - utcPrevious) / (1000 * 60 * 60 * 24));
+    }
+    if (diffDays === 1) { streak++; } else { streak = (i === 0) ? 1 : 1; }
+    longestStreak = Math.max(longestStreak, streak);
+  }
+
+   // Determine current streak based on the *last* completion date
+   const lastCompletionDate = sortedDates[sortedDates.length - 1];
+   if (lastCompletionDate === todayStr || lastCompletionDate === yesterdayStr) {
+     // Recalculate the streak ending on the last date
+     let finalStreak = 0;
+     for (let i = sortedDates.length -1; i >= 0; i--) {
+         const currentD = new Date(sortedDates[i]);
+         const prevD = i > 0 ? new Date(sortedDates[i-1]) : null;
+         let dayDiff = 1;
+         if(prevD) {
+             const utcCurrent = Date.UTC(currentD.getFullYear(), currentD.getMonth(), currentD.getDate());
+             const utcPrevious = Date.UTC(prevD.getFullYear(), prevD.getMonth(), prevD.getDate());
+             dayDiff = Math.floor((utcCurrent - utcPrevious) / (1000 * 60 * 60 * 24));
+         }
+         if (i === sortedDates.length -1 || dayDiff === 1) { finalStreak++; } else { break; }
+     }
+      currentStreak = finalStreak;
+   } else {
+      currentStreak = 0; // Streak broken
+   }
+
+  // *** ADDED Missing Return Statement ***
+  return { currentStreak, longestStreak };
+};
+
+
+// Calculates streak for a single habit's completion dates
+const calculateHabitStreak = (completionDates: string[]): { currentStreak: number; longestStreak: number } => {
+  const sortedDates = [...new Set(completionDates)].sort();
+  if (sortedDates.length === 0) {
+    return { currentStreak: 0, longestStreak: 0 }; // Return for empty case
+  }
+
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  const todayStr = today.toISOString().split('T')[0];
+  const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+  let currentStreak = 0;
+  let longestStreak = 0;
+  let streak = 0;
+
+  // Calculate longest streak
+  for (let i = 0; i < sortedDates.length; i++) {
+    const currentDate = new Date(sortedDates[i]);
+    const previousDate = i > 0 ? new Date(sortedDates[i - 1]) : null;
+    let diffDays = 1;
+    if (previousDate) {
+       const utcCurrent = Date.UTC(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+       const utcPrevious = Date.UTC(previousDate.getFullYear(), previousDate.getMonth(), previousDate.getDate());
+       diffDays = Math.floor((utcCurrent - utcPrevious) / (1000 * 60 * 60 * 24));
+    }
+    if (diffDays === 1) { streak++; } else { streak = (i === 0) ? 1 : 1; }
+    longestStreak = Math.max(longestStreak, streak);
+  }
+
+  // Determine current streak based on the *last* completion date for THIS habit
+  const lastCompletionDate = sortedDates[sortedDates.length - 1];
+   if (lastCompletionDate === todayStr || lastCompletionDate === yesterdayStr) {
+     // Recalculate the streak ending on the last date
+     let finalStreak = 0;
+     for (let i = sortedDates.length -1; i >= 0; i--) {
+         const currentD = new Date(sortedDates[i]);
+         const prevD = i > 0 ? new Date(sortedDates[i-1]) : null;
+         let dayDiff = 1;
+         if(prevD) {
+             const utcCurrent = Date.UTC(currentD.getFullYear(), currentD.getMonth(), currentD.getDate());
+             const utcPrevious = Date.UTC(prevD.getFullYear(), prevD.getMonth(), prevD.getDate());
+             dayDiff = Math.floor((utcCurrent - utcPrevious) / (1000 * 60 * 60 * 24));
+         }
+         if (i === sortedDates.length -1 || dayDiff === 1) { finalStreak++; } else { break; }
+     }
+      currentStreak = finalStreak;
+   } else {
+      currentStreak = 0; // Streak broken
+   }
+
+  // *** ADDED Missing Return Statement ***
+  return { currentStreak, longestStreak };
+};
 
 // --- AchievementsPanel Component (Simplified - Displays progress from prop) ---
 const AchievementsPanel = ({ achievements }: { achievements: Achievement[] }) => {
