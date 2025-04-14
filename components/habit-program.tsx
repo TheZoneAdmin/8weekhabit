@@ -515,7 +515,7 @@ const HabitProgram = () => {
             {/* Reset Confirmation Dialog */}
             <AlertDialog open={showResetConfirm} onOpenChange={setShowResetConfirm}> {/* ... Dialog Content ... */} </AlertDialog>
             {/* Toast Notification */}
-            {toastInfo && <Toast message={toastInfo.message} type={toastInfo.type} onDismiss={() => setToastInfo(null)} />}
+            {toastInfo && <Toast message={toastInfo.message} type={toastInfo.type} />}
             {/* Habit Info Sheet */}
             {selectedHabitInfo && <HabitInfoSheet habit={selectedHabitInfo} isOpen={showInfoSheet} onClose={() => { setShowInfoSheet(false); setSelectedHabitInfo(null); }} />}
             {/* Stats Overview */}
