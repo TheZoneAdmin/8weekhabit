@@ -145,7 +145,10 @@ const calculateStreak = (savedData: SavedData): { currentStreak: number; longest
 
 // Calculates streak for a single habit's completion dates
 const calculateHabitStreak = (completionDates: string[]): { currentStreak: number; longestStreak: number } => {
-  const sortedDates = [...new Set(completionDates)].sort();
+  // *** CORRECTED LINE using Array.from() ***
+  const sortedDates = Array.from(new Set(completionDates)).sort();
+  // ******************************************
+
   if (sortedDates.length === 0) {
     return { currentStreak: 0, longestStreak: 0 }; // Return for empty case
   }
@@ -195,10 +198,8 @@ const calculateHabitStreak = (completionDates: string[]): { currentStreak: numbe
       currentStreak = 0; // Streak broken
    }
 
-  // *** ADDED Missing Return Statement ***
-  return { currentStreak, longestStreak };
+  return { currentStreak, longestStreak }; // Correct final return
 };
-
 // --- AchievementsPanel Component (Simplified - Displays progress from prop) ---
 const AchievementsPanel = ({ achievements }: { achievements: Achievement[] }) => {
     const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
