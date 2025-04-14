@@ -238,11 +238,117 @@ const AchievementsPanel = ({ achievements }: { achievements: Achievement[] }) =>
 
 
 // --- DataManagement Component remains the same ---
-const DataManagement = ({ userId, onExport, onImport, onReset }: { userId: string; onExport: () => void; onImport: (file: File) => void; onReset: () => void; }) => { /* ... implementation ... */ };
+const DataManagement = ({ userId, onExport, onImport, onReset }: {
+  userId: string;
+  onExport: () => void;
+  onImport: (file: File) => void;
+  onReset: () => void; // The parent component now handles showing the confirmation
+}) => {
+  const copyUserId = () => {
+    navigator.clipboard.writeText(userId);
+    // Consider calling a toast callback passed via props for feedback
+    // Example: props.showToast("User ID copied!", "success");
+  };
+
+  // *** ADDED Missing Return Statement and JSX ***
+  return (
+    <Card className="bg-gray-800 p-3 sm:p-4 mb-6">
+      <div className="text-white">
+        {/* User ID Display */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-2 sm:p-3 bg-gray-700 rounded-lg mb-3">
+          <span className="font-mono text-xs sm:text-sm break-all mb-2 sm:mb-0 sm:mr-2 w-full sm:w-auto" title="Your unique tracker ID">
+            Your ID: {userId}
+          </span>
+          <button
+            onClick={copyUserId}
+            className="text-[#CCBA78] hover:text-[#CCBA78]/80 p-1 sm:p-2 text-sm whitespace-nowrap flex-shrink-0"
+            title="Copy your ID to clipboard"
+          >
+            Copy ID
+          </button>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="grid grid-cols-3 gap-1 sm:gap-2 w-full text-center">
+          <button
+            onClick={onExport}
+            title="Export your progress to a JSON file"
+            className="px-2 sm:px-3 py-2 bg-[#CCBA78] text-gray-900 rounded hover:bg-[#CCBA78]/90 text-xs sm:text-sm"
+          >
+            Export
+          </button>
+
+          <label
+             title="Import progress from a previously exported JSON file"
+             className="px-2 sm:px-3 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 cursor-pointer text-xs sm:text-sm"
+          >
+            Import
+            <input
+              type="file"
+              accept=".json"
+              className="hidden"
+              onChange={(e) => {
+                if (e.target.files?.[0]) {
+                  onImport(e.target.files[0]);
+                }
+                // Reset file input to allow re-importing the same file name
+                e.target.value = '';
+              }}
+            />
+          </label>
+
+          <button
+            onClick={onReset} // This now triggers the confirmation dialog in the parent
+            title="Reset all your habit progress and achievements"
+            className="px-2 sm:px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-xs sm:text-sm"
+          >
+            Reset
+          </button>
+        </div>
+      </div>
+    </Card>
+  );
+};
 
 // --- CollapsibleCard Component remains the same ---
-const CollapsibleCard = ({ week, children }: CollapsibleCardProps) => { /* ... implementation ... */ };
+// --- CollapsibleCard Component (Corrected with Implementation) ---
+const CollapsibleCard = ({ week, children }: CollapsibleCardProps) => {
+  // State to manage if the card content is open or closed
+  const [isOpen, setIsOpen] = useState(true); // Default to open
 
+  return (
+    <Card className="bg-gray-800 border-none overflow-hidden rounded-lg"> {/* Added overflow-hidden and rounded */}
+      {/* Clickable Header */}
+      <div
+        className="flex items-center justify-between p-4 sm:p-6 cursor-pointer hover:bg-gray-700/50 transition-colors" // Adjusted padding
+        onClick={() => setIsOpen(!isOpen)}
+        role="button" // Added role for accessibility
+        aria-expanded={isOpen} // Added aria attribute
+        aria-controls={`week-${week.week}-content`} // Added aria attribute
+      >
+        <h3 className="text-[#CCBA78] text-lg font-semibold flex items-center">
+          {/* Display Week Number and Focus */}
+          Week {week.week} - {week.focus}
+        </h3>
+        {/* Chevron Icon indicating open/closed state */}
+        <ChevronDown
+          className={`w-5 h-5 text-[#CCBA78] transform transition-transform duration-200 ${
+            isOpen ? 'rotate-180' : ''
+          }`}
+        />
+      </div>
+      {/* Conditionally Rendered Content */}
+      {isOpen && (
+        <CardContent
+           id={`week-${week.week}-content`} // Added ID for aria-controls
+           className="p-4 sm:p-6 pt-0 border-t border-gray-700" // Adjusted padding
+        >
+          {children} {/* Renders the habits passed into the card */}
+        </CardContent>
+      )}
+    </Card>
+  );
+};
 // --- useUserStorage Hook (Refined for Toast Callbacks) ---
 const useUserStorage = (showToastCallback: (message: string, type?: 'success' | 'error') => void) => { /* ... implementation including export/import/reset with callbacks ... */
     const [userId, setUserId] = useState<string>('');
