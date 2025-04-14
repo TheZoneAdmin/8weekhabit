@@ -152,7 +152,7 @@ const calculateStreak = (savedData: SavedData): { currentStreak: number; longest
     return { currentStreak, longestStreak };
 };
 const calculateHabitStreak = (completionDates: string[]): { currentStreak: number; longestStreak: number } => { /* ... implementation ... */
-    const sortedDates = [...new Set(completionDates)].sort(); if (sortedDates.length === 0) return { currentStreak: 0, longestStreak: 0 };
+    const sortedDates = Array.from(new Set(completionDates)).sort(); // Use Array.from()
     const today = new Date(), yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
     const todayStr = today.toISOString().split('T')[0], yesterdayStr = yesterday.toISOString().split('T')[0];
     let currentStreak = 0, longestStreak = 0, streak = 0;
