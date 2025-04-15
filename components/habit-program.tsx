@@ -296,7 +296,7 @@ interface WalkthroughTourProps {
   onClose: () => void;
 }
 
-const WalkthroughTour = ({ isOpen, onClose }) => {
+const WalkthroughTour: React.FC<WalkthroughTourProps> = ({ isOpen, onClose }) => {
   const [step, setStep] = useState(1);
   const totalSteps = 3;
 
