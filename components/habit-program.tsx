@@ -484,6 +484,7 @@ const calculateHabitStreak = (completionDates: string[]): { currentStreak: numbe
     return { currentStreak, longestStreak };
 };
 
+// --- Modified AchievementsPanel Component ---
 const AchievementsPanel = ({ 
     achievements, 
     selectedTrack 
@@ -519,6 +520,44 @@ const AchievementsPanel = ({
             return achievement.targetHabitId.startsWith(currentPrefix);
         });
     }, [achievements, selectedTrack]);
+
+    // Process achievements to add calculations and determine which is next to unlock
+    const processedAchievements = useMemo(() => {
+        // Sort unlocked achievements to the top
+        return [...filteredAchievements].sort((a, b) => {
+            // First sort by unlock status
+            if (a.unlocked && !b.unlocked) return -1;
+            if (!a.unlocked && b.unlocked) return 1;
+            
+            // Then by progress (for locked achievements)
+            if (!a.unlocked && !b.unlocked) {
+                return (b.progress || 0) - (a.progress || 0);
+            }
+            
+            // For unlocked achievements, sort by unlock date (if available)
+            if (a.unlocked && b.unlocked) {
+                if (a.unlockedAt && b.unlockedAt) {
+                    return new Date(b.unlockedAt).getTime() - new Date(a.unlockedAt).getTime();
+                }
+            }
+            
+            // Default sort by points
+            return b.points - a.points;
+        });
+    }, [filteredAchievements]);
+    
+    // Determine which achievement is closest to being unlocked
+    const nextAchievementToUnlock = useMemo(() => {
+        const lockedAchievements = processedAchievements.filter(achievement => !achievement.unlocked);
+        if (lockedAchievements.length === 0) return null;
+        
+        // Return the one with highest progress
+        return lockedAchievements.reduce((highest, current) => {
+            const highestProgress = highest.progress || 0;
+            const currentProgress = current.progress || 0;
+            return currentProgress > highestProgress ? current : highest;
+        }, lockedAchievements[0]);
+    }, [processedAchievements]);
 
     // Simple share function (replace with actual image generation/hosting if needed)
     const shareToFacebook = () => {
