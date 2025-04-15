@@ -981,9 +981,7 @@ const checkAndUpdateAchievements = (
       setSavedData(updatedSavedData);
     };
 
-    // Function to show habit info
-    const showHabitInfo = (habit: Habit) => { setSelectedHabitInfo(habit); setShowInfoSheet(true); };
-
+    
     // Loading state handling
     if (isLoading && isClient) {
         return <div className="flex justify-center items-center min-h-screen bg-gray-900 text-white">Loading Your Progress...</div>;
