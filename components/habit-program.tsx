@@ -1132,11 +1132,12 @@ const checkAndUpdateAchievements = (
   className="text-gray-400 hover:text-[#CCBA78] transition-colors"
   aria-label="Learn why this habit matters"
   onClick={() => {
+   <button 
+  className="text-gray-400 hover:text-[#CCBA78] transition-colors"
+  aria-label="Learn why this habit matters"
+  onClick={() => {
     showToastCallback(
-      <div>
-        <span className="text-[#CCBA78] font-medium">Why this matters:</span><br />
-        {habitDescription || "Building this habit helps create a foundation for your fitness success."}
-      </div>, 
+      `Why this matters: ${habitDescription || "Building this habit helps create a foundation for your fitness success."}`, 
       'success'
     )
   }}
