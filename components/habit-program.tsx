@@ -518,7 +518,7 @@ const HabitProgram = () => {
                             <div className="mt-4">
                                 <p className="font-medium text-[#CCBA78] mb-1">Tips:</p>
                                 <ul className="list-disc pl-5 space-y-1.5">
-                                    <li>Consistency > Perfection</li>
+                                    <li>Consistency Beats Perfection</li>
                                     <li>Use examples as guides</li>
                                     <li>Don't worry if you miss a day!</li>
                                     <li>Check in daily</li>
