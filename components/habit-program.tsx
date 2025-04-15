@@ -295,7 +295,13 @@ const CollapsibleCard = ({ week, children }: CollapsibleCardProps) => {
 
 
 // --- useUserStorage Hook ---
-const useUserStorage = (showToastCallback: (message: string, type?: 'success' | 'error') => void) => {
+const showToastCallback = useCallback((message: string, type: 'success' | 'error' = 'success') => {
+    setToastInfo(null); // Clear previous toast immediately
+    setTimeout(() => {
+        setToastInfo({ message, type });
+    }, 50); // Short delay to allow DOM update if needed
+    setTimeout(() => setToastInfo(null), type === 'error' ? 4000 : 3000); // Auto-dismiss
+}, []); // Dependencies are empty as it only uses setters/constants
     const [userId, setUserId] = useState<string>('');
     const [isClient, setIsClient] = useState(false);
     const [isLoading, setIsLoading] = useState(true); // Added loading state
