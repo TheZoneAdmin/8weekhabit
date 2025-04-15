@@ -291,6 +291,11 @@ const PRIORITIZED_ACHIEVEMENTS = [
 ];
 
 // --- First-Timer Walkthrough Component ---
+interface WalkthroughTourProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
 const WalkthroughTour = ({ isOpen, onClose }) => {
   const [step, setStep] = useState(1);
   const totalSteps = 3;
