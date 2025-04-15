@@ -372,7 +372,7 @@ const showToastCallback = useCallback((message: string, type: 'success' | 'error
 
    
     return { userId, userData, setUserData, savedData, setSavedData, exportProgress, importProgress, resetAllProgress, isClient, isLoading };
-}; 
+} 
 // --- Main HabitProgram Component ---
 const HabitProgram = () => {
     const [toastInfo, setToastInfo] = useState<{ message: string; type?: 'success' | 'error' } | null>(null);
