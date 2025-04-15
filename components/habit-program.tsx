@@ -998,177 +998,172 @@ const checkAndUpdateAchievements = (
     }
 
     // --- Main JSX Structure ---
-    return (
-        <div className="bg-gray-900 p-4 pb-24 sm:p-6 md:p-8 max-w-4xl mx-auto min-h-screen"> {/* Adjusted padding */}
-            {/* First-Timer Walkthrough */}
-            <WalkthroughTour isOpen={showWalkthrough} onClose={() => setShowWalkthrough(false)} />
-            
-            {/* Header */}
-            <div className="mb-6 sm:mb-8">
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2"><span className="text-[#CCBA78]">Transform</span><span className="text-white"> Your Habits</span></h1>
-                <h2 className="text-white text-base sm:text-lg">8-Week Journey to Better Health</h2> {/* Adjusted size */}
-                
-                {/* Help button to reopen walkthrough */}
-                <button 
-                    onClick={() => setShowWalkthrough(true)}
-                    className="mt-2 flex items-center text-sm text-gray-400 hover:text-[#CCBA78] transition-colors"
-                >
-                    <HelpCircle className="w-4 h-4 mr-1" />
-                    <span>How it works</span>
-                </button>
+   // --- Main JSX Structure ---
+return (
+  <div className="bg-gray-900 p-4 pb-24 sm:p-6 md:p-8 max-w-4xl mx-auto min-h-screen"> {/* Adjusted padding */}
+    {/* First-Timer Walkthrough */}
+    <WalkthroughTour isOpen={showWalkthrough} onClose={() => setShowWalkthrough(false)} />
+    
+    {/* Header */}
+    <div className="mb-6 sm:mb-8">
+      <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2"><span className="text-[#CCBA78]">Transform</span><span className="text-white"> Your Habits</span></h1>
+      <h2 className="text-white text-base sm:text-lg">8-Week Journey to Better Health</h2> {/* Adjusted size */}
+      
+      {/* Help button to reopen walkthrough */}
+      <button 
+        onClick={() => setShowWalkthrough(true)}
+        className="mt-2 flex items-center text-sm text-gray-400 hover:text-[#CCBA78] transition-colors"
+      >
+        <HelpCircle className="w-4 h-4 mr-1" />
+        <span>How it works</span>
+      </button>
+    </div>
+
+    {/* Onboarding Section */}
+    <div className="bg-gray-800 rounded-lg mb-6 overflow-hidden border border-gray-700/50"> {/* Added subtle border */}
+      <button onClick={() => setShowOnboarding(!showOnboarding)} className="w-full p-4 flex justify-between items-center text-[#CCBA78] hover:bg-gray-700/50 transition-colors">
+        <h3 className="text-lg sm:text-xl font-semibold">Welcome to Your 8-Week Journey!</h3> {/* Adjusted size */}
+        <ChevronDown className={`w-5 h-5 transform transition-transform duration-200 ${showOnboarding ? 'rotate-180' : ''}`} />
+      </button>
+      {showOnboarding && (
+        <div className="p-4 sm:p-6 border-t border-gray-700"> {/* Adjusted padding */}
+          <div className="space-y-4 text-gray-300 text-sm sm:text-base"> {/* Base text lighter */}
+            <p>Choose your path:</p>
+            <ul className="list-disc pl-5 space-y-1.5"> {/* Adjusted spacing */}
+              <li><span className="text-[#CCBA78] font-medium">Strength & Growth</span> - For building muscle & strength.</li>
+              <li><span className="text-[#CCBA78] font-medium">Functional Training (Hybrid)</span> - For overall fitness, strength & cardio.</li>
+              <li><span className="text-[#CCBA78] font-medium">Group Fitness (Classes)</span> - For guided workouts & community.</li>
+            </ul>
+            <div className="mt-4"> {/* Adjusted spacing */}
+              <p className="font-medium text-[#CCBA78] mb-1">How it works:</p>
+              <ul className="list-disc pl-5 space-y-1.5">
+                <li>Select your track below</li>
+                <li>Track 3 daily habits each week</li>
+                <li>Check off completed habits daily</li>
+                <li>Build streaks (🔥) & earn achievements (🏆)</li>
+              </ul>
             </div>
-
-            {/* Onboarding Section */}
-            <div className="bg-gray-800 rounded-lg mb-6 overflow-hidden border border-gray-700/50"> {/* Added subtle border */}
-                <button onClick={() => setShowOnboarding(!showOnboarding)} className="w-full p-4 flex justify-between items-center text-[#CCBA78] hover:bg-gray-700/50 transition-colors">
-                    <h3 className="text-lg sm:text-xl font-semibold">Welcome to Your 8-Week Journey!</h3> {/* Adjusted size */}
-                    <ChevronDown className={`w-5 h-5 transform transition-transform duration-200 ${showOnboarding ? 'rotate-180' : ''}`} />
-                </button>
-                {showOnboarding && (
-                    <div className="p-4 sm:p-6 border-t border-gray-700"> {/* Adjusted padding */}
-                        <div className="space-y-4 text-gray-300 text-sm sm:text-base"> {/* Base text lighter */}
-                            <p>Choose your path:</p>
-                            <ul className="list-disc pl-5 space-y-1.5"> {/* Adjusted spacing */}
-                                <li><span className="text-[#CCBA78] font-medium">Strength & Growth</span> - For building muscle & strength.</li>
-                                <li><span className="text-[#CCBA78] font-medium">Functional Training (Hybrid)</span> - For overall fitness, strength & cardio.</li>
-                                <li><span className="text-[#CCBA78] font-medium">Group Fitness (Classes)</span> - For guided workouts & community.</li>
-                            </ul>
-                            <div className="mt-4"> {/* Adjusted spacing */}
-                                <p className="font-medium text-[#CCBA78] mb-1">How it works:</p>
-                                <ul className="list-disc pl-5 space-y-1.5">
-                                    <li>Select your track below</li>
-                                    <li>Track 3 daily habits each week</li>
-                                    <li>Check off completed habits daily</li>
-                                    <li>Build streaks (🔥) & earn achievements (🏆)</li>
-                                </ul>
-                            </div>
-                            <div className="mt-4">
-                                <p className="font-medium text-[#CCBA78] mb-1">Tips:</p>
-                                <ul className="list-disc pl-5 space-y-1.5">
-                                    <li>Consistency Beats Perfection</li>
-                                    <li>Use examples as guides</li>
-                                    <li>Don't worry if you miss a day!</li>
-                                    <li>Check in daily</li>
-                                </ul>
-                            </div>
-                            <p className="mt-4 text-xs sm:text-sm italic text-gray-400">Need help? Ask any staff member!</p> {/* Adjusted text */}
-                        </div>
-                    </div>
-                )}
+            <div className="mt-4">
+              <p className="font-medium text-[#CCBA78] mb-1">Tips:</p>
+              <ul className="list-disc pl-5 space-y-1.5">
+                <li>Consistency Beats Perfection</li>
+                <li>Use examples as guides</li>
+                <li>Don't worry if you miss a day!</li>
+                <li>Check in daily</li>
+              </ul>
             </div>
-
-            {/* Data Management */}
-            <DataManagement userId={userId} onExport={exportProgress} onImport={importProgress} onReset={() => setShowResetConfirm(true)} />
-
-            {/* Reset Dialog */}
-            <AlertDialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>
-                <AlertDialogContent className="bg-gray-800 text-white"><AlertDialogHeader><AlertDialogTitle className="text-red-500">Reset Progress?</AlertDialogTitle><AlertDialogDescription>This cannot be undone.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel className="bg-gray-600 hover:bg-gray-500 border-none">Cancel</AlertDialogCancel><AlertDialogAction onClick={()=>{resetAllProgress(); setShowResetConfirm(false);}} className="bg-red-600 hover:bg-red-700">Reset</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
-            </AlertDialog>
-
-            {/* Toast Area - Position fixed at bottom center */}
-            <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-xs sm:max-w-sm px-4">
-                {toastInfo && <Toast message={toastInfo.message} type={toastInfo.type} />}
-            </div>
-
-            {/* Habit Info Sheet */}
-            {selectedHabitInfo && <HabitInfoSheet habit={selectedHabitInfo} isOpen={showInfoSheet} onClose={() => { setShowInfoSheet(false); setSelectedHabitInfo(null); }} />}
-
-             {/* Achievements Panel */}
-             {/* Render only if achievements array is not empty */}
-             {(userData?.achievements && userData.achievements.length > 0) &&
-                 <AchievementsPanel achievements={userData.achievements} selectedTrack={selectedTrack} />
-             }
-{/* Program Tabs */}
-<Tabs 
-  defaultValue="strength" 
-  className="mb-20 sm:mb-0"
-  onValueChange={(value) => setSelectedTrack(value as keyof typeof programs)}
->
-  <TabsList className="grid grid-cols-3 gap-2 mb-6">
-    {(Object.keys(programs) as Array<keyof typeof programs>).map((key) => {
-      let Icon = Dumbbell; if (key === 'hybrid') Icon = Clock; if (key === 'cardio') Icon = Users;
-      const title = key === 'cardio' ? 'Classes' : key.charAt(0).toUpperCase() + key.slice(1);
-      return <TabsTrigger key={key} value={key} className="data-[state=active]:bg-[#CCBA78] data-[state=active]:text-gray-900 data-[state=inactive]:bg-gray-700 data-[state=inactive]:text-gray-400 data-[state=inactive]:hover:bg-gray-600/70 px-3 py-2.5 rounded text-xs sm:text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-[#CCBA78] focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900"><div className="flex flex-col items-center gap-1 sm:gap-1.5"><Icon className="w-4 h-4 sm:w-5 sm:h-5" /><span>{title}</span></div></TabsTrigger>;
-    })}
-  </TabsList>
-
-  {/* Program Content */}
-  {Object.entries(programs).map(([key, program]) => (
-    <TabsContent key={key} value={key}>
-      <div className="space-y-4 sm:space-y-6"> {/* Adjusted spacing */}
-        {program.weeks.map((week) => (
-          <CollapsibleCard key={`${key}-week-${week.week}`} week={week}>
-            <div className="space-y-3 sm:space-y-4"> {/* Adjusted spacing */}
-              {week.habits.map((habit, idx) => {
-                const completionDates = savedData[key as keyof typeof programs]?.[week.week]?.[idx]?.completionDates || [];
-                const { currentStreak: habitStreak } = calculateHabitStreak(completionDates);
-                const isCheckedToday = completionDates.includes(new Date().toISOString().split('T')[0]);
-                
-                // Get the corresponding icon for this habit
-                const iconName = habitIconMapping[habit.id];
-                // Get the "Why This Matters" description
-                const habitDescription = habitDescriptions[habit.id];
-                
-                return (
-                  <div key={habit.id} className={`group flex items-start space-x-3 p-3 rounded-md transition-colors duration-150 ${isCheckedToday ? 'bg-green-900/40 hover:bg-green-900/50' : 'hover:bg-gray-700/40'}`}>
-                    <input 
-                      type="checkbox" 
-                      id={`habit-${habit.id}`} 
-                      className="mt-1 w-5 h-5 rounded border-gray-500 focus:ring-2 focus:ring-offset-0 focus:ring-offset-gray-800 focus:ring-[#CCBA78] text-[#CCBA78] bg-gray-700 shrink-0 cursor-pointer" 
-                      checked={isCheckedToday} 
-                      onChange={(e) => handleCheckbox(key as keyof typeof programs, week.week, idx, e.target.checked)} 
-                    />
-                    <div className="flex-grow">
-                      <div className="flex items-center gap-2">
-                        <label 
-                          htmlFor={`habit-${habit.id}`} 
-                          className="font-medium text-gray-100 hover:text-[#CCBA78] transition-colors cursor-pointer"
-                        >
-                          {habit.habit}
-                        </label>
-                        
-                        {/* Why This Matters tooltip */}
-                        <button 
-  className="text-gray-400 hover:text-[#CCBA78] transition-colors"
-  aria-label="Learn why this habit matters"
-  onClick={() => {
-   <button 
-  className="text-gray-400 hover:text-[#CCBA78] transition-colors"
-  aria-label="Learn why this habit matters"
-  onClick={() => {
-    showToastCallback(
-      `Why this matters: ${habitDescription || "Building this habit helps create a foundation for your fitness success."}`, 
-      'success'
-    )
-  }}
->
-  <HelpCircle className="w-3.5 h-3.5" />
-</button>
-                      </div>
-                      
-                      <p className="text-gray-400 text-sm mt-0.5 sm:mt-1">{habit.example}</p> {/* Example slightly darker */}
-                      <div className="flex items-center justify-between mt-1.5"> {/* Adjusted spacing */}
-                        <p className="text-gray-500 text-xs">Completed {completionDates.length} times</p> {/* Completion count darker */}
-                        {habitStreak > 0 && (
-                          <div className="flex items-center gap-1 text-orange-400 animate-pulse" title={`${habitStreak}-day streak`}>
-                            <Flame className="w-3.5 h-3.5" />
-                            <span className="text-xs font-medium">{habitStreak}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </CollapsibleCard>
-        ))}
-      </div>
-    </TabsContent>
-  ))}
-</Tabs>
+            <p className="mt-4 text-xs sm:text-sm italic text-gray-400">Need help? Ask any staff member!</p> {/* Adjusted text */}
+          </div>
         </div>
-    );
-};
+      )}
+    </div>
 
-export default HabitProgram;
+    {/* Data Management */}
+    <DataManagement userId={userId} onExport={exportProgress} onImport={importProgress} onReset={() => setShowResetConfirm(true)} />
+
+    {/* Reset Dialog */}
+    <AlertDialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>
+      <AlertDialogContent className="bg-gray-800 text-white"><AlertDialogHeader><AlertDialogTitle className="text-red-500">Reset Progress?</AlertDialogTitle><AlertDialogDescription>This cannot be undone.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel className="bg-gray-600 hover:bg-gray-500 border-none">Cancel</AlertDialogCancel><AlertDialogAction onClick={()=>{resetAllProgress(); setShowResetConfirm(false);}} className="bg-red-600 hover:bg-red-700">Reset</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
+    </AlertDialog>
+
+    {/* Toast Area - Position fixed at bottom center */}
+    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-xs sm:max-w-sm px-4">
+      {toastInfo && <Toast message={toastInfo.message} type={toastInfo.type} />}
+    </div>
+
+    {/* Habit Info Sheet */}
+    {selectedHabitInfo && <HabitInfoSheet habit={selectedHabitInfo} isOpen={showInfoSheet} onClose={() => { setShowInfoSheet(false); setSelectedHabitInfo(null); }} />}
+
+     {/* Achievements Panel */}
+     {/* Render only if achievements array is not empty */}
+     {(userData?.achievements && userData.achievements.length > 0) &&
+       <AchievementsPanel achievements={userData.achievements} selectedTrack={selectedTrack} />
+     }
+    
+    {/* Program Tabs */}
+    <Tabs 
+      defaultValue="strength" 
+      className="mb-20 sm:mb-0"
+      onValueChange={(value) => setSelectedTrack(value as keyof typeof programs)}
+    >
+      <TabsList className="grid grid-cols-3 gap-2 mb-6">
+        {(Object.keys(programs) as Array<keyof typeof programs>).map((key) => {
+          let Icon = Dumbbell; if (key === 'hybrid') Icon = Clock; if (key === 'cardio') Icon = Users;
+          const title = key === 'cardio' ? 'Classes' : key.charAt(0).toUpperCase() + key.slice(1);
+          return <TabsTrigger key={key} value={key} className="data-[state=active]:bg-[#CCBA78] data-[state=active]:text-gray-900 data-[state=inactive]:bg-gray-700 data-[state=inactive]:text-gray-400 data-[state=inactive]:hover:bg-gray-600/70 px-3 py-2.5 rounded text-xs sm:text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-[#CCBA78] focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900"><div className="flex flex-col items-center gap-1 sm:gap-1.5"><Icon className="w-4 h-4 sm:w-5 sm:h-5" /><span>{title}</span></div></TabsTrigger>;
+        })}
+      </TabsList>
+
+      {/* Program Content */}
+      {Object.entries(programs).map(([key, program]) => (
+        <TabsContent key={key} value={key}>
+          <div className="space-y-4 sm:space-y-6"> {/* Adjusted spacing */}
+            {program.weeks.map((week) => (
+              <CollapsibleCard key={`${key}-week-${week.week}`} week={week}>
+                <div className="space-y-3 sm:space-y-4"> {/* Adjusted spacing */}
+                  {week.habits.map((habit, idx) => {
+                    const completionDates = savedData[key as keyof typeof programs]?.[week.week]?.[idx]?.completionDates || [];
+                    const { currentStreak: habitStreak } = calculateHabitStreak(completionDates);
+                    const isCheckedToday = completionDates.includes(new Date().toISOString().split('T')[0]);
+                    
+                    // Get the corresponding icon for this habit
+                    const iconName = habitIconMapping[habit.id];
+                    // Get the "Why This Matters" description
+                    const habitDescription = habitDescriptions[habit.id];
+                    
+                    return (
+                      <div key={habit.id} className={`group flex items-start space-x-3 p-3 rounded-md transition-colors duration-150 ${isCheckedToday ? 'bg-green-900/40 hover:bg-green-900/50' : 'hover:bg-gray-700/40'}`}>
+                        <input 
+                          type="checkbox" 
+                          id={`habit-${habit.id}`} 
+                          className="mt-1 w-5 h-5 rounded border-gray-500 focus:ring-2 focus:ring-offset-0 focus:ring-offset-gray-800 focus:ring-[#CCBA78] text-[#CCBA78] bg-gray-700 shrink-0 cursor-pointer" 
+                          checked={isCheckedToday} 
+                          onChange={(e) => handleCheckbox(key as keyof typeof programs, week.week, idx, e.target.checked)} 
+                        />
+                        <div className="flex-grow">
+                          <div className="flex items-center gap-2">
+                            <label 
+                              htmlFor={`habit-${habit.id}`} 
+                              className="font-medium text-gray-100 hover:text-[#CCBA78] transition-colors cursor-pointer"
+                            >
+                              {habit.habit}
+                            </label>
+                            
+                            {/* Why This Matters tooltip */}
+                            <button 
+                              className="text-gray-400 hover:text-[#CCBA78] transition-colors"
+                              aria-label="Learn why this habit matters"
+                              onClick={() => {
+                                showToastCallback(
+                                  `Why this matters: ${habitDescription || "Building this habit helps create a foundation for your fitness success."}`, 
+                                  'success'
+                                )
+                              }}
+                            >
+                              <HelpCircle className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                          
+                          <p className="text-gray-400 text-sm mt-0.5 sm:mt-1">{habit.example}</p> {/* Example slightly darker */}
+                          <div className="flex items-center justify-between mt-1.5"> {/* Adjusted spacing */}
+                            <p className="text-gray-500 text-xs">Completed {completionDates.length} times</p> {/* Completion count darker */}
+                            {habitStreak > 0 && (
+                              <div className="flex items-center gap-1 text-orange-400 animate-pulse" title={`${habitStreak}-day streak`}>
+                                <Flame className="w-3.5 h-3.5" />
+                                <span className="text-xs font-medium">{habitStreak}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CollapsibleCard>
+            ))}
+          </div>
+        </TabsContent>
+      ))}
+    </Tabs>
+  </div>
+);
