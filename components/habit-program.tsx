@@ -997,6 +997,21 @@ const HabitProgram = () => {
         return <div className="flex justify-center items-center min-h-screen bg-gray-900 text-white">Loading Your Progress...</div>;
     }
 
+// Check for achievement data and initialize it if needed
+useEffect(() => {
+  if (userData && (!userData.achievements || userData.achievements.length === 0)) {
+    // Initialize achievements from the ACHIEVEMENTS constant
+    const initializedAchievements = [...ACHIEVEMENTS].map(achievement => ({
+      ...achievement,
+      progress: 0
+    }));
+    
+    setUserData({
+      ...userData,
+      achievements: initializedAchievements
+    });
+  }
+}, [userData, setUserData]);
     // --- Main JSX Structure ---
     return (
       <div className="bg-gray-900 p-4 pb-24 sm:p-6 md:p-8 max-w-4xl mx-auto min-h-screen"> {/* Adjusted padding */}
@@ -1075,9 +1090,12 @@ const HabitProgram = () => {
 
          {/* Achievements Panel */}
          {/* Render only if achievements array is not empty */}
-         {(userData?.achievements && userData.achievements.length > 0) &&
-           <AchievementsPanel achievements={userData.achievements} selectedTrack={selectedTrack} />
-         }
+        {userData && userData.achievements && userData.achievements.length > 0 && (
+  <AchievementsPanel 
+    achievements={userData.achievements} 
+    selectedTrack={selectedTrack} 
+  />
+)}
         
         {/* Program Tabs */}
         <Tabs 
