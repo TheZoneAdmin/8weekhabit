@@ -1,227 +1,219 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Dumbbell, Clock, Users, ChevronDown, Save, Upload, Link as LinkIcon, Share2, Facebook, Info, Calendar } from 'lucide-react';
+import { Dumbbell, Clock, Users, ChevronDown, Save, Upload, Share2, Facebook, Info, Calendar } from 'lucide-react';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Trophy, Award, Crown, Flame } from 'lucide-react';
-import { Toast } from "@/components/ui/toast";
-import { HabitInfoSheet } from "@/components/ui/habit-info-sheet";
+import { Toast } from "@/components/ui/toast"; // Assuming this component exists and works
+import { HabitInfoSheet } from "@/components/ui/habit-info-sheet"; // Assuming this exists
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
-// --- Interfaces (Habit includes id) ---
+// --- Interfaces ---
 interface Habit {
-  id: string;
+  id: string; // Unique identifier for the habit
   habit: string;
   example: string;
 }
-interface Week { week: number; focus: string; habits: ReadonlyArray<Habit>; }
-interface Program { title: string; weeks: ReadonlyArray<Week>; }
-interface CollapsibleCardProps { week: Week; children: React.ReactNode; }
-// Achievement includes progress, targetHabitId, streakTarget
-interface Achievement { id: string; title: string; description: string; icon: string; condition: string; targetHabitId?: string; streakTarget?: number; points: number; unlocked: boolean; unlockedAt?: string; progress?: number; }
-interface UserProgress { currentStreak: number; longestStreak: number; totalPoints: number; completedHabits: number; achievements: Achievement[]; weeklyProgress: { /* ... */ }; lastUpdated: string; }
-interface SavedData { [program: string]: { [week: number]: { [habitIndex: number]: { completionDates: string[]; }; }; }; }
+interface Week {
+  week: number;
+  focus: string;
+  habits: ReadonlyArray<Habit>;
+}
+interface Program {
+  title: string;
+  weeks: ReadonlyArray<Week>;
+}
+interface CollapsibleCardProps {
+  week: Week;
+  children: React.ReactNode;
+}
+interface Achievement {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  condition: string;
+  targetHabitId?: string;
+  streakTarget?: number;
+  points: number;
+  unlocked: boolean;
+  unlockedAt?: string;
+  progress?: number; // Store calculated progress (0-100)
+}
+interface UserProgress {
+  currentStreak: number; // Login/Activity Streak
+  longestStreak: number; // Login/Activity Streak
+  totalPoints: number;
+  completedHabits: number;
+  achievements: Achievement[];
+  weeklyProgress: Record<number, any>; // Using Record<number, any> for simplicity
+  lastUpdated: string;
+}
+interface SavedData {
+  [program: string]: {
+    [week: number]: {
+      // Use habit ID as key instead of index for robustness? Requires data migration if format changes.
+      // Stick with index for now as per previous code.
+      [habitIndex: number]: {
+        completionDates: string[];
+      };
+    };
+  };
+}
 
 // --- Programs Data with Habit IDs ---
-const programs = { /* ... Your full programs object with habit IDs ... */
+// Ensure this object is complete and correct in your actual file
+const programs = {
     strength: {
-    title: "Strength & Growth Track",
-    weeks: [
-      { week: 1, focus: "Foundation Week", habits: [ { id: "str-w1-h1", habit: "Complete scheduled workout", example: "Follow your planned workout schedule (rest days count when planned)" }, { id: "str-w1-h2", habit: "Pack gym bag the night before", example: "Prepare clothes, shoes, water bottle, and towel for tomorrow" }, { id: "str-w1-h3", habit: "Etiquette champ", example: "Clean and organize equipment after each use" } ] },
-      { week: 2, focus: "Form Focus", habits: [ { id: "str-w2-h1", habit: "Complete 5-minute mobility warm-up", example: "Dynamic stretches before each workout" }, { id: "str-w2-h2", habit: "Record exercises and weights used", example: "Log all sets, reps, and weights in your tracker" }, { id: "str-w2-h3", habit: "Check form in mirror each exercise", example: "Monitor technique during each exercise set" } ] },
-      { week: 3, focus: "Nutrition Basics", habits: [ { id: "str-w3-h1", habit: "Track daily protein intake", example: "Log protein at each meal to hit the daily target" }, { id: "str-w3-h2", habit: "Drink water throughout the day", example: "Track water intake, minimum 8 glasses" }, { id: "str-w3-h3", habit: "Eat pre/post workout meals", example: "Time meals around training sessions" } ] },
-      { week: 4, focus: "Recovery", habits: [ { id: "str-w4-h1", habit: "Get 7+ hours sleep", example: "Maintain consistent bedtime routine" }, { id: "str-w4-h2", habit: "Complete 10-min daily stretch", example: "Stretch major muscle groups after training" }, { id: "str-w4-h3", habit: "Rate muscle soreness (1-5)", example: "Track recovery in workout log daily" } ] },
-      { week: 5, focus: "Progressive Overload", habits: [ { id: "str-w5-h1", habit: "Follow workout program exactly", example: "Complete all prescribed sets/reps/exercises" }, { id: "str-w5-h2", habit: "Track weight increases", example: "Note when you increase weights on exercises" }, { id: "str-w5-h3", habit: "Rate workout intensity (1-5)", example: "Record how challenging each session feels" } ] },
-      { week: 6, focus: "Mind-Muscle", habits: [ { id: "str-w6-h1", habit: "Practice breathing technique", example: "Breathe out on exertion for each rep" }, { id: "str-w6-h2", habit: "Focus on muscle contraction", example: "Feel target muscle working each exercise" }, { id: "str-w6-h3", habit: "Maintain proper form all sets", example: "No form breakdown even when tired" } ] },
-      { week: 7, focus: "Consistency", habits: [ { id: "str-w7-h1", habit: "Hit daily step goal", example: "Track and meet minimum step target" }, { id: "str-w7-h2", habit: "Complete all planned exercises", example: "No skipping exercises in a workout" }, { id: "str-w7-h3", habit: "Follow meal timing plan", example: "Eat at scheduled times around workouts" } ] },
-      { week: 8, focus: "Mastery", habits: [ { id: "str-w8-h1", habit: "Complete full workout protocol", example: "Warmup, workout, cooldown all done" }, { id: "str-w8-h2", habit: "Meet daily nutrition targets", example: "Hit protein, water, meal timing goals" }, { id: "str-w8-h3", habit: "Log all workout metrics", example: "Record weights, sets, reps, intensity" } ] }
-    ]
-  },
-  hybrid: {
-    title: "Functional Training Track",
-    weeks: [
-      { week: 1, focus: "Movement Foundations", habits: [ { id: "hyb-w1-h1", habit: "Practice air squat technique", example: "10 perfect form squats every hour you're awake" }, { id: "hyb-w1-h2", habit: "Hold plank position", example: "Accumulate 2 minutes total throughout day" }, { id: "hyb-w1-h3", habit: "Complete mobility routine", example: "10-min joint mobility work (hips, shoulders, ankles)" } ] },
-      { week: 2, focus: "Workout Basics", habits: [ { id: "hyb-w2-h1", habit: "Complete programmed WOD or rest", example: "Follow scheduled workout or active recovery" }, { id: "hyb-w2-h2", habit: "Record all workout scores", example: "Log time, reps, weights for every workout" }, { id: "hyb-w2-h3", habit: "Practice scaling options", example: "Write down scaled version before each WOD" } ] },
-      { week: 3, focus: "Movement Skills", habits: [ { id: "hyb-w3-h1", habit: "Practice daily skill work", example: "10min on pull-up progression or Olympic lift drill" }, { id: "hyb-w3-h2", habit: "Complete metabolic conditioning", example: "Short MetCon or interval work" }, { id: "hyb-w3-h3", habit: "Work on weakness", example: "10min practice on identified weak movement" } ] },
-      { week: 4, focus: "Intensity Management", habits: [ { id: "hyb-w4-h1", habit: "Rate workout intensity", example: "Score 1-10 RPE for each training session" }, { id: "hyb-w4-h2", habit: "Track heart rate recovery", example: "Note 1-min recovery after intense portions" }, { id: "hyb-w4-h3", habit: "Complete cooldown protocol", example: "5-min easy movement + stretching post-workout" } ] },
-      { week: 5, focus: "Performance Nutrition", habits: [ { id: "hyb-w5-h1", habit: "Time meals around training", example: "Eat 2hrs before WOD, recovery meal within 1hr after" }, { id: "hyb-w5-h2", habit: "Track macronutrient intake", example: "Log protein, carbs, fats in food tracker" }, { id: "hyb-w5-h3", habit: "Follow hydration protocol", example: "Water + electrolytes before/during/after WODs" } ] },
-      { week: 6, focus: "Benchmark Progress", habits: [ { id: "hyb-w6-h1", habit: "Record benchmark scores", example: "Log times/reps for named workouts" }, { id: "hyb-w6-h2", habit: "Track key lift numbers", example: "Note weights for main lifts each session" }, { id: "hyb-w6-h3", habit: "Measure workout intensity", example: "Rate sessions by RPE and heart rate" } ] },
-      { week: 7, focus: "Advanced Skills", habits: [ { id: "hyb-w7-h1", habit: "Practice Olympic lift drills", example: "Daily technique work on clean/snatch progressions" }, { id: "hyb-w7-h2", habit: "Work on gymnastics skills", example: "Handstand/muscle-up/pull-up practice" }, { id: "hyb-w7-h3", habit: "Complete accessory work", example: "Core, mobility, or weakness focus" } ] },
-      { week: 8, focus: "Competition Prep", habits: [ { id: "hyb-w8-h1", habit: "Complete full WOD warmup", example: "Movement prep, skill work, build-up sets" }, { id: "hyb-w8-h2", habit: "Execute workout strategy", example: "Follow pacing and movement plan" }, { id: "hyb-w8-h3", habit: "Record all performance data", example: "Log workout scores, RPE, recovery metrics" } ] }
-    ]
-  },
-  cardio: { // Note: key is 'cardio', title implies 'Classes'
-    title: "Group Fitness Track",
-    weeks: [
-      { week: 1, focus: "Class Preparation", habits: [ { id: "cls-w1-h1", habit: "Pack class essentials bag", example: "Prepare water, towel, and clothes the night before" }, { id: "cls-w1-h2", habit: "Arrive 10 minutes early", example: "Set up the equipment before class starts" }, { id: "cls-w1-h3", habit: "Clean equipment after use", example: "Wipe down and organize your station" } ] },
-      { week: 2, focus: "Class Foundations", habits: [ { id: "cls-w2-h1", habit: "Complete pre-class warmup", example: "5-min mobility before class starts" }, { id: "cls-w2-h2", habit: "Follow instructor cues", example: "Match movements to instructions" }, { id: "cls-w2-h3", habit: "Track workout intensity", example: "Rate perceived exertion 1-5" } ] },
-      { week: 3, focus: "Movement Mastery", habits: [ { id: "cls-w3-h1", habit: "Practice proper form", example: "Focus on technique each exercise" }, { id: "cls-w3-h2", habit: "Use appropriate modifications", example: "Adjust moves to your level" }, { id: "cls-w3-h3", habit: "Record energy levels", example: "Note energy before/during/after" } ] },
-      { week: 4, focus: "Class Intensity", habits: [ { id: "cls-w4-h1", habit: "Maintain form", example: "Keep solid form and technique even as fatigue builds" }, { id: "cls-w4-h2", habit: "Monitor heart rate zones", example: "Stay in target zone ranges" }, { id: "cls-w4-h3", habit: "Track water intake", example: "Hydrate before/during/after" } ] },
-      { week: 5, focus: "Personal Progress", habits: [ { id: "cls-w5-h1", habit: "Try one new modification", example: "Attempt a harder version of one move" }, { id: "cls-w5-h2", habit: "Meet intensity targets", example: "Hit prescribed effort levels" }, { id: "cls-w5-h3", habit: "Record performance metrics", example: "Track weights, reps, or time" } ] },
-      { week: 6, focus: "Class Engagement", habits: [ { id: "cls-w6-h1", habit: "Introduce yourself to someone new", example: "Learn one classmate's name and fitness goal" }, { id: "cls-w6-h2", habit: "Stay for cooldown", example: "Complete all cooldown stretches" }, { id: "cls-w6-h3", habit: "Give workout maximum effort", example: "Push to appropriate intensity" } ] },
-      { week: 7, focus: "Advanced Progress", habits: [ { id: "cls-w7-h1", habit: "Complete advanced moves", example: "Try full versions of exercises" }, { id: "cls-w7-h2", habit: "Maintain form under fatigue", example: "Keep technique late in class" }, { id: "cls-w7-h3", habit: "Track weekly improvements", example: "Note progress in key exercises" } ] },
-      { week: 8, focus: "Class Mastery", habits: [ { id: "cls-w8-h1", habit: "Lead by example in class", example: "Show optimal form and technique, help a beginner" }, { id: "cls-w8-h2", habit: "Share progress milestones", example: "Document and share one improvement from your journey" }, { id: "cls-w8-h3", habit: "Record class achievements", example: "Log personal records and wins" } ] }
-    ]
-  }
- } as const;
+        title: "Strength & Growth Track", weeks: [
+            { week: 1, focus: "Foundation Week", habits: [{ id: "str-w1-h1", habit: "Complete scheduled workout", example: "Follow planned schedule (rest days count)" }, { id: "str-w1-h2", habit: "Pack gym bag", example: "Prepare clothes, shoes, water, towel" }, { id: "str-w1-h3", habit: "Etiquette champ", example: "Clean/organize equipment after use" }] },
+            { week: 2, focus: "Form Focus", habits: [{ id: "str-w2-h1", habit: "5-min mobility warm-up", example: "Dynamic stretches before workout" }, { id: "str-w2-h2", habit: "Record exercises/weights", example: "Log sets, reps, weights" }, { id: "str-w2-h3", habit: "Check form in mirror", example: "Monitor technique during sets" }] },
+            { week: 3, focus: "Nutrition Basics", habits: [{ id: "str-w3-h1", habit: "Track daily protein", example: "Log protein at each meal" }, { id: "str-w3-h2", habit: "Drink water", example: "Track intake, min 8 glasses" }, { id: "str-w3-h3", habit: "Eat pre/post workout", example: "Time meals around training" }] },
+            { week: 4, focus: "Recovery", habits: [{ id: "str-w4-h1", habit: "Get 7+ hours sleep", example: "Maintain consistent bedtime" }, { id: "str-w4-h2", habit: "10-min daily stretch", example: "Stretch major groups post-training" }, { id: "str-w4-h3", habit: "Rate muscle soreness", example: "Track recovery (1-5) daily" }] },
+            { week: 5, focus: "Progressive Overload", habits: [{ id: "str-w5-h1", habit: "Follow program exactly", example: "Complete prescribed sets/reps" }, { id: "str-w5-h2", habit: "Track weight increases", example: "Note when weights increase" }, { id: "str-w5-h3", habit: "Rate workout intensity", example: "Record RPE (1-5) per session" }] },
+            { week: 6, focus: "Mind-Muscle", habits: [{ id: "str-w6-h1", habit: "Practice breathing", example: "Breathe out on exertion" }, { id: "str-w6-h2", habit: "Focus on contraction", example: "Feel target muscle working" }, { id: "str-w6-h3", habit: "Maintain form always", example: "No form breakdown when tired" }] },
+            { week: 7, focus: "Consistency", habits: [{ id: "str-w7-h1", habit: "Hit daily step goal", example: "Track & meet minimum steps" }, { id: "str-w7-h2", habit: "Complete all exercises", example: "No skipping exercises" }, { id: "str-w7-h3", habit: "Follow meal timing", example: "Eat at scheduled times" }] },
+            { week: 8, focus: "Mastery", habits: [{ id: "str-w8-h1", habit: "Complete full protocol", example: "Warmup, workout, cooldown" }, { id: "str-w8-h2", habit: "Meet nutrition targets", example: "Hit protein, water, timing" }, { id: "str-w8-h3", habit: "Log all metrics", example: "Record weights, sets, reps, RPE" }] }
+        ]
+    },
+    hybrid: {
+        title: "Functional Training Track", weeks: [
+            { week: 1, focus: "Movement Foundations", habits: [{ id: "hyb-w1-h1", habit: "Practice air squats", example: "10 perfect squats hourly" }, { id: "hyb-w1-h2", habit: "Hold plank", example: "Accumulate 2 min total daily" }, { id: "hyb-w1-h3", habit: "Mobility routine", example: "10-min joint work daily" }] },
+            { week: 2, focus: "Workout Basics", habits: [{ id: "hyb-w2-h1", habit: "Complete WOD/Rest", example: "Follow schedule or active recovery" }, { id: "hyb-w2-h2", habit: "Record scores", example: "Log time/reps/weights" }, { id: "hyb-w2-h3", habit: "Practice scaling", example: "Write down scaled version first" }] },
+            { week: 3, focus: "Movement Skills", habits: [{ id: "hyb-w3-h1", habit: "Daily skill work", example: "10min pull-up/Oly drill" }, { id: "hyb-w3-h2", habit: "Complete MetCon", example: "Short metabolic conditioning" }, { id: "hyb-w3-h3", habit: "Work on weakness", example: "10min practice on weak move" }] },
+            { week: 4, focus: "Intensity Management", habits: [{ id: "hyb-w4-h1", habit: "Rate workout intensity", example: "Score RPE (1-10) per session" }, { id: "hyb-w4-h2", habit: "Track HR recovery", example: "Note 1-min recovery post-effort" }, { id: "hyb-w4-h3", habit: "Complete cooldown", example: "5-min easy move + stretch" }] },
+            { week: 5, focus: "Performance Nutrition", habits: [{ id: "hyb-w5-h1", habit: "Time meals", example: "Eat 2hrs pre, <1hr post WOD" }, { id: "hyb-w5-h2", habit: "Track macros", example: "Log P/C/F daily" }, { id: "hyb-w5-h3", habit: "Follow hydration", example: "Water + electrolytes around WODs" }] },
+            { week: 6, focus: "Benchmark Progress", habits: [{ id: "hyb-w6-h1", habit: "Record benchmarks", example: "Log scores for named WODs" }, { id: "hyb-w6-h2", habit: "Track key lifts", example: "Note weights for main lifts" }, { id: "hyb-w6-h3", habit: "Measure intensity", example: "Rate sessions by RPE/HR" }] },
+            { week: 7, focus: "Advanced Skills", habits: [{ id: "hyb-w7-h1", habit: "Oly lift drills", example: "Daily clean/snatch technique" }, { id: "hyb-w7-h2", habit: "Gymnastics skills", example: "HS/MU/Pull-up practice" }, { id: "hyb-w7-h3", habit: "Accessory work", example: "Core, mobility, weakness focus" }] },
+            { week: 8, focus: "Competition Prep", habits: [{ id: "hyb-w8-h1", habit: "Full WOD warmup", example: "Movement prep, skills, build-up" }, { id: "hyb-w8-h2", habit: "Execute strategy", example: "Follow pacing/movement plan" }, { id: "hyb-w8-h3", habit: "Record all data", example: "Log scores, RPE, recovery" }] }
+        ]
+    },
+    cardio: {
+        title: "Group Fitness Track", weeks: [
+            { week: 1, focus: "Class Preparation", habits: [{ id: "cls-w1-h1", habit: "Pack class bag", example: "Water, towel, clothes prepped" }, { id: "cls-w1-h2", habit: "Arrive 10 min early", example: "Set up before class" }, { id: "cls-w1-h3", habit: "Clean equipment", example: "Wipe down & organize station" }] },
+            { week: 2, focus: "Class Foundations", habits: [{ id: "cls-w2-h1", habit: "Pre-class warmup", example: "5-min mobility before start" }, { id: "cls-w2-h2", habit: "Follow instructor", example: "Match cues/movements" }, { id: "cls-w2-h3", habit: "Track intensity", example: "Rate RPE (1-5)" }] },
+            { week: 3, focus: "Movement Mastery", habits: [{ id: "cls-w3-h1", habit: "Practice form", example: "Focus on technique" }, { id: "cls-w3-h2", habit: "Use modifications", example: "Adjust moves to your level" }, { id: "cls-w3-h3", habit: "Record energy levels", example: "Note energy pre/during/post" }] },
+            { week: 4, focus: "Class Intensity", habits: [{ id: "cls-w4-h1", habit: "Maintain form", example: "Keep technique under fatigue" }, { id: "cls-w4-h2", habit: "Monitor HR zones", example: "Stay in target ranges" }, { id: "cls-w4-h3", habit: "Track water intake", example: "Hydrate before/during/after" }] },
+            { week: 5, focus: "Personal Progress", habits: [{ id: "cls-w5-h1", habit: "Try new mod", example: "Attempt harder version" }, { id: "cls-w5-h2", habit: "Meet intensity targets", example: "Hit prescribed effort" }, { id: "cls-w5-h3", habit: "Record metrics", example: "Track weights/reps/time" }] },
+            { week: 6, focus: "Class Engagement", habits: [{ id: "cls-w6-h1", habit: "Meet someone new", example: "Learn classmate's name/goal" }, { id: "cls-w6-h2", habit: "Stay for cooldown", example: "Complete all stretches" }, { id: "cls-w6-h3", habit: "Max effort", example: "Push to appropriate intensity" }] },
+            { week: 7, focus: "Advanced Progress", habits: [{ id: "cls-w7-h1", habit: "Advanced moves", example: "Try full exercise versions" }, { id: "cls-w7-h2", habit: "Form under fatigue", example: "Keep technique late in class" }, { id: "cls-w7-h3", habit: "Track improvements", example: "Note progress in key moves" }] },
+            { week: 8, focus: "Class Mastery", habits: [{ id: "cls-w8-h1", habit: "Lead by example", example: "Show form, help beginner" }, { id: "cls-w8-h2", habit: "Share milestones", example: "Document/share 1 improvement" }, { id: "cls-w8-h3", habit: "Record achievements", example: "Log PRs and wins" }] }
+        ]
+    }
+} as const;
 
-// --- Achievements Definition (Same as before) ---
-const ACHIEVEMENTS: Achievement[] = [ /* ... Full list including habit streaks ... */
+// --- Achievements Definition ---
+const ACHIEVEMENTS: Achievement[] = [
     { id: 'first-week', title: 'First Week Champion', description: 'Complete all habits for one week', icon: 'trophy', condition: 'Complete 21 habits in a single week', points: 210, unlocked: false },
     { id: 'habit-warrior', title: 'Habit Warrior', description: 'Complete 50 total habits', icon: 'award', condition: 'Complete any 50 habits', points: 350, unlocked: false },
     { id: 'century-club', title: 'Century Club', description: 'Complete 100 total habits', icon: 'award', condition: 'Complete any 100 habits', points: 750, unlocked: false },
     { id: 'halfway-there', title: 'Halfway There!', description: 'Complete all habits for 4 weeks', icon: 'award', condition: 'Complete 84 total habits (Weeks 1-4)', points: 500, unlocked: false },
     { id: 'program-master', title: 'Program Master', description: 'Complete an entire 8-week program', icon: 'crown', condition: 'Complete all 168 habits in an 8-week program', points: 1680, unlocked: false },
     { id: 'streak-master-login', title: 'Check-in Streak Master', description: 'Maintain a 7-day check-in streak', icon: 'calendar', condition: 'Check-in (complete any habit) for 7 consecutive days', streakTarget: 7, points: 70, unlocked: false },
+    // Habit Streaks
     { id: 'streak-habit-str-w1-h1-7d', title: 'Workout Consistency', description: 'Complete scheduled workout 7 days straight', icon: 'flame', condition: 'Maintain a 7-day streak for "Complete scheduled workout"', targetHabitId: 'str-w1-h1', streakTarget: 7, points: 100, unlocked: false },
     { id: 'streak-habit-str-w3-h1-7d', title: 'Protein Tracker', description: 'Track daily protein intake 7 days straight', icon: 'flame', condition: 'Maintain a 7-day streak for "Track daily protein intake"', targetHabitId: 'str-w3-h1', streakTarget: 7, points: 100, unlocked: false },
     { id: 'streak-habit-hyb-w1-h1-7d', title: 'Squat Practice Pro', description: 'Practice air squat technique 7 days straight', icon: 'flame', condition: 'Maintain a 7-day streak for "Practice air squat technique"', targetHabitId: 'hyb-w1-h1', streakTarget: 7, points: 100, unlocked: false },
 ];
 
-// --- Helper Functions (calculateStreak, calculateHabitStreak - same as before) ---
+// --- Helper Functions ---
 const calculateStreak = (savedData: SavedData): { currentStreak: number; longestStreak: number } => {
-  const allDates = new Set<string>();
-  Object.values(savedData).forEach(program =>
-    Object.values(program).forEach(week =>
-      Object.values(week).forEach(habit =>
-        (habit.completionDates || []).forEach(date => allDates.add(date))
-      )
-    )
-  );
-
-  const sortedDates = Array.from(allDates).sort();
-  if (sortedDates.length === 0) {
-    return { currentStreak: 0, longestStreak: 0 }; // Return for empty case
-  }
-
-  const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(today.getDate() - 1);
-  const todayStr = today.toISOString().split('T')[0];
-  const yesterdayStr = yesterday.toISOString().split('T')[0];
-
-  let currentStreak = 0;
-  let longestStreak = 0;
-  let streak = 0;
-
-  // Calculate longest streak
-  for (let i = 0; i < sortedDates.length; i++) {
-    const currentDate = new Date(sortedDates[i]);
-    const previousDate = i > 0 ? new Date(sortedDates[i - 1]) : null;
-    let diffDays = 1;
-    if (previousDate) {
-       const utcCurrent = Date.UTC(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
-       const utcPrevious = Date.UTC(previousDate.getFullYear(), previousDate.getMonth(), previousDate.getDate());
-       diffDays = Math.floor((utcCurrent - utcPrevious) / (1000 * 60 * 60 * 24));
+    const allDates = new Set<string>();
+    Object.values(savedData).forEach(program => Object.values(program).forEach(week => Object.values(week).forEach(habit => (habit.completionDates || []).forEach(date => allDates.add(date)))));
+    const sortedDates = Array.from(allDates).sort();
+    if (sortedDates.length === 0) return { currentStreak: 0, longestStreak: 0 };
+    const today = new Date(), yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+    const todayStr = today.toISOString().split('T')[0], yesterdayStr = yesterday.toISOString().split('T')[0];
+    let currentStreak = 0, longestStreak = 0, streak = 0;
+    for (let i = 0; i < sortedDates.length; i++) {
+        const currentDate = new Date(sortedDates[i]), previousDate = i > 0 ? new Date(sortedDates[i - 1]) : null;
+        let diffDays = 1;
+        if (previousDate) { const utcCurrent = Date.UTC(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate()), utcPrevious = Date.UTC(previousDate.getFullYear(), previousDate.getMonth(), previousDate.getDate()); diffDays = Math.floor((utcCurrent - utcPrevious) / (1000 * 60 * 60 * 24)); }
+        if (diffDays === 1) { streak++; } else { streak = (i === 0) ? 1 : 1; }
+        longestStreak = Math.max(longestStreak, streak);
     }
-    if (diffDays === 1) { streak++; } else { streak = (i === 0) ? 1 : 1; }
-    longestStreak = Math.max(longestStreak, streak);
-  }
-
-   // Determine current streak based on the *last* completion date
-   const lastCompletionDate = sortedDates[sortedDates.length - 1];
-   if (lastCompletionDate === todayStr || lastCompletionDate === yesterdayStr) {
-     // Recalculate the streak ending on the last date
-     let finalStreak = 0;
-     for (let i = sortedDates.length -1; i >= 0; i--) {
-         const currentD = new Date(sortedDates[i]);
-         const prevD = i > 0 ? new Date(sortedDates[i-1]) : null;
-         let dayDiff = 1;
-         if(prevD) {
-             const utcCurrent = Date.UTC(currentD.getFullYear(), currentD.getMonth(), currentD.getDate());
-             const utcPrevious = Date.UTC(prevD.getFullYear(), prevD.getMonth(), prevD.getDate());
-             dayDiff = Math.floor((utcCurrent - utcPrevious) / (1000 * 60 * 60 * 24));
-         }
-         if (i === sortedDates.length -1 || dayDiff === 1) { finalStreak++; } else { break; }
-     }
-      currentStreak = finalStreak;
-   } else {
-      currentStreak = 0; // Streak broken
-   }
-
-  // *** ADDED Missing Return Statement ***
-  return { currentStreak, longestStreak };
+    const lastCompletionDate = sortedDates[sortedDates.length - 1];
+    if (lastCompletionDate === todayStr || lastCompletionDate === yesterdayStr) {
+        let finalStreak = 0;
+        for (let i = sortedDates.length - 1; i >= 0; i--) {
+            const currentD = new Date(sortedDates[i]), prevD = i > 0 ? new Date(sortedDates[i - 1]) : null; let dayDiff = 1;
+            if (prevD) { const utcCurrent = Date.UTC(currentD.getFullYear(), currentD.getMonth(), currentD.getDate()), utcPrevious = Date.UTC(prevD.getFullYear(), prevD.getMonth(), prevD.getDate()); dayDiff = Math.floor((utcCurrent - utcPrevious) / (1000 * 60 * 60 * 24)); }
+            if (i === sortedDates.length - 1 || dayDiff === 1) { finalStreak++; } else { break; }
+        } currentStreak = finalStreak;
+    } else { currentStreak = 0; }
+    return { currentStreak, longestStreak };
 };
 
-
-// Calculates streak for a single habit's completion dates
 const calculateHabitStreak = (completionDates: string[]): { currentStreak: number; longestStreak: number } => {
-  // *** CORRECTED LINE using Array.from() ***
-  const sortedDates = Array.from(new Set(completionDates)).sort();
-  // ******************************************
-
-  if (sortedDates.length === 0) {
-    return { currentStreak: 0, longestStreak: 0 }; // Return for empty case
-  }
-
-  const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(today.getDate() - 1);
-  const todayStr = today.toISOString().split('T')[0];
-  const yesterdayStr = yesterday.toISOString().split('T')[0];
-
-  let currentStreak = 0;
-  let longestStreak = 0;
-  let streak = 0;
-
-  // Calculate longest streak
-  for (let i = 0; i < sortedDates.length; i++) {
-    const currentDate = new Date(sortedDates[i]);
-    const previousDate = i > 0 ? new Date(sortedDates[i - 1]) : null;
-    let diffDays = 1;
-    if (previousDate) {
-       const utcCurrent = Date.UTC(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
-       const utcPrevious = Date.UTC(previousDate.getFullYear(), previousDate.getMonth(), previousDate.getDate());
-       diffDays = Math.floor((utcCurrent - utcPrevious) / (1000 * 60 * 60 * 24));
+    const sortedDates = Array.from(new Set(completionDates)).sort();
+    if (sortedDates.length === 0) return { currentStreak: 0, longestStreak: 0 };
+    const today = new Date(), yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+    const todayStr = today.toISOString().split('T')[0], yesterdayStr = yesterday.toISOString().split('T')[0];
+    let currentStreak = 0, longestStreak = 0, streak = 0;
+    for (let i = 0; i < sortedDates.length; i++) {
+        const currentDate = new Date(sortedDates[i]), previousDate = i > 0 ? new Date(sortedDates[i - 1]) : null; let diffDays = 1;
+        if (previousDate) { const utcCurrent = Date.UTC(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate()), utcPrevious = Date.UTC(previousDate.getFullYear(), previousDate.getMonth(), previousDate.getDate()); diffDays = Math.floor((utcCurrent - utcPrevious) / (1000 * 60 * 60 * 24)); }
+        if (diffDays === 1) { streak++; } else { streak = (i === 0) ? 1 : 1; }
+        longestStreak = Math.max(longestStreak, streak);
     }
-    if (diffDays === 1) { streak++; } else { streak = (i === 0) ? 1 : 1; }
-    longestStreak = Math.max(longestStreak, streak);
-  }
-
-  // Determine current streak based on the *last* completion date for THIS habit
-  const lastCompletionDate = sortedDates[sortedDates.length - 1];
-   if (lastCompletionDate === todayStr || lastCompletionDate === yesterdayStr) {
-     // Recalculate the streak ending on the last date
-     let finalStreak = 0;
-     for (let i = sortedDates.length -1; i >= 0; i--) {
-         const currentD = new Date(sortedDates[i]);
-         const prevD = i > 0 ? new Date(sortedDates[i-1]) : null;
-         let dayDiff = 1;
-         if(prevD) {
-             const utcCurrent = Date.UTC(currentD.getFullYear(), currentD.getMonth(), currentD.getDate());
-             const utcPrevious = Date.UTC(prevD.getFullYear(), prevD.getMonth(), prevD.getDate());
-             dayDiff = Math.floor((utcCurrent - utcPrevious) / (1000 * 60 * 60 * 24));
-         }
-         if (i === sortedDates.length -1 || dayDiff === 1) { finalStreak++; } else { break; }
-     }
-      currentStreak = finalStreak;
-   } else {
-      currentStreak = 0; // Streak broken
-   }
-
-  return { currentStreak, longestStreak }; // Correct final return
+    const lastCompletionDate = sortedDates[sortedDates.length - 1];
+    if (lastCompletionDate === todayStr || lastCompletionDate === yesterdayStr) {
+        let finalStreak = 0;
+        for (let i = sortedDates.length - 1; i >= 0; i--) {
+            const currentD = new Date(sortedDates[i]), prevD = i > 0 ? new Date(sortedDates[i - 1]) : null; let dayDiff = 1;
+            if (prevD) { const utcCurrent = Date.UTC(currentD.getFullYear(), currentD.getMonth(), currentD.getDate()), utcPrevious = Date.UTC(prevD.getFullYear(), prevD.getMonth(), prevD.getDate()); dayDiff = Math.floor((utcCurrent - utcPrevious) / (1000 * 60 * 60 * 24)); }
+            if (i === sortedDates.length - 1 || dayDiff === 1) { finalStreak++; } else { break; }
+        } currentStreak = finalStreak;
+    } else { currentStreak = 0; }
+    return { currentStreak, longestStreak };
 };
-// --- AchievementsPanel Component (Simplified - Displays progress from prop) ---
+
+// --- AchievementsPanel Component ---
 const AchievementsPanel = ({ achievements }: { achievements: Achievement[] }) => {
     const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
     const [showShareDialog, setShowShareDialog] = useState(false);
-    const shareToFacebook = () => { /* ... implementation ... */ };
+
+    // Simple share function (replace with actual image generation/hosting if needed)
+    const shareToFacebook = () => {
+        if (!selectedAchievement) return;
+        const shareText = `🏆 Achievement Unlocked at The Zone! 💪\n\nI earned "${selectedAchievement.title}"!\n\n#TheZone #FitnessGoals`;
+        // Ideally share a URL that has OG tags for the image, title, description
+        const urlToShare = window.location.href; // Or a specific achievement page URL
+        const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(urlToShare)}&quote=${encodeURIComponent(shareText)}`;
+        window.open(url, '_blank', 'width=600,height=400');
+        setShowShareDialog(false);
+    };
+
+    if (!achievements) { return <div className="text-center text-gray-500 p-4">Loading achievements...</div>; }
 
     return (
         <Card className="bg-gray-800 border-none mb-8">
-            <div className="p-6">
+            <div className="p-4 sm:p-6"> {/* Adjusted padding */}
                 <h3 className="text-[#CCBA78] text-xl font-semibold mb-4">Achievements</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {achievements.map((achievement) => (
                         <div key={achievement.id} className={`p-4 rounded-lg ${achievement.unlocked ? 'bg-[#CCBA78] bg-opacity-20 border border-[#CCBA78]' : 'bg-gray-700 bg-opacity-50'}`}>
-                            {/* Header */}
-                            <div className="flex items-center justify-between"> {/* ... Icon, Title, Share ... */} </div>
-                            {/* Footer */}
-                            <div className="mt-2 flex justify-between items-center"> {/* ... Condition/Date, Points ... */} </div>
-                            {/* Progress Bar */}
+                            <div className="flex items-center justify-between min-h-[40px]">
+                                <div className="flex items-center gap-3">
+                                    {achievement.icon === 'trophy' && <Trophy className={`w-5 h-5 ${achievement.unlocked ? 'text-[#CCBA78]' : 'text-gray-400'}`} />}
+                                    {achievement.icon === 'flame' && <Flame className={`w-5 h-5 ${achievement.unlocked ? 'text-orange-400' : 'text-gray-400'}`} />} {/* Orange flame when unlocked */}
+                                    {achievement.icon === 'award' && <Award className={`w-5 h-5 ${achievement.unlocked ? 'text-[#CCBA78]' : 'text-gray-400'}`} />}
+                                    {achievement.icon === 'crown' && <Crown className={`w-5 h-5 ${achievement.unlocked ? 'text-[#CCBA78]' : 'text-gray-400'}`} />}
+                                    {achievement.icon === 'calendar' && <Calendar className={`w-5 h-5 ${achievement.unlocked ? 'text-[#CCBA78]' : 'text-gray-400'}`} />}
+                                    <div className="flex-1"> {/* Allow text to wrap */}
+                                        <h4 className={`font-semibold ${achievement.unlocked ? 'text-[#CCBA78]' : 'text-gray-300'}`}>{achievement.title}</h4>
+                                        <p className="text-sm text-gray-400">{achievement.description}</p>
+                                    </div>
+                                </div>
+                                {achievement.unlocked && (<button onClick={() => { setSelectedAchievement(achievement); setShowShareDialog(true); }} className="p-1.5 text-[#CCBA78] hover:bg-gray-600 rounded-full flex-shrink-0 ml-2" title="Share"><Share2 className="w-4 h-4" /></button>)}
+                            </div>
+                            <div className="mt-2 flex justify-between items-center text-xs sm:text-sm"> {/* Responsive text size */}
+                                <span className="text-gray-400 italic">{achievement.unlocked ? `Unlocked: ${new Date(achievement.unlockedAt!).toLocaleDateString()}` : achievement.condition}</span>
+                                <span className={`font-medium ${achievement.unlocked ? 'text-[#CCBA78]' : 'text-gray-400'}`}>{achievement.points} pts</span>
+                            </div>
                             {!achievement.unlocked && (
                                 <div className="mt-2">
-                                    <div className="w-full bg-gray-600 rounded-full h-2">
-                                        <div className="bg-[#CCBA78] h-2 rounded-full" style={{ width: `${achievement.progress ?? 0}%` }} />
+                                    <div className="w-full bg-gray-600 rounded-full h-1.5 sm:h-2 overflow-hidden"> {/* Adjusted height */}
+                                        <div className="bg-[#CCBA78] h-full rounded-full transition-all duration-300 ease-out" style={{ width: `${achievement.progress ?? 0}%` }} />
                                     </div>
                                     <p className="text-xs text-gray-400 mt-1 text-right">{Math.floor(achievement.progress ?? 0)}%</p>
                                 </div>
@@ -231,155 +223,174 @@ const AchievementsPanel = ({ achievements }: { achievements: Achievement[] }) =>
                 </div>
             </div>
             {/* Share Dialog */}
-            <AlertDialog open={showShareDialog} onOpenChange={setShowShareDialog}> {/* ... Dialog Content ... */} </AlertDialog>
+            <AlertDialog open={showShareDialog} onOpenChange={setShowShareDialog}>
+                <AlertDialogContent className="bg-gray-800 text-white max-w-md"> {/* Adjusted max-width */}
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-[#CCBA78] text-lg">Share Achievement</AlertDialogTitle> {/* Adjusted size */}
+                        <AlertDialogDescription className="text-gray-300 text-sm">Celebrate your success!</AlertDialogDescription> {/* Adjusted size */}
+                    </AlertDialogHeader>
+                    {selectedAchievement && (
+                        <div className="my-4 p-4 bg-gray-700 rounded-lg text-center">
+                            {/* Icon */}
+                             <div className="flex justify-center mb-2">
+                                 {selectedAchievement.icon === 'trophy' && <Trophy className="w-10 h-10 text-[#CCBA78]" />}
+                                 {selectedAchievement.icon === 'flame' && <Flame className="w-10 h-10 text-orange-400" />}
+                                 {selectedAchievement.icon === 'award' && <Award className="w-10 h-10 text-[#CCBA78]" />}
+                                 {selectedAchievement.icon === 'crown' && <Crown className="w-10 h-10 text-[#CCBA78]" />}
+                                 {selectedAchievement.icon === 'calendar' && <Calendar className="w-10 h-10 text-[#CCBA78]" />}
+                             </div>
+                             <h3 className="text-lg font-semibold text-[#CCBA78] mb-1">{selectedAchievement.title}</h3>
+                             <p className="text-gray-300 text-sm mb-2">{selectedAchievement.description}</p>
+                             <p className="text-xs text-gray-400">Unlocked: {new Date(selectedAchievement.unlockedAt || Date.now()).toLocaleDateString()}</p>
+                        </div>
+                    )}
+                    <AlertDialogFooter className="gap-2 flex-col sm:flex-row"> {/* Adjusted flex direction */}
+                        <AlertDialogCancel className="w-full sm:w-auto bg-gray-600 text-white hover:bg-gray-500 border-none">Cancel</AlertDialogCancel> {/* Adjusted style */}
+                        <AlertDialogAction onClick={shareToFacebook} className="w-full sm:w-auto bg-[#1877F2] hover:bg-[#1877F2]/90 text-white flex items-center justify-center gap-2"> <Facebook className="w-4 h-4" /> Share </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </Card>
+    );
+};
+
+// --- DataManagement Component ---
+const DataManagement = ({ userId, onExport, onImport, onReset }: { userId: string; onExport: () => void; onImport: (file: File) => void; onReset: () => void; }) => {
+    const copyUserId = () => { if(navigator.clipboard) { navigator.clipboard.writeText(userId); /* Add toast feedback */ } };
+    return (
+        <Card className="bg-gray-800 p-3 sm:p-4 mb-6 rounded-lg"> {/* Added rounded-lg */}
+            <div className="text-white">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-2 sm:p-3 bg-gray-700 rounded-lg mb-3">
+                    <span className="font-mono text-xs sm:text-sm break-all mb-2 sm:mb-0 mr-2" title="Your unique tracker ID">ID: {userId || "loading..."}</span> {/* Handle loading state */}
+                    <button onClick={copyUserId} className="text-[#CCBA78] hover:text-[#CCBA78]/80 p-1 sm:p-2 text-sm whitespace-nowrap flex-shrink-0 rounded hover:bg-gray-600 transition-colors" title="Copy ID">Copy ID</button> {/* Added hover bg */}
+                </div>
+                <div className="grid grid-cols-3 gap-1 sm:gap-2 w-full text-center">
+                    <button onClick={onExport} title="Export progress" className="px-2 sm:px-3 py-2 bg-[#CCBA78] text-gray-900 rounded hover:bg-[#CCBA78]/90 text-xs sm:text-sm transition-colors">Export</button>
+                    <label title="Import progress" className="px-2 sm:px-3 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 cursor-pointer text-xs sm:text-sm transition-colors"> Import <input type="file" accept=".json" className="hidden" onChange={(e) => { if (e.target.files?.[0]) { onImport(e.target.files[0]); } e.target.value = ''; }} /> </label>
+                    <button onClick={onReset} title="Reset all progress" className="px-2 sm:px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-xs sm:text-sm transition-colors">Reset</button>
+                </div>
+            </div>
+        </Card>
+    );
+};
+
+// --- CollapsibleCard Component ---
+const CollapsibleCard = ({ week, children }: CollapsibleCardProps) => {
+    const [isOpen, setIsOpen] = useState(week.week === 1); // Default open only for week 1
+    return (
+        <Card className="bg-gray-800 border border-gray-700/50 overflow-hidden rounded-lg"> {/* Added border */}
+            <div className="flex items-center justify-between p-4 sm:p-6 cursor-pointer hover:bg-gray-700/50 transition-colors" onClick={() => setIsOpen(!isOpen)} role="button" aria-expanded={isOpen} aria-controls={`week-${week.week}-content`}>
+                <h3 className="text-[#CCBA78] text-lg font-semibold">Week {week.week} - {week.focus}</h3>
+                <ChevronDown className={`w-5 h-5 text-[#CCBA78] transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+            </div>
+            {/* Conditional Rendering with explicit check */}
+            {isOpen === true && (
+               <CardContent id={`week-${week.week}-content`} className="p-4 sm:p-6 pt-4 border-t border-gray-700"> {/* Adjusted padding */}
+                   {children}
+               </CardContent>
+             )}
         </Card>
     );
 };
 
 
-// --- DataManagement Component remains the same ---
-const DataManagement = ({ userId, onExport, onImport, onReset }: {
-  userId: string;
-  onExport: () => void;
-  onImport: (file: File) => void;
-  onReset: () => void; // The parent component now handles showing the confirmation
-}) => {
-  const copyUserId = () => {
-    navigator.clipboard.writeText(userId);
-    // Consider calling a toast callback passed via props for feedback
-    // Example: props.showToast("User ID copied!", "success");
-  };
-
-  // *** ADDED Missing Return Statement and JSX ***
-  return (
-    <Card className="bg-gray-800 p-3 sm:p-4 mb-6">
-      <div className="text-white">
-        {/* User ID Display */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-2 sm:p-3 bg-gray-700 rounded-lg mb-3">
-          <span className="font-mono text-xs sm:text-sm break-all mb-2 sm:mb-0 sm:mr-2 w-full sm:w-auto" title="Your unique tracker ID">
-            Your ID: {userId}
-          </span>
-          <button
-            onClick={copyUserId}
-            className="text-[#CCBA78] hover:text-[#CCBA78]/80 p-1 sm:p-2 text-sm whitespace-nowrap flex-shrink-0"
-            title="Copy your ID to clipboard"
-          >
-            Copy ID
-          </button>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="grid grid-cols-3 gap-1 sm:gap-2 w-full text-center">
-          <button
-            onClick={onExport}
-            title="Export your progress to a JSON file"
-            className="px-2 sm:px-3 py-2 bg-[#CCBA78] text-gray-900 rounded hover:bg-[#CCBA78]/90 text-xs sm:text-sm"
-          >
-            Export
-          </button>
-
-          <label
-             title="Import progress from a previously exported JSON file"
-             className="px-2 sm:px-3 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 cursor-pointer text-xs sm:text-sm"
-          >
-            Import
-            <input
-              type="file"
-              accept=".json"
-              className="hidden"
-              onChange={(e) => {
-                if (e.target.files?.[0]) {
-                  onImport(e.target.files[0]);
-                }
-                // Reset file input to allow re-importing the same file name
-                e.target.value = '';
-              }}
-            />
-          </label>
-
-          <button
-            onClick={onReset} // This now triggers the confirmation dialog in the parent
-            title="Reset all your habit progress and achievements"
-            className="px-2 sm:px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-xs sm:text-sm"
-          >
-            Reset
-          </button>
-        </div>
-      </div>
-    </Card>
-  );
-};
-
-// --- CollapsibleCard Component remains the same ---
-// --- CollapsibleCard Component (Corrected with Implementation) ---
-const CollapsibleCard = ({ week, children }: CollapsibleCardProps) => {
-  // State to manage if the card content is open or closed
-  const [isOpen, setIsOpen] = useState(true); // Default to open
-
-  return (
-    <Card className="bg-gray-800 border-none overflow-hidden rounded-lg"> {/* Added overflow-hidden and rounded */}
-      {/* Clickable Header */}
-      <div
-        className="flex items-center justify-between p-4 sm:p-6 cursor-pointer hover:bg-gray-700/50 transition-colors" // Adjusted padding
-        onClick={() => setIsOpen(!isOpen)}
-        role="button" // Added role for accessibility
-        aria-expanded={isOpen} // Added aria attribute
-        aria-controls={`week-${week.week}-content`} // Added aria attribute
-      >
-        <h3 className="text-[#CCBA78] text-lg font-semibold flex items-center">
-          {/* Display Week Number and Focus */}
-          Week {week.week} - {week.focus}
-        </h3>
-        {/* Chevron Icon indicating open/closed state */}
-        <ChevronDown
-          className={`w-5 h-5 text-[#CCBA78] transform transition-transform duration-200 ${
-            isOpen ? 'rotate-180' : ''
-          }`}
-        />
-      </div>
-      {/* Conditionally Rendered Content */}
-      {isOpen && (
-        <CardContent
-           id={`week-${week.week}-content`} // Added ID for aria-controls
-           className="p-4 sm:p-6 pt-0 border-t border-gray-700" // Adjusted padding
-        >
-          {children} {/* Renders the habits passed into the card */}
-        </CardContent>
-      )}
-    </Card>
-  );
-};
-// --- useUserStorage Hook (Refined for Toast Callbacks) ---
-const useUserStorage = (showToastCallback: (message: string, type?: 'success' | 'error') => void) => { /* ... implementation including export/import/reset with callbacks ... */
+// --- useUserStorage Hook ---
+const useUserStorage = (showToastCallback: (message: string, type?: 'success' | 'error') => void) => {
     const [userId, setUserId] = useState<string>('');
     const [isClient, setIsClient] = useState(false);
+    const [isLoading, setIsLoading] = useState(true); // Added loading state
     const [userData, setUserData] = useState<UserProgress>(() => ({ currentStreak: 0, longestStreak: 0, totalPoints: 0, completedHabits: 0, achievements: ACHIEVEMENTS.map(a => ({ ...a, progress: 0, unlocked: false, unlockedAt: undefined })), weeklyProgress: {}, lastUpdated: new Date().toISOString() }));
     const [savedData, setSavedData] = useState<SavedData>({});
-    useEffect(() => { /* ... Load logic ... */ }, []);
-    useEffect(() => { /* ... Save userData logic ... */ }, [userData, userId, isClient]);
-    useEffect(() => { /* ... Save savedData logic ... */ }, [savedData, isClient]);
-    const exportProgress = () => { /* ... Export logic with toast callback ... */ };
-    const importProgress = (jsonFile: File) => { /* ... Import logic with toast callback ... */ };
-    const resetAllProgress = useCallback(() => { /* ... Reset logic with toast callback ... */ }, [userId, isClient, setUserData, setSavedData, showToastCallback]);
-    return { userId, userData, setUserData, savedData, setSavedData, exportProgress, importProgress, resetAllProgress, isClient };
+
+    // Load data on mount
+    useEffect(() => {
+        setIsClient(true);
+        setIsLoading(true); // Start loading
+        let id = localStorage.getItem('habit_tracker_user_id');
+        if (!id) { id = crypto.randomUUID(); localStorage.setItem('habit_tracker_user_id', id); }
+        setUserId(id);
+
+        try {
+            const savedUserStr = localStorage.getItem(`habit_tracker_${id}`);
+            if (savedUserStr) {
+                const parsedUser = JSON.parse(savedUserStr);
+                const currentIds = new Set(ACHIEVEMENTS.map(a => a.id));
+                const loadedAch = (parsedUser.achievements || []).filter((a: Achievement) => currentIds.has(a.id)).map((la: Achievement) => ({ ...ACHIEVEMENTS.find(d => d.id === la.id), ...la }));
+                const newAch = ACHIEVEMENTS.filter(d => !loadedAch.some((la: Achievement) => la.id === d.id)).map(a => ({ ...a, progress: 0, unlocked: false }));
+                parsedUser.achievements = [...loadedAch, ...newAch];
+                setUserData(parsedUser);
+            } // Keep default if no saved data
+
+            const savedProgressStr = localStorage.getItem('habitProgress');
+            if (savedProgressStr) {
+                setSavedData(JSON.parse(savedProgressStr));
+            } // Keep default if no saved data
+        } catch (error) {
+            console.error("Error loading data from localStorage:", error);
+             // Reset to defaults if loading fails? Or notify user?
+             showToastCallback("Error loading previous progress.", 'error');
+             localStorage.removeItem(`habit_tracker_${id}`); // Clear potentially corrupt data
+             localStorage.removeItem('habitProgress');
+             setUserId(crypto.randomUUID()); // Generate a new ID maybe?
+             setUserData({ currentStreak: 0, longestStreak: 0, totalPoints: 0, completedHabits: 0, achievements: ACHIEVEMENTS.map(a => ({ ...a, progress: 0, unlocked: false, unlockedAt: undefined })), weeklyProgress: {}, lastUpdated: new Date().toISOString() });
+             setSavedData({});
+        } finally {
+             setIsLoading(false); // Finish loading
+        }
+    }, [showToastCallback]); // Added showToastCallback dependency
+
+    // Save userData on change
+    useEffect(() => { if (isClient && !isLoading && userId) { localStorage.setItem(`habit_tracker_${userId}`, JSON.stringify(userData)); } }, [userData, userId, isClient, isLoading]);
+    // Save savedData on change
+    useEffect(() => { if (isClient && !isLoading) { localStorage.setItem('habitProgress', JSON.stringify(savedData)); } }, [savedData, isClient, isLoading]);
+
+    // Export function
+    const exportProgress = () => { if (!isClient) return; try { const data = { userData, savedData }; const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `thezone-progress-${userId}.json`; a.click(); URL.revokeObjectURL(url); showToastCallback("Progress exported!", 'success'); } catch (e) { console.error(e); showToastCallback("Export failed.", 'error'); } };
+    // Import function
+    const importProgress = (file: File) => { if (!isClient) return; const reader = new FileReader(); reader.onload = (e) => { try { const data = JSON.parse(e.target?.result as string); if (data.userData && data.savedData) { const currentIds = new Set(ACHIEVEMENTS.map(a => a.id)); const loadedAch = (data.userData.achievements || []).filter((a: Achievement) => currentIds.has(a.id)).map((la: Achievement) => ({ ...ACHIEVEMENTS.find(d => d.id === la.id), ...la })); const newAch = ACHIEVEMENTS.filter(d => !loadedAch.some((la: Achievement) => la.id === d.id)).map(a => ({ ...a, progress: 0, unlocked: false })); data.userData.achievements = [...loadedAch, ...newAch]; setUserData(data.userData); setSavedData(data.savedData); showToastCallback("Progress imported!", 'success'); } else { throw new Error("Invalid file"); } } catch (err) { console.error(err); showToastCallback(`Import failed: ${err instanceof Error ? err.message : 'Unknown error'}`, 'error'); } }; reader.onerror = () => { showToastCallback('Failed to read file.', 'error'); }; reader.readAsText(file); };
+    // Reset function
+    const resetAllProgress = useCallback(() => { if (!isClient) return; setSavedData({}); const initialUserData = { currentStreak: 0, longestStreak: 0, totalPoints: 0, completedHabits: 0, achievements: ACHIEVEMENTS.map(a => ({ ...a, progress: 0, unlocked: false, unlockedAt: undefined })), weeklyProgress: {}, lastUpdated: new Date().toISOString() }; setUserData(initialUserData); showToastCallback("Progress reset.", 'success'); }, [userId, isClient, setUserData, setSavedData, showToastCallback]);
+
+    return { userId, userData, setUserData, savedData, setSavedData, exportProgress, importProgress, resetAllProgress, isClient, isLoading };
 };
 
 // --- Main HabitProgram Component ---
 const HabitProgram = () => {
     const [toastInfo, setToastInfo] = useState<{ message: string; type?: 'success' | 'error' } | null>(null);
-    const showToastCallback = useCallback((message: string, type?: 'success' | 'error') => { setToastInfo({ message, type }); setTimeout(() => setToastInfo(null), 3000); }, []);
-    const { userId, userData, setUserData, savedData, setSavedData, exportProgress, importProgress, resetAllProgress, isClient } = useUserStorage(showToastCallback);
+    const showToastCallback = useCallback((message: string, type?: 'success' | 'error' = 'success') => { setToastInfo(null); setTimeout(() => { setToastInfo({ message, type }); }, 50); setTimeout(() => setToastInfo(null), type === 'error' ? 4000 : 3000); }, []); // Reset before showing, longer errors
+    const { userId, userData, setUserData, savedData, setSavedData, exportProgress, importProgress, resetAllProgress, isClient, isLoading } = useUserStorage(showToastCallback);
     const [selectedHabitInfo, setSelectedHabitInfo] = useState<Habit | null>(null);
     const [showInfoSheet, setShowInfoSheet] = useState(false);
     const [showResetConfirm, setShowResetConfirm] = useState(false);
     const [showOnboarding, setShowOnboarding] = useState(() => isClient ? localStorage.getItem('showOnboarding') !== 'false' : true);
     useEffect(() => { if (isClient) localStorage.setItem('showOnboarding', showOnboarding.toString()); }, [showOnboarding, isClient]);
 
-    // --- Centralized Progress Calculation ---
-    const calculateSingleAchievementProgress = useCallback((achievement: Achievement, allDatesMap: Map<string, string[]>, totalCompletions: number): number => { /* ... Implementation as in previous response ... */
+    // Memoized values to prevent unnecessary recalculations
+    const allDatesMap = useMemo(() => {
+        const map = new Map<string, string[]>();
+        if (isLoading || !savedData) return map; // Don't calculate if loading or no data
+        Object.entries(programs).forEach(([progKey, progData]) => {
+            progData.weeks.forEach((weekData) => {
+                weekData.habits.forEach((habitDef, habitIdx) => {
+                    const dates = savedData[progKey as keyof typeof programs]?.[weekData.week]?.[habitIdx]?.completionDates || [];
+                    map.set(habitDef.id, dates);
+                });
+            });
+        });
+        return map;
+    }, [savedData, isLoading]);
+
+    const totalCompletions = useMemo(() => {
+        if (isLoading) return 0;
+        return Array.from(allDatesMap.values()).reduce((sum, dates) => sum + dates.length, 0);
+    }, [allDatesMap, isLoading]);
+
+    // Centralized Progress Calculation Hook
+    const calculateSingleAchievementProgress = useCallback((achievement: Achievement): number => {
         let progress = 0;
         const countWeekCompletions = (weekData: any): number => weekData ? Object.values(weekData).reduce((s: number, h: any) => s + (h.completionDates?.length || 0), 0) : 0;
         const getWeeklyCompletionsArray = () => Object.values(savedData).flatMap(p => Object.values(p)).map(countWeekCompletions);
+
         if (achievement.targetHabitId && achievement.streakTarget) {
             const habitDates = allDatesMap.get(achievement.targetHabitId) || [];
             const { currentStreak } = calculateHabitStreak(habitDates);
@@ -396,231 +407,195 @@ const HabitProgram = () => {
             }
         }
         return Math.floor(progress);
-     }, [savedData]); // Include savedData dependency
+     }, [savedData, allDatesMap, totalCompletions]); // Dependencies
 
-    // --- Effect to Update Achievement Progress and Streaks ---
+    // Effect to Update Achievement Progress and Overall Streaks
     useEffect(() => {
-        if (!isClient) return;
-        const allDatesMap = new Map<string, string[]>();
-        let totalCompletions = 0;
-        Object.entries(programs).forEach(([progKey, progData]) => { progData.weeks.forEach((weekData) => { weekData.habits.forEach((habitDef, habitIdx) => { const dates = savedData[progKey as keyof typeof programs]?.[weekData.week]?.[habitIdx]?.completionDates || []; allDatesMap.set(habitDef.id, dates); totalCompletions += dates.length; }); }); });
+        if (!isClient || isLoading) return; // Don't run if server-side or still loading initial data
+
         const { currentStreak, longestStreak } = calculateStreak(savedData);
-        const achievementsWithProgress = userData.achievements.map(ach => ({ ...ach, progress: ach.unlocked ? 100 : calculateSingleAchievementProgress(ach, allDatesMap, totalCompletions) }));
-        if (userData.currentStreak !== currentStreak || userData.longestStreak !== longestStreak || userData.completedHabits !== totalCompletions || JSON.stringify(userData.achievements) !== JSON.stringify(achievementsWithProgress)) {
-            setUserData(prev => ({ ...prev, currentStreak, longestStreak, completedHabits: totalCompletions, achievements: achievementsWithProgress, lastUpdated: new Date().toISOString() }));
+        const achievementsWithProgress = userData.achievements.map(ach => ({ ...ach, progress: ach.unlocked ? 100 : calculateSingleAchievementProgress(ach) }));
+        const basePoints = totalCompletions * 10; // Moved points calculation here
+        const achievementPoints = achievementsWithProgress.filter(a => a.unlocked).reduce((s, a) => s + a.points, 0);
+        const totalPoints = basePoints + achievementPoints;
+
+
+        // Update state only if values have actually changed
+        if (userData.currentStreak !== currentStreak || userData.longestStreak !== longestStreak || userData.completedHabits !== totalCompletions || userData.totalPoints !== totalPoints || JSON.stringify(userData.achievements) !== JSON.stringify(achievementsWithProgress)) {
+             setUserData(prev => ({ ...prev, currentStreak, longestStreak, completedHabits: totalCompletions, totalPoints, achievements: achievementsWithProgress, lastUpdated: new Date().toISOString() }));
         }
-    }, [savedData, isClient, setUserData, userData.achievements, userData.currentStreak, userData.longestStreak, userData.completedHabits, calculateSingleAchievementProgress]); // Keep calculateSingleAchievementProgress in deps
+    }, [savedData, isClient, isLoading, setUserData, userData.achievements, userData.currentStreak, userData.longestStreak, userData.completedHabits, userData.totalPoints, calculateSingleAchievementProgress, totalCompletions]); // Added isLoading
+
 
     // Pull-to-refresh Effect (remains the same)
     useEffect(() => { /* ... pull to refresh logic ... */ }, [isClient]);
 
-    // --- Checkbox Handler (Simplified state update, logic moved to useEffect) ---
-    const handleCheckbox = (programKey: keyof typeof programs, weekNumber: number, habitIndex: number, checked: boolean) => { /* ... Implementation as in previous response ... */
-        const today = new Date().toISOString().split('T')[0];
-        const habit = programs[programKey]?.weeks?.[weekNumber - 1]?.habits?.[habitIndex]; // Get habit object
-        if (!habit) { console.error("Could not find habit definition for:", programKey, weekNumber, habitIndex); return; }
-        const habitId = habit.id;
-        let toastMsg = "";
+    // Checkbox Handler - Checks for immediate unlocks for toast, main update via useEffect
+     const handleCheckbox = (programKey: keyof typeof programs, weekNumber: number, habitIndex: number, checked: boolean) => {
+         const today = new Date().toISOString().split('T')[0];
+         const habit = programs[programKey]?.weeks?.[weekNumber - 1]?.habits?.[habitIndex];
+         if (!habit) return;
+         const habitId = habit.id;
+         let toastMsg = checked ? `${habit.habit} checked!` : `${habit.habit} unchecked.`;
 
-        setSavedData(prev => {
-            const currentCompletionDates = prev[programKey]?.[weekNumber]?.[habitIndex]?.completionDates || [];
-            let newCompletionDates;
-            if (checked) { newCompletionDates = Array.from(new Set([...currentCompletionDates, today])); toastMsg = `${habit.habit} checked!`; }
-            else { newCompletionDates = currentCompletionDates.filter(date => date !== today); toastMsg = `${habit.habit} unchecked.`; }
+         // --- Update savedData State ---
+         setSavedData(prev => {
+             const currentDates = prev[programKey]?.[weekNumber]?.[habitIndex]?.completionDates || [];
+             const newDates = checked ? Array.from(new Set([...currentDates, today])) : currentDates.filter(date => date !== today);
+             const updatedData = { ...prev }; // Shallow copy previous state
+              // Deep copy necessary levels before modification
+             if (!updatedData[programKey]) updatedData[programKey] = {}; else updatedData[programKey] = { ...updatedData[programKey] };
+             if (!updatedData[programKey][weekNumber]) updatedData[programKey][weekNumber] = {}; else updatedData[programKey][weekNumber] = { ...updatedData[programKey][weekNumber] };
+             // Assign new data for the specific habit
+             updatedData[programKey][weekNumber][habitIndex] = { completionDates: newDates };
+             return updatedData; // Return the new state object
+         });
 
-            const updatedData = { ...prev };
-            if (!updatedData[programKey]) updatedData[programKey] = {};
-            if (!updatedData[programKey][weekNumber]) updatedData[programKey][weekNumber] = {};
-            updatedData[programKey][weekNumber][habitIndex] = { completionDates: newCompletionDates };
-            return updatedData;
-        });
-        showToastCallback(toastMsg, 'success');
+         // Show immediate habit check/uncheck feedback
+         showToastCallback(toastMsg, 'success');
 
-        // --- Trigger Achievement Unlock Check (via useEffect reacting to savedData) ---
-        // Need to also manually check *this specific habit's streak* for immediate achievement unlock toast
-        const updatedDatesForThisHabit = savedData[programKey]?.[weekNumber]?.[habitIndex]?.completionDates || [];
-        const finalDates = checked ? Array.from(new Set([...updatedDatesForThisHabit, today])) : updatedDatesForThisHabit.filter(date => date !== today);
-        const { currentStreak: specificHabitStreak } = calculateHabitStreak(finalDates);
-
-        let newlyUnlocked: string[] = [];
-        const currentAchievements = userData.achievements; // Read current state
-        currentAchievements.forEach(ach => {
-            if (!ach.unlocked && ach.targetHabitId === habitId && ach.streakTarget && specificHabitStreak >= ach.streakTarget) {
+         // --- Check for immediate achievement unlock TOAST ---
+         // (Actual state update happens in useEffect reacting to savedData change)
+         const finalDates = checked
+            ? Array.from(new Set([...(savedData[programKey]?.[weekNumber]?.[habitIndex]?.completionDates || []), today]))
+            : (savedData[programKey]?.[weekNumber]?.[habitIndex]?.completionDates || []).filter(date => date !== today);
+         const { currentStreak: specificHabitStreak } = calculateHabitStreak(finalDates);
+         let newlyUnlocked: string[] = [];
+         userData.achievements.forEach(ach => {
+             if (!ach.unlocked && ach.targetHabitId === habitId && ach.streakTarget && specificHabitStreak >= ach.streakTarget) {
                  newlyUnlocked.push(ach.title);
-                 // Note: Actual unlock happens in the useEffect, this is just for the immediate toast
-            }
-        });
+             }
+             // You could add immediate checks for other simple achievements here if needed
+             // e.g., check for totalCompletions === 50 for Habit Warrior toast
+             // Note: totalCompletions used here would be based on the *previous* state before this update finishes
+         });
          if (newlyUnlocked.length > 0) {
              showToastCallback(`Achievement Unlocked: ${newlyUnlocked.join(', ')}! 🎉`, 'success');
-             // Consider longer timeout for achievement toasts
-             setTimeout(() => setToastInfo(null), 4000);
          }
-    };
+     };
 
     // Function to show habit info
     const showHabitInfo = (habit: Habit) => { setSelectedHabitInfo(habit); setShowInfoSheet(true); };
 
+    // Loading state handling
+    if (isLoading && isClient) {
+        return <div className="flex justify-center items-center min-h-screen bg-gray-900 text-white">Loading Your Progress...</div>;
+    }
+
     // --- Main JSX Structure ---
-     return (
-    // Main container with dark background and padding
-    <div className="bg-gray-900 p-4 pb-24 sm:p-8 md:p-12 max-w-4xl mx-auto min-h-screen">
-
-      {/* Header Section */}
-      <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-4xl font-bold mb-2">
-          <span className="text-[#CCBA78]">Transform</span>
-          <span className="text-white"> Your Habits</span>
-        </h1>
-        <h2 className="text-white text-lg sm:text-xl">8-Week Journey to Better Health</h2>
-      </div>
-
-      {/* Onboarding Section (Collapsible) */}
-      <div className="bg-gray-800 rounded-lg mb-6 overflow-hidden">
-          <button
-            onClick={() => setShowOnboarding(!showOnboarding)}
-            className="w-full p-4 flex justify-between items-center text-[#CCBA78] hover:bg-gray-700 transition-colors"
-            aria-expanded={showOnboarding} // Accessibility
-            aria-controls="onboarding-content" // Accessibility
-          >
-            <h3 className="text-xl font-semibold">Welcome to Your 8-Week Journey!</h3>
-            <ChevronDown
-              className={`w-5 h-5 transform transition-transform duration-200 ${
-                showOnboarding ? 'rotate-180' : ''
-              }`}
-            />
-          </button>
-          {showOnboarding && (
-            <div id="onboarding-content" className="p-6 border-t border-gray-700">
-                {/* Onboarding text lists */}
-                <div className="space-y-4 text-gray-200">
-                   <p>Choose your path:</p>
-                   <ul className="list-disc pl-5 space-y-2">
-                       <li><span className="text-[#CCBA78] font-medium">Strength & Growth</span> - Perfect for building muscle and strength through structured workouts</li>
-                       <li><span className="text-[#CCBA78] font-medium">Functional Training (Hybrid)</span> - Ideal for overall fitness, combining strength and cardio</li>
-                       <li><span className="text-[#CCBA78] font-medium">Group Fitness (Classes)</span> - Great for those who prefer guided workouts and community support</li>
-                   </ul>
-                   <div className="mt-6">
-                       <p className="font-medium text-[#CCBA78] mb-2">How it works:</p>
-                       <ul className="list-disc pl-5 space-y-2">
-                           <li>Select your track below (Strength, Hybrid, or Classes)</li>
-                           <li>Track 3 daily habits shown each week</li>
-                           <li>Check off completed habits daily</li>
-                           <li>Build streaks for consistency (see flames! 🔥)</li>
-                           <li>Earn achievements and points as you progress</li>
-                       </ul>
-                   </div>
-                    <div className="mt-6">
-                       <p className="font-medium text-[#CCBA78] mb-2">Tips for success:</p>
-                       <ul className="list-disc pl-5 space-y-2">
-                           <li>Start with the habits that feel most manageable</li>
-                           <li>Focus on consistency over perfection</li>
-                           <li>Use the example suggestions as guidelines</li>
-                           <li>Don't worry if you miss a day, just get back on track!</li>
-                           <li>Check in daily to maintain your habit streaks</li>
-                       </ul>
-                   </div>
-                   <p className="mt-6 text-sm italic">Need help? Reach out to any staff member for guidance on your journey!</p>
-               </div>
+    return (
+        <div className="bg-gray-900 p-4 pb-24 sm:p-6 md:p-8 max-w-4xl mx-auto min-h-screen"> {/* Adjusted padding */}
+            {/* Header */}
+            <div className="mb-6 sm:mb-8">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2"><span className="text-[#CCBA78]">Transform</span><span className="text-white"> Your Habits</span></h1>
+                <h2 className="text-white text-base sm:text-lg">8-Week Journey to Better Health</h2> {/* Adjusted size */}
             </div>
-          )}
-        </div>
 
-      {/* Data Management Section (ID, Buttons) */}
-      <DataManagement
-        userId={userId}
-        onExport={exportProgress}
-        onImport={importProgress}
-        onReset={() => setShowResetConfirm(true)}
-      />
+            {/* Onboarding Section */}
+            <div className="bg-gray-800 rounded-lg mb-6 overflow-hidden border border-gray-700/50"> {/* Added subtle border */}
+                <button onClick={() => setShowOnboarding(!showOnboarding)} className="w-full p-4 flex justify-between items-center text-[#CCBA78] hover:bg-gray-700/50 transition-colors">
+                    <h3 className="text-lg sm:text-xl font-semibold">Welcome to Your 8-Week Journey!</h3> {/* Adjusted size */}
+                    <ChevronDown className={`w-5 h-5 transform transition-transform duration-200 ${showOnboarding ? 'rotate-180' : ''}`} />
+                </button>
+                {showOnboarding && (
+                    <div className="p-4 sm:p-6 border-t border-gray-700"> {/* Adjusted padding */}
+                        <div className="space-y-4 text-gray-300 text-sm sm:text-base"> {/* Base text lighter */}
+                            <p>Choose your path:</p>
+                            <ul className="list-disc pl-5 space-y-1.5"> {/* Adjusted spacing */}
+                                <li><span className="text-[#CCBA78] font-medium">Strength & Growth</span> - For building muscle & strength.</li>
+                                <li><span className="text-[#CCBA78] font-medium">Functional Training (Hybrid)</span> - For overall fitness, strength & cardio.</li>
+                                <li><span className="text-[#CCBA78] font-medium">Group Fitness (Classes)</span> - For guided workouts & community.</li>
+                            </ul>
+                            <div className="mt-4"> {/* Adjusted spacing */}
+                                <p className="font-medium text-[#CCBA78] mb-1">How it works:</p>
+                                <ul className="list-disc pl-5 space-y-1.5">
+                                    <li>Select your track below</li>
+                                    <li>Track 3 daily habits each week</li>
+                                    <li>Check off completed habits daily</li>
+                                    <li>Build streaks (🔥) & earn achievements (🏆)</li>
+                                </ul>
+                            </div>
+                            <div className="mt-4">
+                                <p className="font-medium text-[#CCBA78] mb-1">Tips:</p>
+                                <ul className="list-disc pl-5 space-y-1.5">
+                                    <li>Consistency > Perfection</li>
+                                    <li>Use examples as guides</li>
+                                    <li>Don't worry if you miss a day!</li>
+                                    <li>Check in daily</li>
+                                </ul>
+                            </div>
+                            <p className="mt-4 text-xs sm:text-sm italic text-gray-400">Need help? Ask any staff member!</p> {/* Adjusted text */}
+                        </div>
+                    </div>
+                )}
+            </div>
 
-      {/* Reset Confirmation Dialog (logic outside return) */}
-      <AlertDialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>
-          <AlertDialogContent className="bg-gray-800 text-white">
-              <AlertDialogHeader><AlertDialogTitle className="text-red-500">Reset Progress?</AlertDialogTitle><AlertDialogDescription>Are you sure? This cannot be undone.</AlertDialogDescription></AlertDialogHeader>
-              <AlertDialogFooter><AlertDialogCancel className="bg-gray-600 hover:bg-gray-500">Cancel</AlertDialogCancel><AlertDialogAction onClick={() => { resetAllProgress(); setShowResetConfirm(false); }} className="bg-red-600 hover:bg-red-700">Yes, Reset</AlertDialogAction></AlertDialogFooter>
-          </AlertDialogContent>
-      </AlertDialog>
+            {/* Data Management */}
+            <DataManagement userId={userId} onExport={exportProgress} onImport={importProgress} onReset={() => setShowResetConfirm(true)} />
 
-      {/* Toast Notification (logic outside return) */}
-      {toastInfo && <Toast message={toastInfo.message} type={toastInfo.type} />}
+            {/* Reset Dialog */}
+            <AlertDialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>
+                 <AlertDialogContent className="bg-gray-800 text-white"><AlertDialogHeader><AlertDialogTitle className="text-red-500">Reset Progress?</AlertDialogTitle><AlertDialogDescription>This cannot be undone.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel className="bg-gray-600 hover:bg-gray-500 border-none">Cancel</AlertDialogCancel><AlertDialogAction onClick={()=>{resetAllProgress(); setShowResetConfirm(false);}} className="bg-red-600 hover:bg-red-700">Reset</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
+             </AlertDialog>
 
-      {/* Habit Info Sheet (logic outside return) */}
-      {selectedHabitInfo && <HabitInfoSheet habit={selectedHabitInfo} isOpen={showInfoSheet} onClose={() => { setShowInfoSheet(false); setSelectedHabitInfo(null); }} />}
+            {/* Toast Area - Position fixed at bottom center */}
+            <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-xs sm:max-w-sm px-4">
+                {toastInfo && <Toast message={toastInfo.message} type={toastInfo.type} />}
+            </div>
 
-      {/* Achievements Panel */}
-      {/* Ensure userData.achievements is populated before rendering */}
-      {userData?.achievements && <AchievementsPanel achievements={userData.achievements} />}
+            {/* Habit Info Sheet */}
+            {selectedHabitInfo && <HabitInfoSheet habit={selectedHabitInfo} isOpen={showInfoSheet} onClose={() => { setShowInfoSheet(false); setSelectedHabitInfo(null); }} />}
 
-      {/* Program Tabs Section */}
-      <Tabs defaultValue="strength" className="mb-20 sm:mb-0">
-          {/* Trajectory Buttons */}
-          <TabsList className="grid grid-cols-3 gap-2 sm:gap-4 mb-6 sm:mb-8">
-              {(Object.keys(programs) as Array<keyof typeof programs>).map((key) => {
-                  let Icon = Dumbbell; if (key === 'hybrid') Icon = Clock; if (key === 'cardio') Icon = Users;
-                  const title = key === 'cardio' ? 'Classes' : key.charAt(0).toUpperCase() + key.slice(1); // Capitalize title
-                  return (
-                      <TabsTrigger
-                          key={key}
-                          value={key}
-                          className="data-[state=active]:bg-[#CCBA78] data-[state=active]:text-gray-900 data-[state=inactive]:bg-gray-700 data-[state=inactive]:text-gray-400 data-[state=inactive]:hover:bg-gray-600 px-2 sm:px-4 py-2 sm:py-3 rounded text-xs sm:text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-[#CCBA78] focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900" // Added hover and focus styles
-                      >
-                          <div className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2">
-                              <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
-                              <span>{title}</span>
-                          </div>
-                      </TabsTrigger>
-                  );
-              })}
-          </TabsList>
+             {/* Achievements Panel */}
+             {/* Render only if achievements array is not empty */}
+             {(userData?.achievements && userData.achievements.length > 0) &&
+                 <AchievementsPanel achievements={userData.achievements} />
+             }
 
-          {/* Program Content (Weeks and Habits) */}
-          {Object.entries(programs).map(([key, program]) => (
-              <TabsContent key={key} value={key}>
-                  <div className="space-y-6">
-                      {program.weeks.map((week) => (
-                          <CollapsibleCard key={`${key}-week-${week.week}`} week={week}>
-                              <div className="space-y-4">
-                                  {week.habits.map((habit, idx) => {
-                                      const completionDates = savedData[key as keyof typeof programs]?.[week.week]?.[idx]?.completionDates || [];
-                                      const { currentStreak: habitStreak } = calculateHabitStreak(completionDates);
-                                      const isCheckedToday = completionDates.includes(new Date().toISOString().split('T')[0]);
-                                      return (
-                                          <div key={habit.id} className={`group flex items-start space-x-3 sm:space-x-4 p-3 rounded-md transition-colors ${isCheckedToday ? 'bg-green-900 bg-opacity-40 hover:bg-green-900/50' : 'hover:bg-gray-700/30'}`}> {/* Hover effect */}
-                                              <input
-                                                  type="checkbox"
-                                                  id={`habit-${habit.id}`}
-                                                  className="mt-1 w-5 h-5 rounded border-gray-500 focus:ring-2 focus:ring-offset-0 focus:ring-offset-gray-800 focus:ring-[#CCBA78] text-[#CCBA78] bg-gray-700 shrink-0 cursor-pointer" // Improved focus style
-                                                  checked={isCheckedToday}
-                                                  onChange={(e) => handleCheckbox(key as keyof typeof programs, week.week, idx, e.target.checked)}
-                                              />
-                                              <div className="flex-grow">
-                                                  {/* Habit Name (White Text) */}
-                                                  <label htmlFor={`habit-${habit.id}`} className="font-medium text-white cursor-pointer hover:text-[#CCBA78] transition-colors">{habit.habit}</label>
-                                                  {/* Example Text (Lighter Gray) */}
-                                                  <p className="text-gray-300 text-sm mt-1">{habit.example}</p> {/* Adjusted color */}
-                                                  {/* Footer row: Completion Count and Streak */}
-                                                  <div className="flex items-center justify-between mt-1">
-                                                      <p className="text-gray-400 text-xs">Completed {completionDates.length} times</p>
-                                                      {habitStreak > 0 && (
-                                                          <div className="flex items-center gap-1 text-orange-400 animate-pulse" title={`${habitStreak}-day streak`}>
-                                                              <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                                                              <span className="text-xs sm:text-sm font-medium">{habitStreak}</span>
-                                                          </div>
-                                                      )}
-                                                  </div>
-                                              </div>
-                                          </div>
-                                      );
-                                  })}
-                              </div>
-                          </CollapsibleCard>
-                      ))}
-                  </div>
-              </TabsContent>
-           ))}
-       </Tabs>
-    </div>
-  );
-}; 
+            {/* Program Tabs */}
+            <Tabs defaultValue="strength" className="mb-20 sm:mb-0">
+                <TabsList className="grid grid-cols-3 gap-2 mb-6">
+                    {(Object.keys(programs) as Array<keyof typeof programs>).map((key) => {
+                        let Icon = Dumbbell; if (key === 'hybrid') Icon = Clock; if (key === 'cardio') Icon = Users;
+                        const title = key === 'cardio' ? 'Classes' : key.charAt(0).toUpperCase() + key.slice(1);
+                        return <TabsTrigger key={key} value={key} className="data-[state=active]:bg-[#CCBA78] data-[state=active]:text-gray-900 data-[state=inactive]:bg-gray-700 data-[state=inactive]:text-gray-400 data-[state=inactive]:hover:bg-gray-600/70 px-3 py-2.5 rounded text-xs sm:text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-[#CCBA78] focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900"><div className="flex flex-col items-center gap-1 sm:gap-1.5"><Icon className="w-4 h-4 sm:w-5 sm:h-5" /><span>{title}</span></div></TabsTrigger>;
+                    })}
+                </TabsList>
 
-export default HabitProgram;
+                {/* Program Content */}
+                {Object.entries(programs).map(([key, program]) => (
+                    <TabsContent key={key} value={key}>
+                        <div className="space-y-4 sm:space-y-6"> {/* Adjusted spacing */}
+                            {program.weeks.map((week) => (
+                                <CollapsibleCard key={`${key}-week-${week.week}`} week={week}>
+                                    <div className="space-y-3 sm:space-y-4"> {/* Adjusted spacing */}
+                                        {week.habits.map((habit, idx) => {
+                                            const completionDates = savedData[key as keyof typeof programs]?.[week.week]?.[idx]?.completionDates || [];
+                                            const { currentStreak: habitStreak } = calculateHabitStreak(completionDates);
+                                            const isCheckedToday = completionDates.includes(new Date().toISOString().split('T')[0]);
+                                            return (
+                                                <div key={habit.id} className={`group flex items-start space-x-3 p-3 rounded-md transition-colors duration-150 ${isCheckedToday ? 'bg-green-900/40 hover:bg-green-900/50' : 'hover:bg-gray-700/40'}`}>
+                                                    <input type="checkbox" id={`habit-${habit.id}`} className="mt-1 w-5 h-5 rounded border-gray-500 focus:ring-2 focus:ring-offset-0 focus:ring-offset-gray-800 focus:ring-[#CCBA78] text-[#CCBA78] bg-gray-700 shrink-0 cursor-pointer" checked={isCheckedToday} onChange={(e) => handleCheckbox(key as keyof typeof programs, week.week, idx, e.target.checked)} />
+                                                    <div className="flex-grow">
+                                                        <label htmlFor={`habit-${habit.id}`} className="font-medium text-gray-100 hover:text-[#CCBA78] transition-colors cursor-pointer">{habit.habit}</label> {/* Habit text slightly lighter */}
+                                                        <p className="text-gray-400 text-sm mt-0.5 sm:mt-1">{habit.example}</p> {/* Example slightly darker */}
+                                                        <div className="flex items-center justify-between mt-1.5"> {/* Adjusted spacing */}
+                                                             <p className="text-gray-500 text-xs">Completed {completionDates.length} times</p> {/* Completion count darker */}
+                                                             {habitStreak > 0 && (<div className="flex items-center gap-1 text-orange-400 animate-pulse" title={`${habitStreak}-day streak`}><Flame className="w-3.5 h-3.5" /><span className="text-xs font-medium">{habitStreak}</span></div>)}
+                                                         </div>
+                                                     </div>
+                                                 </div>
+                                             );
+                                         })}
+                                     </div>
+                                 </CollapsibleCard>
+                             ))}
+                         </div>
+                     </TabsContent>
+                 ))}
+             </Tabs>
+         </div>
+     );
+ };
+
+ export default HabitProgram;
