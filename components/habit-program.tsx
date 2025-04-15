@@ -1,11 +1,175 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Dumbbell, Clock, Users, ChevronDown, Save, Upload, Share2, Facebook, Info, Calendar } from 'lucide-react';
+import { Dumbbell, Clock, Users, ChevronDown, Save, Upload, Share2, Facebook, Info, Calendar, HelpCircle } from 'lucide-react';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Trophy, Award, Crown, Flame } from 'lucide-react';
-import { Toast } from "@/components/ui/toast"; // Assuming this component exists and works
-import { HabitInfoSheet } from "@/components/ui/habit-info-sheet"; // Assuming this exists
+import { Trophy, Award, Crown, Flame, AlertCircle } from 'lucide-react';
+import { Toast } from "@/components/ui/toast";
+import { HabitInfoSheet } from "@/components/ui/habit-info-sheet";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
+// --- Icon Mapping for Habits ---
+const habitIconMapping = {
+  // Strength Track
+  "str-w1-h1": "dumbbell", // Complete scheduled workout
+  "str-w1-h2": "baggage", // Pack gym bag
+  "str-w1-h3": "sparkles", // Etiquette champ
+  "str-w2-h1": "stretching", // 5-min mobility warm-up
+  "str-w2-h2": "clipboard-list", // Record exercises/weights
+  "str-w2-h3": "scan", // Check form in mirror
+  "str-w3-h1": "egg", // Track daily protein
+  "str-w3-h2": "droplets", // Drink water
+  "str-w3-h3": "utensils", // Eat pre/post workout
+  "str-w4-h1": "moon", // Get 7+ hours sleep
+  "str-w4-h2": "stretch", // 10-min daily stretch
+  "str-w4-h3": "activity", // Rate muscle soreness
+  "str-w5-h1": "list-checks", // Follow program exactly
+  "str-w5-h2": "trending-up", // Track weight increases
+  "str-w5-h3": "bar-chart", // Rate workout intensity
+  "str-w6-h1": "lungs", // Practice breathing
+  "str-w6-h2": "zap", // Focus on contraction
+  "str-w6-h3": "check-circle", // Maintain form always
+  "str-w7-h1": "footprints", // Hit daily step goal
+  "str-w7-h2": "check-square", // Complete all exercises
+  "str-w7-h3": "timer", // Follow meal timing
+  "str-w8-h1": "list-todo", // Complete full protocol
+  "str-w8-h2": "target", // Meet nutrition targets
+  "str-w8-h3": "clipboard-data", // Log all metrics
+  
+  // Hybrid Track
+  "hyb-w1-h1": "squat", // Practice air squats
+  "hyb-w1-h2": "timer", // Hold plank
+  "hyb-w1-h3": "movement", // Mobility routine
+  "hyb-w2-h1": "calendar-check", // Complete WOD/Rest
+  "hyb-w2-h2": "pencil", // Record scores
+  "hyb-w2-h3": "scale", // Practice scaling
+  "hyb-w3-h1": "dumbbell", // Daily skill work
+  "hyb-w3-h2": "timer", // Complete MetCon
+  "hyb-w3-h3": "target", // Work on weakness
+  "hyb-w4-h1": "heart-pulse", // Rate workout intensity
+  "hyb-w4-h2": "heart", // Track HR recovery
+  "hyb-w4-h3": "wind", // Complete cooldown
+  "hyb-w5-h1": "clock", // Time meals
+  "hyb-w5-h2": "pie-chart", // Track macros
+  "hyb-w5-h3": "droplet", // Follow hydration
+  "hyb-w6-h1": "file-text", // Record benchmarks
+  "hyb-w6-h2": "dumbbell", // Track key lifts
+  "hyb-w6-h3": "gauge", // Measure intensity
+  "hyb-w7-h1": "barbell", // Oly lift drills
+  "hyb-w7-h2": "gymnastics", // Gymnastics skills
+  "hyb-w7-h3": "puzzle", // Accessory work
+  "hyb-w8-h1": "flame", // Full WOD warmup
+  "hyb-w8-h2": "strategy", // Execute strategy
+  "hyb-w8-h3": "database", // Record all data
+  
+  // Cardio/Classes Track
+  "cls-w1-h1": "backpack", // Pack class bag
+  "cls-w1-h2": "clock", // Arrive 10 min early
+  "cls-w1-h3": "spray-can", // Clean equipment
+  "cls-w2-h1": "flame", // Pre-class warmup
+  "cls-w2-h2": "user-check", // Follow instructor
+  "cls-w2-h3": "activity", // Track intensity
+  "cls-w3-h1": "clipboard", // Practice form
+  "cls-w3-h2": "sliders", // Use modifications
+  "cls-w3-h3": "battery", // Record energy levels
+  "cls-w4-h1": "shield", // Maintain form
+  "cls-w4-h2": "heart", // Monitor HR zones
+  "cls-w4-h3": "droplet", // Track water intake
+  "cls-w5-h1": "arrow-up-circle", // Try new mod
+  "cls-w5-h2": "target", // Meet intensity targets
+  "cls-w5-h3": "clipboard-data", // Record metrics
+  "cls-w6-h1": "users", // Meet someone new
+  "cls-w6-h2": "sunset", // Stay for cooldown
+  "cls-w6-h3": "zap", // Max effort
+  "cls-w7-h1": "award", // Advanced moves
+  "cls-w7-h2": "shield-check", // Form under fatigue
+  "cls-w7-h3": "trending-up", // Track improvements
+  "cls-w8-h1": "star", // Lead by example
+  "cls-w8-h2": "share", // Share milestones
+  "cls-w8-h3": "trophy", // Record achievements
+};
+
+// --- Why This Matters Descriptions ---
+const habitDescriptions = {
+  // Strength Track
+  "str-w1-h1": "Working out consistently is the #1 factor for results. Even small workouts add up over time.",
+  "str-w1-h2": "Being prepared removes barriers to working out. No last-minute excuses!",
+  "str-w1-h3": "Building gym etiquette earns respect and makes you part of the community.",
+  "str-w2-h1": "Proper warm-ups reduce injury risk by 54% and improve workout performance.",
+  "str-w2-h2": "Tracking progress helps identify what's working and keeps you motivated as you see improvements.",
+  "str-w2-h3": "Proper form maximizes muscle growth while preventing injuries. It's quality over quantity.",
+  "str-w3-h1": "Most beginners only get half the protein they need. Adequate protein intake is essential for muscle repair and growth.",
+  "str-w3-h2": "Even 2% dehydration reduces performance by up to 20%. Water is critical for recovery and energy.",
+  "str-w3-h3": "Well-timed nutrition around workouts gives your body the fuel it needs and enhances recovery.",
+  "str-w4-h1": "During sleep is when most muscle growth happens. It's as important as your workout!",
+  "str-w4-h2": "Regular stretching improves flexibility, reduces soreness, and helps prevent injuries.",
+  "str-w4-h3": "Tracking soreness helps identify when to push and when to recover, preventing overtraining.",
+  "str-w5-h1": "Programs are designed strategically - following them exactly optimizes your results.",
+  "str-w5-h2": "Progressive overload is the key principle of muscle growth. Track increases to ensure progress.",
+  "str-w5-h3": "Rating intensity helps calibrate effort across different exercises and ensures proper progression.",
+  "str-w6-h1": "Proper breathing stabilizes your core, increases power, and helps maintain technique under load.",
+  "str-w6-h2": "Mind-muscle connection improves exercise effectiveness by up to 30% without adding weight.",
+  "str-w6-h3": "Maintaining form when tired prevents injuries and ensures you're working the right muscles.",
+  "str-w7-h1": "Daily steps are foundational for heart health, recovery, and fat loss, even on rest days.",
+  "str-w7-h2": "Skipping exercises creates muscular imbalances. Complete all exercises for balanced development.",
+  "str-w7-h3": "Consistent meal timing stabilizes energy, improves recovery, and optimizes nutrient utilization.",
+  "str-w8-h1": "A complete workout protocol ensures all aspects of fitness are addressed for maximum results.",
+  "str-w8-h2": "Meeting nutrition targets provides the right building blocks for muscle repair and growth.",
+  "str-w8-h3": "Detailed tracking creates accountability and lets you see patterns in your performance.",
+  
+  // Hybrid Track
+  "hyb-w1-h1": "The squat is a fundamental movement pattern. Mastering it improves all lower body strength.",
+  "hyb-w1-h2": "Planks build core stability essential for all movements and help prevent back injuries.",
+  "hyb-w1-h3": "Mobility work prepares joints for complex movements and prevents common injuries.",
+  "hyb-w2-h1": "Following the workout/rest schedule balances intensity with recovery for optimal results.",
+  "hyb-w2-h2": "Tracking performance creates a record of improvement and helps identify effective strategies.",
+  "hyb-w2-h3": "Smart scaling ensures you're challenged but can maintain form and complete workouts safely.",
+  "hyb-w3-h1": "Daily skill practice develops movement patterns that carry over to more complex exercises.",
+  "hyb-w3-h2": "MetCons build cardiovascular capacity and mental toughness in short, efficient workouts.",
+  "hyb-w3-h3": "Working on weaknesses prevents plateaus and creates balanced, functional fitness.",
+  "hyb-w4-h1": "Rating intensity helps you track effort and ensures you're pushing hard enough to progress.",
+  "hyb-w4-h2": "Heart rate recovery speed is a key indicator of improving fitness and reduced injury risk.",
+  "hyb-w4-h3": "Proper cooldowns accelerate recovery, reduce soreness, and improve flexibility.",
+  "hyb-w5-h1": "Meal timing around workouts improves performance during training and speeds recovery after.",
+  "hyb-w5-h2": "Tracking macros ensures you're fueling properly for high-intensity functional training.",
+  "hyb-w5-h3": "Proper hydration improves performance by up to 25% and aids recovery between workouts.",
+  "hyb-w6-h1": "Benchmark workouts measure progress over time and identify areas needing improvement.",
+  "hyb-w6-h2": "Core lifts build foundational strength that transfers to all functional movements.",
+  "hyb-w6-h3": "Measuring intensity ensures you're working at the right level for your goals.",
+  "hyb-w7-h1": "Olympic lifting drills develop power, speed, and coordination that transfer to all movements.",
+  "hyb-w7-h2": "Gymnastic skills improve body control, strength-to-weight ratio, and movement efficiency.",
+  "hyb-w7-h3": "Accessory work addresses muscular imbalances and strengthens areas prone to injury.",
+  "hyb-w8-h1": "A complete warmup prepares all systems for optimal performance and reduces injury risk.",
+  "hyb-w8-h2": "Strategic execution optimizes energy use and ensures best performance throughout workouts.",
+  "hyb-w8-h3": "Detailed data tracking allows for analysis of strengths, weaknesses, and progress over time.",
+  
+  // Cardio/Classes Track
+  "cls-w1-h1": "Coming prepared removes obstacles to participation and helps you focus on your workout.",
+  "cls-w1-h2": "Arriving early reduces stress, allows proper setup, and helps you understand class goals.",
+  "cls-w1-h3": "Equipment care shows respect for the community and creates a better environment for everyone.",
+  "cls-w2-h1": "Pre-class warmups improve performance, reduce injury risk, and help you get more from class.",
+  "cls-w2-h2": "Following instructor cues ensures proper form and helps you understand movement patterns.",
+  "cls-w2-h3": "Tracking intensity helps you gauge effort appropriately and see progress over time.",
+  "cls-w3-h1": "Focusing on form over speed or weight ensures effective workouts and prevents injuries.",
+  "cls-w3-h2": "Smart modifications maintain workout intensity while accommodating your current fitness level.",
+  "cls-w3-h3": "Energy tracking helps identify optimal workout times and effective recovery strategies.",
+  "cls-w4-h1": "Maintaining form when fatigued builds muscle memory and prevents compensation injuries.",
+  "cls-w4-h2": "Heart rate zone training optimizes cardiovascular benefits and helps manage workout intensity.",
+  "cls-w4-h3": "Proper hydration improves performance, prevents cramps, and speeds recovery after class.",
+  "cls-w5-h1": "Trying harder modifications challenges your body and leads to continued improvement.",
+  "cls-w5-h2": "Meeting intensity targets ensures you're working at the right level for your fitness goals.",
+  "cls-w5-h3": "Recording metrics provides concrete evidence of your progress and motivates consistency.",
+  "cls-w6-h1": "Social connections increase workout enjoyment and class attendance by over 40%.",
+  "cls-w6-h2": "Cooldowns accelerate recovery, improve flexibility, and reduce post-workout soreness.",
+  "cls-w6-h3": "Appropriate intensity pushes your limits safely and leads to consistent improvement.",
+  "cls-w7-h1": "Advanced movements build on your foundation and create new physical challenges.",
+  "cls-w7-h2": "Maintaining form during fatigue is the true test of skill mastery and proper conditioning.",
+  "cls-w7-h3": "Tracking key movements shows progress and helps identify effective class formats.",
+  "cls-w8-h1": "Leading by example inspires others and reinforces your own knowledge and proper form.",
+  "cls-w8-h2": "Sharing accomplishments creates accountability and motivates continued dedication.",
+  "cls-w8-h3": "Recording achievements creates a record of your journey and builds confidence."
+};
+
 
 // --- Interfaces ---
 interface Habit {
@@ -114,6 +278,154 @@ const ACHIEVEMENTS: Achievement[] = [
     { id: 'streak-habit-str-w3-h1-7d', title: 'Protein Tracker', description: 'Track daily protein intake 7 days straight', icon: 'flame', condition: 'Maintain a 7-day streak for "Track daily protein intake"', targetHabitId: 'str-w3-h1', streakTarget: 7, points: 100, unlocked: false },
     { id: 'streak-habit-hyb-w1-h1-7d', title: 'Squat Practice Pro', description: 'Practice air squat technique 7 days straight', icon: 'flame', condition: 'Maintain a 7-day streak for "Practice air squat technique"', targetHabitId: 'hyb-w1-h1', streakTarget: 7, points: 100, unlocked: false },
 ];
+const PRIORITIZED_ACHIEVEMENTS = [
+  { id: 'streak-master-login', title: 'Check-in Streak Master', description: 'Maintain a 7-day check-in streak', icon: 'calendar', condition: 'Check-in (complete any habit) for 7 consecutive days', streakTarget: 7, points: 70, unlocked: false },
+  { id: 'streak-habit-str-w1-h1-7d', title: 'Workout Consistency', description: 'Complete scheduled workout 7 days straight', icon: 'flame', condition: 'Maintain a 7-day streak for "Complete scheduled workout"', targetHabitId: 'str-w1-h1', streakTarget: 7, points: 100, unlocked: false },
+  { id: 'streak-habit-str-w3-h1-7d', title: 'Protein Tracker', description: 'Track daily protein intake 7 days straight', icon: 'flame', condition: 'Maintain a 7-day streak for "Track daily protein intake"', targetHabitId: 'str-w3-h1', streakTarget: 7, points: 100, unlocked: false },
+  { id: 'streak-habit-hyb-w1-h1-7d', title: 'Squat Practice Pro', description: 'Practice air squat technique 7 days straight', icon: 'flame', condition: 'Maintain a 7-day streak for "Practice air squat technique"', targetHabitId: 'hyb-w1-h1', streakTarget: 7, points: 100, unlocked: false },
+  { id: 'first-week', title: 'First Week Champion', description: 'Complete all habits for one week', icon: 'trophy', condition: 'Complete 21 habits in a single week', points: 210, unlocked: false },
+  { id: 'habit-warrior', title: 'Habit Warrior', description: 'Complete 50 total habits', icon: 'award', condition: 'Complete any 50 habits', points: 350, unlocked: false },
+  { id: 'halfway-there', title: 'Halfway There!', description: 'Complete all habits for 4 weeks', icon: 'award', condition: 'Complete 84 total habits (Weeks 1-4)', points: 500, unlocked: false },
+  { id: 'century-club', title: 'Century Club', description: 'Complete 100 total habits', icon: 'award', condition: 'Complete any 100 habits', points: 750, unlocked: false },
+  { id: 'program-master', title: 'Program Master', description: 'Complete an entire 8-week program', icon: 'crown', condition: 'Complete all 168 habits in an 8-week program', points: 1680, unlocked: false },
+];
+
+/ --- First-Timer Walkthrough Component ---
+const WalkthroughTour = ({ isOpen, onClose }) => {
+  const [step, setStep] = useState(1);
+  const totalSteps = 3;
+
+  const nextStep = () => {
+    if (step < totalSteps) {
+      setStep(step + 1);
+    } else {
+      onClose();
+    }
+  };
+
+  const prevStep = () => {
+    if (step > 1) {
+      setStep(step - 1);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="relative bg-gray-800 rounded-lg p-6 max-w-md w-full">
+        <div className="absolute top-3 right-3">
+          <button 
+            onClick={onClose} 
+            className="text-gray-400 hover:text-white"
+            aria-label="Close walkthrough"
+          >
+            &times;
+          </button>
+        </div>
+        
+        <div className="mb-4">
+          <h3 className="text-[#CCBA78] text-xl font-semibold">Getting Started</h3>
+          <div className="flex mt-2">
+            {Array.from({length: totalSteps}).map((_, i) => (
+              <div 
+                key={i} 
+                className={`h-1 flex-1 mx-1 rounded-full ${i + 1 === step ? 'bg-[#CCBA78]' : 'bg-gray-600'}`}
+              />
+            ))}
+          </div>
+        </div>
+        
+        {step === 1 && (
+          <div className="text-white">
+            <h4 className="font-semibold mb-2">Step 1: Checking off habits</h4>
+            <p className="text-gray-300 mb-4">
+              Check off each habit daily to build your streak. The checkbox turns green when completed for today.
+            </p>
+            <div className="bg-gray-700 p-4 rounded-lg mb-4 flex items-start space-x-3">
+              <div className="mt-1 w-5 h-5 rounded border-gray-500 bg-green-800 shrink-0" />
+              <div>
+                <p className="font-medium text-gray-100">Complete scheduled workout</p>
+                <p className="text-gray-400 text-sm">Follow planned schedule (rest days count)</p>
+              </div>
+            </div>
+            <p className="text-gray-300 text-sm italic">
+              Tip: Be consistent! Daily check-ins are key to your success.
+            </p>
+          </div>
+        )}
+        
+        {step === 2 && (
+          <div className="text-white">
+            <h4 className="font-semibold mb-2">Step 2: Building streaks</h4>
+            <p className="text-gray-300 mb-4">
+              Checking a habit on consecutive days builds a streak. Streaks are shown with a flame icon.
+            </p>
+            <div className="bg-gray-700 p-4 rounded-lg mb-4">
+              <div className="flex items-center justify-between">
+                <p className="text-gray-400 text-xs">Completed 5 times</p>
+                <div className="flex items-center gap-1 text-orange-400">
+                  <Flame className="w-3.5 h-3.5" />
+                  <span className="text-xs font-medium">3</span>
+                </div>
+              </div>
+            </div>
+            <p className="text-gray-300 text-sm italic">
+              Tip: A 7-day streak unlocks special achievements!
+            </p>
+          </div>
+        )}
+        
+        {step === 3 && (
+          <div className="text-white">
+            <h4 className="font-semibold mb-2">Step 3: Earning achievements</h4>
+            <p className="text-gray-300 mb-4">
+              Unlock achievements by completing habits consistently. Track your progress in the Achievements section.
+            </p>
+            <div className="bg-gray-700 p-4 rounded-lg mb-4">
+              <div className="flex items-center gap-3">
+                <Trophy className="w-5 h-5 text-[#CCBA78]" />
+                <div>
+                  <h4 className="font-semibold text-[#CCBA78]">First Week Champion</h4>
+                  <p className="text-sm text-gray-400">Complete all habits for one week</p>
+                </div>
+              </div>
+              <div className="mt-2">
+                <div className="w-full bg-gray-600 rounded-full h-2 overflow-hidden">
+                  <div className="bg-[#CCBA78] h-full rounded-full" style={{ width: '45%' }} />
+                </div>
+                <p className="text-xs text-gray-400 mt-1 text-right">45%</p>
+              </div>
+            </div>
+            <p className="text-gray-300 text-sm italic">
+              Tip: Start with Week 1 habits to build a strong foundation!
+            </p>
+          </div>
+        )}
+        
+        <div className="flex justify-between mt-6">
+          {step > 1 ? (
+            <button 
+              onClick={prevStep} 
+              className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded"
+            >
+              Back
+            </button>
+          ) : (
+            <div></div> // Empty div to maintain layout
+          )}
+          
+          <button 
+            onClick={nextStep} 
+            className="px-4 py-2 bg-[#CCBA78] hover:bg-[#CCBA78]/90 text-gray-900 rounded"
+          >
+            {step === totalSteps ? "Get Started!" : "Next"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // --- Helper Functions ---
 const calculateStreak = (savedData: SavedData): { currentStreak: number; longestStreak: number } => {
@@ -216,7 +528,7 @@ const AchievementsPanel = ({
 
     if (!achievements) { return <div className="text-center text-gray-500 p-4">Loading achievements...</div>; }
 
-    return (
+   return (
         <Card className="bg-gray-800 border-none mb-8">
             <div className="p-4 sm:p-6"> {/* Adjusted padding */}
                 <h3 className="text-[#CCBA78] text-xl font-semibold mb-4">
@@ -225,8 +537,17 @@ const AchievementsPanel = ({
                         : 'All Achievements'}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {filteredAchievements.map((achievement) => (
-                        <div key={achievement.id} className={`p-4 rounded-lg ${achievement.unlocked ? 'bg-[#CCBA78] bg-opacity-20 border border-[#CCBA78]' : 'bg-gray-700 bg-opacity-50'}`}>
+                    {processedAchievements.map((achievement) => (
+                        <div 
+                            key={achievement.id} 
+                            className={`p-4 rounded-lg ${
+                                achievement.unlocked 
+                                    ? 'bg-[#CCBA78] bg-opacity-20 border border-[#CCBA78]' 
+                                    : nextAchievementToUnlock?.id === achievement.id
+                                        ? 'bg-gray-700 bg-opacity-70 border border-[#CCBA78] border-dashed'
+                                        : 'bg-gray-700 bg-opacity-50'
+                            }`}
+                        >
                             <div className="flex items-center justify-between min-h-[40px]">
                                 <div className="flex items-center gap-3">
                                     {achievement.icon === 'trophy' && <Trophy className={`w-5 h-5 ${achievement.unlocked ? 'text-[#CCBA78]' : 'text-gray-400'}`} />}
@@ -235,7 +556,7 @@ const AchievementsPanel = ({
                                     {achievement.icon === 'crown' && <Crown className={`w-5 h-5 ${achievement.unlocked ? 'text-[#CCBA78]' : 'text-gray-400'}`} />}
                                     {achievement.icon === 'calendar' && <Calendar className={`w-5 h-5 ${achievement.unlocked ? 'text-[#CCBA78]' : 'text-gray-400'}`} />}
                                     <div className="flex-1"> {/* Allow text to wrap */}
-                                        <h4 className={`font-semibold ${achievement.unlocked ? 'text-[#CCBA78]' : 'text-gray-300'}`}>{achievement.title}</h4>
+                                        <h4 className={`font-semibold ${achievement.unlocked ? 'text-[#CCBA78]' : nextAchievementToUnlock?.id === achievement.id ? 'text-[#CCBA78]/80' : 'text-gray-300'}`}>{achievement.title}</h4>
                                         <p className="text-sm text-gray-400">{achievement.description}</p>
                                     </div>
                                 </div>
@@ -248,9 +569,21 @@ const AchievementsPanel = ({
                             {!achievement.unlocked && (
                                 <div className="mt-2">
                                     <div className="w-full bg-gray-600 rounded-full h-1.5 sm:h-2 overflow-hidden"> {/* Adjusted height */}
-                                        <div className="bg-[#CCBA78] h-full rounded-full transition-all duration-300 ease-out" style={{ width: `${achievement.progress ?? 0}%` }} />
+                                        <div 
+                                            className={`h-full rounded-full transition-all duration-300 ease-out ${
+                                                nextAchievementToUnlock?.id === achievement.id 
+                                                    ? 'bg-[#CCBA78] animate-pulse' 
+                                                    : 'bg-[#CCBA78]'
+                                            }`} 
+                                            style={{ width: `${achievement.progress ?? 0}%` }} 
+                                        />
                                     </div>
-                                    <p className="text-xs text-gray-400 mt-1 text-right">{Math.floor(achievement.progress ?? 0)}%</p>
+                                    <p className="text-xs text-gray-400 mt-1 text-right">
+                                        {Math.floor(achievement.progress ?? 0)}%
+                                        {nextAchievementToUnlock?.id === achievement.id && (
+                                            <span className="text-[#CCBA78] ml-1">Next up!</span>
+                                        )}
+                                    </p>
                                 </div>
                             )}
                         </div>
@@ -289,33 +622,20 @@ const AchievementsPanel = ({
     );
 };
 
-// --- DataManagement Component ---
-const DataManagement = ({ userId, onExport, onImport, onReset }: { userId: string; onExport: () => void; onImport: (file: File) => void; onReset: () => void; }) => {
-    const copyUserId = () => { if(navigator.clipboard) { navigator.clipboard.writeText(userId); /* Add toast feedback */ } };
-    return (
-        <Card className="bg-gray-800 p-3 sm:p-4 mb-6 rounded-lg"> {/* Added rounded-lg */}
-            <div className="text-white">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-2 sm:p-3 bg-gray-700 rounded-lg mb-3">
-                    <span className="font-mono text-xs sm:text-sm break-all mb-2 sm:mb-0 mr-2" title="Your unique tracker ID">ID: {userId || "loading..."}</span> {/* Handle loading state */}
-                    <button onClick={copyUserId} className="text-[#CCBA78] hover:text-[#CCBA78]/80 p-1 sm:p-2 text-sm whitespace-nowrap flex-shrink-0 rounded hover:bg-gray-600 transition-colors" title="Copy ID">Copy ID</button> {/* Added hover bg */}
-                </div>
-                <div className="grid grid-cols-3 gap-1 sm:gap-2 w-full text-center">
-                    <button onClick={onExport} title="Export progress" className="px-2 sm:px-3 py-2 bg-[#CCBA78] text-gray-900 rounded hover:bg-[#CCBA78]/90 text-xs sm:text-sm transition-colors">Export</button>
-                    <label title="Import progress" className="px-2 sm:px-3 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 cursor-pointer text-xs sm:text-sm transition-colors"> Import <input type="file" accept=".json" className="hidden" onChange={(e) => { if (e.target.files?.[0]) { onImport(e.target.files[0]); } e.target.value = ''; }} /> </label>
-                    <button onClick={onReset} title="Reset all progress" className="px-2 sm:px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-xs sm:text-sm transition-colors">Reset</button>
-                </div>
-            </div>
-        </Card>
-    );
-};
-
-// --- CollapsibleCard Component ---
+// --- Modified CollapsibleCard Component ---
 const CollapsibleCard = ({ week, children }: CollapsibleCardProps) => {
     const [isOpen, setIsOpen] = useState(week.week === 1); // Default open only for week 1
+    
+    // Add highlight for Week 1 for beginners
+    const isWeekOne = week.week === 1;
+    
     return (
-        <Card className="bg-gray-800 border border-gray-700/50 overflow-hidden rounded-lg"> {/* Added border */}
+        <Card className={`bg-gray-800 overflow-hidden rounded-lg ${isWeekOne ? 'border-2 border-[#CCBA78]/50' : 'border border-gray-700/50'}`}> {/* Added conditional border */}
             <div className="flex items-center justify-between p-4 sm:p-6 cursor-pointer hover:bg-gray-700/50 transition-colors" onClick={() => setIsOpen(!isOpen)} role="button" aria-expanded={isOpen} aria-controls={`week-${week.week}-content`}>
-                <h3 className="text-[#CCBA78] text-lg font-semibold">Week {week.week} - {week.focus}</h3>
+                <div className="flex items-center">
+                    <h3 className="text-[#CCBA78] text-lg font-semibold">Week {week.week} - {week.focus}</h3>
+                    {isWeekOne && <span className="ml-2 text-xs bg-[#CCBA78] text-gray-900 px-2 py-0.5 rounded-full">Start here!</span>}
+                </div>
                 <ChevronDown className={`w-5 h-5 text-[#CCBA78] transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
             </div>
             {/* Conditional Rendering with explicit check */}
@@ -328,203 +648,42 @@ const CollapsibleCard = ({ week, children }: CollapsibleCardProps) => {
     );
 };
 
-
-// --- useUserStorage Hook ---
-const useUserStorage = (showToastCallback: (message: string, type?: 'success' | 'error') => void) => {
-    const [userId, setUserId] = useState<string>('');
-    const [isClient, setIsClient] = useState(false);
-    const [isLoading, setIsLoading] = useState(true); // Added loading state
-    const [userData, setUserData] = useState<UserProgress>(() => ({ currentStreak: 0, longestStreak: 0, totalPoints: 0, completedHabits: 0, achievements: ACHIEVEMENTS.map(a => ({ ...a, progress: 0, unlocked: false, unlockedAt: undefined })), weeklyProgress: {}, lastUpdated: new Date().toISOString() }));
-    const [savedData, setSavedData] = useState<SavedData>({});
-
-    // Load data on mount
-    useEffect(() => {
-        setIsClient(true);
-        setIsLoading(true); // Start loading
-        let id = localStorage.getItem('habit_tracker_user_id');
-        if (!id) { id = crypto.randomUUID(); localStorage.setItem('habit_tracker_user_id', id); }
-        setUserId(id);
-
-        try {
-            const savedUserStr = localStorage.getItem(`habit_tracker_${id}`);
-            if (savedUserStr) {
-                const parsedUser = JSON.parse(savedUserStr);
-                const currentIds = new Set(ACHIEVEMENTS.map(a => a.id));
-                const loadedAch = (parsedUser.achievements || []).filter((a: Achievement) => currentIds.has(a.id)).map((la: Achievement) => ({ ...ACHIEVEMENTS.find(d => d.id === la.id), ...la }));
-                const newAch = ACHIEVEMENTS.filter(d => !loadedAch.some((la: Achievement) => la.id === d.id)).map(a => ({ ...a, progress: 0, unlocked: false }));
-                parsedUser.achievements = [...loadedAch, ...newAch];
-                setUserData(parsedUser);
-            } // Keep default if no saved data
-
-            const savedProgressStr = localStorage.getItem('habitProgress');
-            if (savedProgressStr) {
-                setSavedData(JSON.parse(savedProgressStr));
-            } // Keep default if no saved data
-        } catch (error) {
-            console.error("Error loading data from localStorage:", error);
-             // Reset to defaults if loading fails? Or notify user?
-            showToastCallback("Error loading previous progress.", 'error');
-            localStorage.removeItem(`habit_tracker_${id}`); // Clear potentially corrupt data
-            localStorage.removeItem('habitProgress');
-            setUserId(crypto.randomUUID()); // Generate a new ID maybe?
-            setUserData({ currentStreak: 0, longestStreak: 0, totalPoints: 0, completedHabits: 0, achievements: ACHIEVEMENTS.map(a => ({ ...a, progress: 0, unlocked: false, unlockedAt: undefined })), weeklyProgress: {}, lastUpdated: new Date().toISOString() });
-            setSavedData({});
-        } finally {
-             setIsLoading(false); // Finish loading
-        }
-    }, [showToastCallback]); // Added showToastCallback dependency
-
-    // Save userData on change
-    useEffect(() => { if (isClient && !isLoading && userId) { localStorage.setItem(`habit_tracker_${userId}`, JSON.stringify(userData)); } }, [userData, userId, isClient, isLoading]);
-    // Save savedData on change
-    useEffect(() => { if (isClient && !isLoading) { localStorage.setItem('habitProgress', JSON.stringify(savedData)); } }, [savedData, isClient, isLoading]);
-
-    // Export function
-    const exportProgress = () => { if (!isClient) return; try { const data = { userData, savedData }; const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `thezone-progress-${userId}.json`; a.click(); URL.revokeObjectURL(url); showToastCallback("Progress exported!", 'success'); } catch (e) { console.error(e); showToastCallback("Export failed.", 'error'); } };
-    // Import function
-    const importProgress = (file: File) => { if (!isClient) return; const reader = new FileReader(); reader.onload = (e) => { try { const data = JSON.parse(e.target?.result as string); if (data.userData && data.savedData) { const currentIds = new Set(ACHIEVEMENTS.map(a => a.id)); const loadedAch = (data.userData.achievements || []).filter((a: Achievement) => currentIds.has(a.id)).map((la: Achievement) => ({ ...ACHIEVEMENTS.find(d => d.id === la.id), ...la })); const newAch = ACHIEVEMENTS.filter(d => !loadedAch.some((la: Achievement) => la.id === d.id)).map(a => ({ ...a, progress: 0, unlocked: false })); data.userData.achievements = [...loadedAch, ...newAch]; setUserData(data.userData); setSavedData(data.savedData); showToastCallback("Progress imported!", 'success'); } else { throw new Error("Invalid file"); } } catch (err) { console.error(err); showToastCallback(`Import failed: ${err instanceof Error ? err.message : 'Unknown error'}`, 'error'); } }; reader.onerror = () => { showToastCallback('Failed to read file.', 'error'); }; reader.readAsText(file); };
-    // Reset function
-    const resetAllProgress = useCallback(() => {
-        if (!isClient) return;
-        setSavedData({});
-        localStorage.removeItem('habitProgress');
-        const initialUserData = {
-            currentStreak: 0, longestStreak: 0, totalPoints: 0, completedHabits: 0,
-            achievements: ACHIEVEMENTS.map(a => ({ ...a, progress: 0, unlocked: false, unlockedAt: undefined })),
-            weeklyProgress: {}, lastUpdated: new Date().toISOString()
-        };
-        setUserData(initialUserData);
-        // Saving immediately after setting state might be slightly delayed, but usually fine
-        localStorage.setItem(`habit_tracker_${userId}`, JSON.stringify(initialUserData));
-        showToastCallback("Progress reset.", 'success');
-    }, [userId, isClient, setUserData, setSavedData, showToastCallback]);
-
-    return { userId, userData, setUserData, savedData, setSavedData, exportProgress, importProgress, resetAllProgress, isClient, isLoading };
-};
-
-// --- Main HabitProgram Component ---
 // --- Main HabitProgram Component ---
 const HabitProgram = () => {
     const [toastInfo, setToastInfo] = useState<{ message: string; type?: 'success' | 'error' } | null>(null);
-     const showToastCallback = useCallback((message: string, type: 'success' | 'error' = 'success') => {
+    const [selectedTrack, setSelectedTrack] = useState<keyof typeof programs | 'all'>('strength'); // Default to 'strength'
+    const [showWalkthrough, setShowWalkthrough] = useState(false);
+    
+    const showToastCallback = useCallback((message: string, type: 'success' | 'error' = 'success') => {
         setToastInfo(null);
         setTimeout(() => { setToastInfo({ message, type }); }, 50);
         setTimeout(() => setToastInfo(null), type === 'error' ? 4000 : 3000);
     }, []);
-    const [selectedTrack, setSelectedTrack] = useState<keyof typeof programs | 'all'>('strength'); // Default to 'strength'
+    
     const { userId, userData, setUserData, savedData, setSavedData, exportProgress, importProgress, resetAllProgress, isClient, isLoading } = useUserStorage(showToastCallback);
     const [selectedHabitInfo, setSelectedHabitInfo] = useState<Habit | null>(null);
     const [showInfoSheet, setShowInfoSheet] = useState(false);
     const [showResetConfirm, setShowResetConfirm] = useState(false);
     const [showOnboarding, setShowOnboarding] = useState(() => isClient ? localStorage.getItem('showOnboarding') !== 'false' : true);
-    useEffect(() => { if (isClient) localStorage.setItem('showOnboarding', showOnboarding.toString()); }, [showOnboarding, isClient]);
-
-    // Memoized values to prevent unnecessary recalculations
-    const allDatesMap = useMemo(() => {
-        const map = new Map<string, string[]>();
-        if (isLoading || !savedData) return map; // Don't calculate if loading or no data
-        Object.entries(programs).forEach(([progKey, progData]) => {
-            progData.weeks.forEach((weekData) => {
-                weekData.habits.forEach((habitDef, habitIdx) => {
-                    const dates = savedData[progKey as keyof typeof programs]?.[weekData.week]?.[habitIdx]?.completionDates || [];
-                    map.set(habitDef.id, dates);
-                });
-            });
-        });
-        return map;
-    }, [savedData, isLoading]);
-
-    const totalCompletions = useMemo(() => {
-        if (isLoading) return 0;
-        return Array.from(allDatesMap.values()).reduce((sum, dates) => sum + dates.length, 0);
-    }, [allDatesMap, isLoading]);
-
-    // Centralized Progress Calculation Hook
-    const calculateSingleAchievementProgress = useCallback((achievement: Achievement): number => {
-        let progress = 0;
-        const countWeekCompletions = (weekData: any): number => weekData ? Object.values(weekData).reduce((s: number, h: any) => s + (h.completionDates?.length || 0), 0) : 0;
-        const getWeeklyCompletionsArray = () => Object.values(savedData).flatMap(p => Object.values(p)).map(countWeekCompletions);
-
-        if (achievement.targetHabitId && achievement.streakTarget) {
-            const habitDates = allDatesMap.get(achievement.targetHabitId) || [];
-            const { currentStreak } = calculateHabitStreak(habitDates);
-            progress = Math.min((currentStreak / achievement.streakTarget) * 100, 100);
-        } else {
-            switch (achievement.id) {
-                case 'first-week': const maxW = getWeeklyCompletionsArray().reduce((m, c) => Math.max(m, c), 0); progress = Math.min((maxW / 21) * 100, 100); break;
-                case 'habit-warrior': progress = Math.min((totalCompletions / 50) * 100, 100); break;
-                case 'century-club': progress = Math.min((totalCompletions / 100) * 100, 100); break;
-                case 'halfway-there': progress = Math.min((totalCompletions / 84) * 100, 100); break;
-                case 'program-master': progress = Math.min((totalCompletions / 168) * 100, 100); break;
-                case 'streak-master-login': const { currentStreak } = calculateStreak(savedData); progress = Math.min((currentStreak / (achievement.streakTarget || 7)) * 100, 100); break;
-                default: progress = 0; break;
+    
+    // Track first-time users
+    const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
+    
+    useEffect(() => { 
+        if (isClient) {
+            localStorage.setItem('showOnboarding', showOnboarding.toString());
+            
+            // Check if first time user
+            const hasVisitedBefore = localStorage.getItem('hasVisitedBefore');
+            if (!hasVisitedBefore) {
+                setIsFirstTimeUser(true);
+                setShowWalkthrough(true);
+                localStorage.setItem('hasVisitedBefore', 'true');
             }
         }
-        return Math.floor(progress);
-    }, [savedData, allDatesMap, totalCompletions]); // Dependencies
+    }, [showOnboarding, isClient]);
 
-    // Effect to Update Achievement Progress and Overall Streaks
-    useEffect(() => {
-        if (!isClient || isLoading) return; // Don't run if server-side or still loading initial data
-
-        const { currentStreak, longestStreak } = calculateStreak(savedData);
-        const achievementsWithProgress = userData.achievements.map(ach => ({ ...ach, progress: ach.unlocked ? 100 : calculateSingleAchievementProgress(ach) }));
-        const basePoints = totalCompletions * 10; // Moved points calculation here
-        const achievementPoints = achievementsWithProgress.filter(a => a.unlocked).reduce((s, a) => s + a.points, 0);
-        const totalPoints = basePoints + achievementPoints;
-
-        // Update state only if values have actually changed
-        if (userData.currentStreak !== currentStreak || userData.longestStreak !== longestStreak || userData.completedHabits !== totalCompletions || userData.totalPoints !== totalPoints || JSON.stringify(userData.achievements) !== JSON.stringify(achievementsWithProgress)) {
-            setUserData(prev => ({ ...prev, currentStreak, longestStreak, completedHabits: totalCompletions, totalPoints, achievements: achievementsWithProgress, lastUpdated: new Date().toISOString() }));
-        }
-    }, [savedData, isClient, isLoading, setUserData, userData.achievements, userData.currentStreak, userData.longestStreak, userData.completedHabits, userData.totalPoints, calculateSingleAchievementProgress, totalCompletions]); // Added isLoading
-
-    // Pull-to-refresh Effect (remains the same)
-    useEffect(() => { /* ... pull to refresh logic ... */ }, [isClient]);
-
-    // Checkbox Handler - Checks for immediate unlocks for toast, main update via useEffect
-    const handleCheckbox = (programKey: keyof typeof programs, weekNumber: number, habitIndex: number, checked: boolean) => {
-        const today = new Date().toISOString().split('T')[0];
-        const habit = programs[programKey]?.weeks?.[weekNumber - 1]?.habits?.[habitIndex];
-        if (!habit) return;
-        const habitId = habit.id;
-        let toastMsg = checked ? `${habit.habit} checked!` : `${habit.habit} unchecked.`;
-
-        // --- Update savedData State ---
-        setSavedData(prev => {
-            const currentDates = prev[programKey]?.[weekNumber]?.[habitIndex]?.completionDates || [];
-            const newDates = checked ? Array.from(new Set([...currentDates, today])) : currentDates.filter(date => date !== today);
-            const updatedData = { ...prev }; // Shallow copy previous state
-            // Deep copy necessary levels before modification
-            if (!updatedData[programKey]) updatedData[programKey] = {}; else updatedData[programKey] = { ...updatedData[programKey] };
-            if (!updatedData[programKey][weekNumber]) updatedData[programKey][weekNumber] = {}; else updatedData[programKey][weekNumber] = { ...updatedData[programKey][weekNumber] };
-            // Assign new data for the specific habit
-            updatedData[programKey][weekNumber][habitIndex] = { completionDates: newDates };
-            return updatedData; // Return the new state object
-        });
-
-        // Show immediate habit check/uncheck feedback
-        showToastCallback(toastMsg, 'success');
-
-        // --- Check for immediate achievement unlock TOAST ---
-        // (Actual state update happens in useEffect reacting to savedData change)
-        const finalDates = checked
-            ? Array.from(new Set([...(savedData[programKey]?.[weekNumber]?.[habitIndex]?.completionDates || []), today]))
-            : (savedData[programKey]?.[weekNumber]?.[habitIndex]?.completionDates || []).filter(date => date !== today);
-        const { currentStreak: specificHabitStreak } = calculateHabitStreak(finalDates);
-        let newlyUnlocked: string[] = [];
-        userData.achievements.forEach(ach => {
-            if (!ach.unlocked && ach.targetHabitId === habitId && ach.streakTarget && specificHabitStreak >= ach.streakTarget) {
-                newlyUnlocked.push(ach.title);
-            }
-            // You could add immediate checks for other simple achievements here if needed
-            // e.g., check for totalCompletions === 50 for Habit Warrior toast
-            // Note: totalCompletions used here would be based on the *previous* state before this update finishes
-        });
-        if (newlyUnlocked.length > 0) {
-            showToastCallback(`Achievement Unlocked: ${newlyUnlocked.join(', ')}! 🎉`, 'success');
-        }
-    };
+    // [Keep your existing memoized values, effects, and handlers]
 
     // Function to show habit info
     const showHabitInfo = (habit: Habit) => { setSelectedHabitInfo(habit); setShowInfoSheet(true); };
@@ -537,10 +696,22 @@ const HabitProgram = () => {
     // --- Main JSX Structure ---
     return (
         <div className="bg-gray-900 p-4 pb-24 sm:p-6 md:p-8 max-w-4xl mx-auto min-h-screen"> {/* Adjusted padding */}
+            {/* First-Timer Walkthrough */}
+            <WalkthroughTour isOpen={showWalkthrough} onClose={() => setShowWalkthrough(false)} />
+            
             {/* Header */}
             <div className="mb-6 sm:mb-8">
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2"><span className="text-[#CCBA78]">Transform</span><span className="text-white"> Your Habits</span></h1>
                 <h2 className="text-white text-base sm:text-lg">8-Week Journey to Better Health</h2> {/* Adjusted size */}
+                
+                {/* Help button to reopen walkthrough */}
+                <button 
+                    onClick={() => setShowWalkthrough(true)}
+                    className="mt-2 flex items-center text-sm text-gray-400 hover:text-[#CCBA78] transition-colors"
+                >
+                    <HelpCircle className="w-4 h-4 mr-1" />
+                    <span>How it works</span>
+                </button>
             </div>
 
             {/* Onboarding Section */}
@@ -600,56 +771,100 @@ const HabitProgram = () => {
 
              {/* Achievements Panel */}
              {/* Render only if achievements array is not empty */}
-            {(userData?.achievements && userData.achievements.length > 0) &&
-    <AchievementsPanel achievements={userData.achievements} selectedTrack={selectedTrack} />
-}
+             {(userData?.achievements && userData.achievements.length > 0) &&
+                 <AchievementsPanel achievements={userData.achievements} selectedTrack={selectedTrack} />
+             }
+{/* Program Tabs */}
+<Tabs 
+  defaultValue="strength" 
+  className="mb-20 sm:mb-0"
+  onValueChange={(value) => setSelectedTrack(value as keyof typeof programs)}
+>
+  <TabsList className="grid grid-cols-3 gap-2 mb-6">
+    {(Object.keys(programs) as Array<keyof typeof programs>).map((key) => {
+      let Icon = Dumbbell; if (key === 'hybrid') Icon = Clock; if (key === 'cardio') Icon = Users;
+      const title = key === 'cardio' ? 'Classes' : key.charAt(0).toUpperCase() + key.slice(1);
+      return <TabsTrigger key={key} value={key} className="data-[state=active]:bg-[#CCBA78] data-[state=active]:text-gray-900 data-[state=inactive]:bg-gray-700 data-[state=inactive]:text-gray-400 data-[state=inactive]:hover:bg-gray-600/70 px-3 py-2.5 rounded text-xs sm:text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-[#CCBA78] focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900"><div className="flex flex-col items-center gap-1 sm:gap-1.5"><Icon className="w-4 h-4 sm:w-5 sm:h-5" /><span>{title}</span></div></TabsTrigger>;
+    })}
+  </TabsList>
 
-            {/* Program Tabs */}
-           <Tabs 
-                defaultValue="strength" 
-                className="mb-20 sm:mb-0"
-                onValueChange={(value) => setSelectedTrack(value as keyof typeof programs)}
-            >
-                <TabsList className="grid grid-cols-3 gap-2 mb-6">
-                    {(Object.keys(programs) as Array<keyof typeof programs>).map((key) => {
-                        let Icon = Dumbbell; if (key === 'hybrid') Icon = Clock; if (key === 'cardio') Icon = Users;
-                        const title = key === 'cardio' ? 'Classes' : key.charAt(0).toUpperCase() + key.slice(1);
-                        return <TabsTrigger key={key} value={key} className="data-[state=active]:bg-[#CCBA78] data-[state=active]:text-gray-900 data-[state=inactive]:bg-gray-700 data-[state=inactive]:text-gray-400 data-[state=inactive]:hover:bg-gray-600/70 px-3 py-2.5 rounded text-xs sm:text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-[#CCBA78] focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900"><div className="flex flex-col items-center gap-1 sm:gap-1.5"><Icon className="w-4 h-4 sm:w-5 sm:h-5" /><span>{title}</span></div></TabsTrigger>;
-                    })}
-                </TabsList>
-
-                {/* Program Content */}
-                {Object.entries(programs).map(([key, program]) => (
-                    <TabsContent key={key} value={key}>
-                        <div className="space-y-4 sm:space-y-6"> {/* Adjusted spacing */}
-                            {program.weeks.map((week) => (
-                                <CollapsibleCard key={`${key}-week-${week.week}`} week={week}>
-                                    <div className="space-y-3 sm:space-y-4"> {/* Adjusted spacing */}
-                                        {week.habits.map((habit, idx) => {
-                                            const completionDates = savedData[key as keyof typeof programs]?.[week.week]?.[idx]?.completionDates || [];
-                                            const { currentStreak: habitStreak } = calculateHabitStreak(completionDates);
-                                            const isCheckedToday = completionDates.includes(new Date().toISOString().split('T')[0]);
-                                            return (
-                                                <div key={habit.id} className={`group flex items-start space-x-3 p-3 rounded-md transition-colors duration-150 ${isCheckedToday ? 'bg-green-900/40 hover:bg-green-900/50' : 'hover:bg-gray-700/40'}`}>
-                                                    <input type="checkbox" id={`habit-${habit.id}`} className="mt-1 w-5 h-5 rounded border-gray-500 focus:ring-2 focus:ring-offset-0 focus:ring-offset-gray-800 focus:ring-[#CCBA78] text-[#CCBA78] bg-gray-700 shrink-0 cursor-pointer" checked={isCheckedToday} onChange={(e) => handleCheckbox(key as keyof typeof programs, week.week, idx, e.target.checked)} />
-                                                    <div className="flex-grow">
-                                                        <label htmlFor={`habit-${habit.id}`} className="font-medium text-gray-100 hover:text-[#CCBA78] transition-colors cursor-pointer">{habit.habit}</label> {/* Habit text slightly lighter */}
-                                                        <p className="text-gray-400 text-sm mt-0.5 sm:mt-1">{habit.example}</p> {/* Example slightly darker */}
-                                                        <div className="flex items-center justify-between mt-1.5"> {/* Adjusted spacing */}
-                                                            <p className="text-gray-500 text-xs">Completed {completionDates.length} times</p> {/* Completion count darker */}
-                                                            {habitStreak > 0 && (<div className="flex items-center gap-1 text-orange-400 animate-pulse" title={`${habitStreak}-day streak`}><Flame className="w-3.5 h-3.5" /><span className="text-xs font-medium">{habitStreak}</span></div>)}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </CollapsibleCard>
-                            ))}
-                        </div>
-                    </TabsContent>
-                ))}
-            </Tabs>
+  {/* Program Content */}
+  {Object.entries(programs).map(([key, program]) => (
+    <TabsContent key={key} value={key}>
+      <div className="space-y-4 sm:space-y-6"> {/* Adjusted spacing */}
+        {program.weeks.map((week) => (
+          <CollapsibleCard key={`${key}-week-${week.week}`} week={week}>
+            <div className="space-y-3 sm:space-y-4"> {/* Adjusted spacing */}
+              {week.habits.map((habit, idx) => {
+                const completionDates = savedData[key as keyof typeof programs]?.[week.week]?.[idx]?.completionDates || [];
+                const { currentStreak: habitStreak } = calculateHabitStreak(completionDates);
+                const isCheckedToday = completionDates.includes(new Date().toISOString().split('T')[0]);
+                
+                // Get the corresponding icon for this habit
+                const iconName = habitIconMapping[habit.id];
+                // Get the "Why This Matters" description
+                const habitDescription = habitDescriptions[habit.id];
+                
+                return (
+                  <div key={habit.id} className={`group flex items-start space-x-3 p-3 rounded-md transition-colors duration-150 ${isCheckedToday ? 'bg-green-900/40 hover:bg-green-900/50' : 'hover:bg-gray-700/40'}`}>
+                    <input 
+                      type="checkbox" 
+                      id={`habit-${habit.id}`} 
+                      className="mt-1 w-5 h-5 rounded border-gray-500 focus:ring-2 focus:ring-offset-0 focus:ring-offset-gray-800 focus:ring-[#CCBA78] text-[#CCBA78] bg-gray-700 shrink-0 cursor-pointer" 
+                      checked={isCheckedToday} 
+                      onChange={(e) => handleCheckbox(key as keyof typeof programs, week.week, idx, e.target.checked)} 
+                    />
+                    <div className="flex-grow">
+                      <div className="flex items-center gap-2">
+                        <label 
+                          htmlFor={`habit-${habit.id}`} 
+                          className="font-medium text-gray-100 hover:text-[#CCBA78] transition-colors cursor-pointer"
+                        >
+                          {habit.habit}
+                        </label>
+                        
+                        {/* Why This Matters tooltip */}
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button 
+                                className="text-gray-400 hover:text-[#CCBA78] transition-colors"
+                                aria-label="Learn why this habit matters"
+                              >
+                                <HelpCircle className="w-3.5 h-3.5" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent className="bg-gray-800 border-gray-700 text-white p-3 max-w-xs">
+                              <p className="text-sm">
+                                <span className="text-[#CCBA78] font-medium">Why this matters:</span><br />
+                                {habitDescription || "Building this habit helps create a foundation for your fitness success."}
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                      
+                      <p className="text-gray-400 text-sm mt-0.5 sm:mt-1">{habit.example}</p> {/* Example slightly darker */}
+                      <div className="flex items-center justify-between mt-1.5"> {/* Adjusted spacing */}
+                        <p className="text-gray-500 text-xs">Completed {completionDates.length} times</p> {/* Completion count darker */}
+                        {habitStreak > 0 && (
+                          <div className="flex items-center gap-1 text-orange-400 animate-pulse" title={`${habitStreak}-day streak`}>
+                            <Flame className="w-3.5 h-3.5" />
+                            <span className="text-xs font-medium">{habitStreak}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CollapsibleCard>
+        ))}
+      </div>
+    </TabsContent>
+  ))}
+</Tabs>
         </div>
     );
 };
