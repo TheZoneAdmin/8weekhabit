@@ -290,7 +290,7 @@ const PRIORITIZED_ACHIEVEMENTS = [
   { id: 'program-master', title: 'Program Master', description: 'Complete an entire 8-week program', icon: 'crown', condition: 'Complete all 168 habits in an 8-week program', points: 1680, unlocked: false },
 ];
 
-/ --- First-Timer Walkthrough Component ---
+// --- First-Timer Walkthrough Component ---
 const WalkthroughTour = ({ isOpen, onClose }) => {
   const [step, setStep] = useState(1);
   const totalSteps = 3;
