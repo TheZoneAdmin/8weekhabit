@@ -355,11 +355,24 @@ const showToastCallback = useCallback((message: string, type: 'success' | 'error
     // Import function
     const importProgress = (file: File) => { if (!isClient) return; const reader = new FileReader(); reader.onload = (e) => { try { const data = JSON.parse(e.target?.result as string); if (data.userData && data.savedData) { const currentIds = new Set(ACHIEVEMENTS.map(a => a.id)); const loadedAch = (data.userData.achievements || []).filter((a: Achievement) => currentIds.has(a.id)).map((la: Achievement) => ({ ...ACHIEVEMENTS.find(d => d.id === la.id), ...la })); const newAch = ACHIEVEMENTS.filter(d => !loadedAch.some((la: Achievement) => la.id === d.id)).map(a => ({ ...a, progress: 0, unlocked: false })); data.userData.achievements = [...loadedAch, ...newAch]; setUserData(data.userData); setSavedData(data.savedData); showToastCallback("Progress imported!", 'success'); } else { throw new Error("Invalid file"); } } catch (err) { console.error(err); showToastCallback(`Import failed: ${err instanceof Error ? err.message : 'Unknown error'}`, 'error'); } }; reader.onerror = () => { showToastCallback('Failed to read file.', 'error'); }; reader.readAsText(file); };
     // Reset function
-    const resetAllProgress = useCallback(() => { if (!isClient) return; setSavedData({}); const initialUserData = { currentStreak: 0, longestStreak: 0, totalPoints: 0, completedHabits: 0, achievements: ACHIEVEMENTS.map(a => ({ ...a, progress: 0, unlocked: false, unlockedAt: undefined })), weeklyProgress: {}, lastUpdated: new Date().toISOString() }; setUserData(initialUserData); showToastCallback("Progress reset.", 'success'); }, [userId, isClient, setUserData, setSavedData, showToastCallback]);
+     const resetAllProgress = useCallback(() => {
+        if (!isClient) return;
+        setSavedData({});
+        localStorage.removeItem('habitProgress');
+        const initialUserData = {
+            currentStreak: 0, longestStreak: 0, totalPoints: 0, completedHabits: 0,
+            achievements: ACHIEVEMENTS.map(a => ({ ...a, progress: 0, unlocked: false, unlockedAt: undefined })),
+            weeklyProgress: {}, lastUpdated: new Date().toISOString()
+        };
+        setUserData(initialUserData);
+        // Saving immediately after setting state might be slightly delayed, but usually fine
+        localStorage.setItem(`habit_tracker_${userId}`, JSON.stringify(initialUserData));
+        showToastCallback("Progress reset.", 'success');
+    }, [userId, isClient, setUserData, setSavedData, showToastCallback]); // Add semicolon
 
+   
     return { userId, userData, setUserData, savedData, setSavedData, exportProgress, importProgress, resetAllProgress, isClient, isLoading };
-};
-
+}; 
 // --- Main HabitProgram Component ---
 const HabitProgram = () => {
     const [toastInfo, setToastInfo] = useState<{ message: string; type?: 'success' | 'error' } | null>(null);
