@@ -167,10 +167,41 @@ const calculateHabitStreak = (completionDates: string[]): { currentStreak: numbe
     return { currentStreak, longestStreak };
 };
 
-// --- AchievementsPanel Component ---
-const AchievementsPanel = ({ achievements }: { achievements: Achievement[] }) => {
+const AchievementsPanel = ({ 
+    achievements, 
+    selectedTrack 
+}: { 
+    achievements: Achievement[];
+    selectedTrack?: keyof typeof programs | 'all'; 
+}) => {
     const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
     const [showShareDialog, setShowShareDialog] = useState(false);
+
+    // Filter achievements based on selectedTrack
+    const filteredAchievements = useMemo(() => {
+        if (!selectedTrack || selectedTrack === 'all') {
+            return achievements;
+        }
+
+        // Map achievement IDs to their track prefixes
+        const trackPrefixes = {
+            'strength': 'str-',
+            'hybrid': 'hyb-',
+            'cardio': 'cls-'
+        };
+
+        const currentPrefix = trackPrefixes[selectedTrack];
+        
+        return achievements.filter(achievement => {
+            // Always include generic achievements that aren't track-specific
+            if (!achievement.targetHabitId) {
+                return true;
+            }
+            
+            // Include achievements specific to the current track
+            return achievement.targetHabitId.startsWith(currentPrefix);
+        });
+    }, [achievements, selectedTrack]);
 
     // Simple share function (replace with actual image generation/hosting if needed)
     const shareToFacebook = () => {
@@ -188,9 +219,13 @@ const AchievementsPanel = ({ achievements }: { achievements: Achievement[] }) =>
     return (
         <Card className="bg-gray-800 border-none mb-8">
             <div className="p-4 sm:p-6"> {/* Adjusted padding */}
-                <h3 className="text-[#CCBA78] text-xl font-semibold mb-4">Achievements</h3>
+                <h3 className="text-[#CCBA78] text-xl font-semibold mb-4">
+                    {selectedTrack && selectedTrack !== 'all' 
+                        ? `${programs[selectedTrack].title} Achievements` 
+                        : 'All Achievements'}
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {achievements.map((achievement) => (
+                    {filteredAchievements.map((achievement) => (
                         <div key={achievement.id} className={`p-4 rounded-lg ${achievement.unlocked ? 'bg-[#CCBA78] bg-opacity-20 border border-[#CCBA78]' : 'bg-gray-700 bg-opacity-50'}`}>
                             <div className="flex items-center justify-between min-h-[40px]">
                                 <div className="flex items-center gap-3">
@@ -371,14 +406,12 @@ const useUserStorage = (showToastCallback: (message: string, type?: 'success' | 
 // --- Main HabitProgram Component ---
 const HabitProgram = () => {
     const [toastInfo, setToastInfo] = useState<{ message: string; type?: 'success' | 'error' } | null>(null);
-    const showToastCallback = useCallback((message: string, type: 'success' | 'error' = 'success') => {
-        setToastInfo(null); // Clear previous toast immediately
-        setTimeout(() => {
-            setToastInfo({ message, type });
-        }, 50); // Short delay to allow DOM update if needed
-        setTimeout(() => setToastInfo(null), type === 'error' ? 4000 : 3000); // Auto-dismiss
-    }, []); // Dependencies are empty as it only uses setters/constants
-    
+     const showToastCallback = useCallback((message: string, type: 'success' | 'error' = 'success') => {
+        setToastInfo(null);
+        setTimeout(() => { setToastInfo({ message, type }); }, 50);
+        setTimeout(() => setToastInfo(null), type === 'error' ? 4000 : 3000);
+    }, []);
+    const [selectedTrack, setSelectedTrack] = useState<keyof typeof programs | 'all'>('strength'); // Default to 'strength'
     const { userId, userData, setUserData, savedData, setSavedData, exportProgress, importProgress, resetAllProgress, isClient, isLoading } = useUserStorage(showToastCallback);
     const [selectedHabitInfo, setSelectedHabitInfo] = useState<Habit | null>(null);
     const [showInfoSheet, setShowInfoSheet] = useState(false);
@@ -572,7 +605,11 @@ const HabitProgram = () => {
              }
 
             {/* Program Tabs */}
-            <Tabs defaultValue="strength" className="mb-20 sm:mb-0">
+           <Tabs 
+                defaultValue="strength" 
+                className="mb-20 sm:mb-0"
+                onValueChange={(value) => setSelectedTrack(value as keyof typeof programs)}
+            >
                 <TabsList className="grid grid-cols-3 gap-2 mb-6">
                     {(Object.keys(programs) as Array<keyof typeof programs>).map((key) => {
                         let Icon = Dumbbell; if (key === 'hybrid') Icon = Clock; if (key === 'cardio') Icon = Users;
