@@ -295,13 +295,7 @@ const CollapsibleCard = ({ week, children }: CollapsibleCardProps) => {
 
 
 // --- useUserStorage Hook ---
-const showToastCallback = useCallback((message: string, type: 'success' | 'error' = 'success') => {
-    setToastInfo(null); // Clear previous toast immediately
-    setTimeout(() => {
-        setToastInfo({ message, type });
-    }, 50); // Short delay to allow DOM update if needed
-    setTimeout(() => setToastInfo(null), type === 'error' ? 4000 : 3000); // Auto-dismiss
-}, []); // Dependencies are empty as it only uses setters/constants
+const useUserStorage = (showToastCallback: (message: string, type?: 'success' | 'error') => void) => {
     const [userId, setUserId] = useState<string>('');
     const [isClient, setIsClient] = useState(false);
     const [isLoading, setIsLoading] = useState(true); // Added loading state
@@ -371,17 +365,20 @@ const showToastCallback = useCallback((message: string, type: 'success' | 'error
     }, [userId, isClient, setUserData, setSavedData, showToastCallback]);
 
     return { userId, userData, setUserData, savedData, setSavedData, exportProgress, importProgress, resetAllProgress, isClient, isLoading };
-}
+};
+
 // --- Main HabitProgram Component ---
 const HabitProgram = () => {
     const [toastInfo, setToastInfo] = useState<{ message: string; type?: 'success' | 'error' } | null>(null);
-    const showToastCallback = useCallback((message: string, type?: 'success' | 'error' = 'success') => { setToastInfo(null); setTimeout(() => { setToastInfo({ message, type }); }, 50); setTimeout(() => setToastInfo(null), type === 'error' ? 4000 : 3000); }, []); // Reset before showing, longer errors
+    const showToastCallback = useCallback((message: string, type: 'success' | 'error' = 'success') => {
+        setToastInfo(null); // Clear previous toast immediately
+        setTimeout(() => {
+            setToastInfo({ message, type });
+        }, 50); // Short delay to allow DOM update if needed
+        setTimeout(() => setToastInfo(null), type === 'error' ? 4000 : 3000); // Auto-dismiss
+    }, []); // Dependencies are empty as it only uses setters/constants
+    
     const { userId, userData, setUserData, savedData, setSavedData, exportProgress, importProgress, resetAllProgress, isClient, isLoading } = useUserStorage(showToastCallback);
-    const [selectedHabitInfo, setSelectedHabitInfo] = useState<Habit | null>(null);
-    const [showInfoSheet, setShowInfoSheet] = useState(false);
-    const [showResetConfirm, setShowResetConfirm] = useState(false);
-    const [showOnboarding, setShowOnboarding] = useState(() => isClient ? localStorage.getItem('showOnboarding') !== 'false' : true);
-    useEffect(() => { if (isClient) localStorage.setItem('showOnboarding', showOnboarding.toString()); }, [showOnboarding, isClient]);
 
     // Memoized values to prevent unnecessary recalculations
     const allDatesMap = useMemo(() => {
