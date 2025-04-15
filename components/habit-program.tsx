@@ -461,112 +461,163 @@ const HabitProgram = () => {
     const showHabitInfo = (habit: Habit) => { setSelectedHabitInfo(habit); setShowInfoSheet(true); };
 
     // --- Main JSX Structure ---
-    return (
-        <div className="bg-gray-900 p-4 pb-24 sm:p-8 md:p-12 max-w-4xl mx-auto min-h-screen">
-            {/* Header */}
-            <div className="mb-6 sm:mb-8">
-                <h1 className="text-2xl sm:text-4xl font-bold mb-2"><span className="text-[#CCBA78]">Transform</span><span className="text-white"> Your Habits</span></h1>
-                <h2 className="text-white text-lg sm:text-xl">8-Week Journey to Better Health</h2>
-            </div>
+     return (
+    // Main container with dark background and padding
+    <div className="bg-gray-900 p-4 pb-24 sm:p-8 md:p-12 max-w-4xl mx-auto min-h-screen">
 
-            {/* Onboarding Section - Restored Content */}
-            <div className="bg-gray-800 rounded-lg mb-6 overflow-hidden">
-                <button onClick={() => setShowOnboarding(!showOnboarding)} className="w-full p-4 flex justify-between items-center text-[#CCBA78] hover:bg-gray-700 transition-colors">
-                    <h3 className="text-xl font-semibold">Welcome to Your 8-Week Journey!</h3>
-                    <ChevronDown className={`w-5 h-5 transform transition-transform duration-200 ${showOnboarding ? 'rotate-180' : ''}`} />
-                </button>
-                {showOnboarding && (
-                    <div className="p-6 border-t border-gray-700">
-                        <div className="space-y-4 text-gray-200">
-                            <p>Choose your path:</p>
-                            <ul className="list-disc pl-5 space-y-2">
-                                <li><span className="text-[#CCBA78] font-medium">Strength & Growth</span> - Perfect for building muscle and strength through structured workouts</li>
-                                <li><span className="text-[#CCBA78] font-medium">Functional Training (Hybrid)</span> - Ideal for overall fitness, combining strength and cardio</li>
-                                <li><span className="text-[#CCBA78] font-medium">Group Fitness (Classes)</span> - Great for those who prefer guided workouts and community support</li>
-                            </ul>
-                            <div className="mt-6">
-                                <p className="font-medium text-[#CCBA78] mb-2">How it works:</p>
-                                <ul className="list-disc pl-5 space-y-2">
-                                    <li>Select your track below (Strength, Hybrid, or Classes)</li>
-                                    <li>Track 3 daily habits shown each week</li>
-                                    <li>Check off completed habits daily</li>
-                                    <li>Build streaks for consistency (see flames! 🔥)</li>
-                                    <li>Earn achievements and points as you progress</li>
-                                </ul>
-                            </div>
-                            <div className="mt-6">
-                                <p className="font-medium text-[#CCBA78] mb-2">Tips for success:</p>
-                                <ul className="list-disc pl-5 space-y-2">
-                                    <li>Start with the habits that feel most manageable</li>
-                                    <li>Focus on consistency over perfection</li>
-                                    <li>Use the example suggestions as guidelines</li>
-                                    <li>Don't worry if you miss a day, just get back on track!</li>
-                                    <li>Check in daily to maintain your habit streaks</li>
-                                </ul>
-                            </div>
-                            <p className="mt-6 text-sm italic">Need help? Reach out to any staff member for guidance on your journey!</p>
-                        </div>
-                    </div>
-                )}
-            </div>
+      {/* Header Section */}
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-4xl font-bold mb-2">
+          <span className="text-[#CCBA78]">Transform</span>
+          <span className="text-white"> Your Habits</span>
+        </h1>
+        <h2 className="text-white text-lg sm:text-xl">8-Week Journey to Better Health</h2>
+      </div>
 
-            {/* Data Management */}
-            <DataManagement userId={userId} onExport={exportProgress} onImport={importProgress} onReset={() => setShowResetConfirm(true)} />
-            {/* Reset Confirmation Dialog */}
-            <AlertDialog open={showResetConfirm} onOpenChange={setShowResetConfirm}> {/* ... Dialog Content ... */} </AlertDialog>
-            {/* Toast Notification */}
-            {toastInfo && <Toast message={toastInfo.message} type={toastInfo.type} />}
-            {/* Habit Info Sheet */}
-            {selectedHabitInfo && <HabitInfoSheet habit={selectedHabitInfo} isOpen={showInfoSheet} onClose={() => { setShowInfoSheet(false); setSelectedHabitInfo(null); }} />}
-            {/* Stats Overview */}
-            <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-6 sm:mb-8"> {/* ... Stats Cards ... */} </div>
-            {/* Achievements Panel */}
-            <AchievementsPanel achievements={userData.achievements} />
-            {/* Program Tabs */}
-            <Tabs defaultValue="strength" className="mb-20 sm:mb-0">
-                <TabsList className="grid grid-cols-3 gap-2 sm:gap-4 mb-6 sm:mb-8"> {/* ... Tab Triggers ... */} </TabsList>
-                {/* Program Content */}
-                {Object.entries(programs).map(([key, program]) => (
-                    <TabsContent key={key} value={key}>
-                        <div className="space-y-6">
-                            {program.weeks.map((week) => (
-                                <CollapsibleCard key={`${key}-week-${week.week}`} week={week}>
-                                    <div className="space-y-4">
-                                        {week.habits.map((habit, idx) => {
-                                            const completionDates = savedData[key as keyof typeof programs]?.[week.week]?.[idx]?.completionDates || [];
-                                            const { currentStreak: habitStreak } = calculateHabitStreak(completionDates);
-                                            const isCheckedToday = completionDates.includes(new Date().toISOString().split('T')[0]);
-                                            return (
-                                                // Habit Item - Restored Full Structure
-                                                <div key={habit.id} className={`group flex items-start space-x-3 sm:space-x-4 p-3 rounded-md transition-colors ${isCheckedToday ? 'bg-green-900 bg-opacity-30' : ''}`}>
-                                                    <input type="checkbox" id={`habit-${habit.id}`} className="mt-1 w-5 h-5 rounded border-gray-500 focus:ring-2 focus:ring-offset-0 focus:ring-[#CCBA78] text-[#CCBA78] bg-gray-700 shrink-0" checked={isCheckedToday} onChange={(e) => handleCheckbox(key as keyof typeof programs, week.week, idx, e.target.checked)} />
-                                                    <div className="flex-grow">
-                                                        <label htmlFor={`habit-${habit.id}`} className="font-medium cursor-pointer hover:text-[#CCBA78] transition-colors">{habit.habit}</label>
-                                                        {/* Example Text */}
-                                                        <p className="text-gray-400 text-sm mt-1">{habit.example}</p>
-                                                        {/* Footer row: Completion Count and Streak */}
-                                                        <div className="flex items-center justify-between mt-1">
-                                                            <p className="text-gray-400 text-xs">Completed {completionDates.length} times</p>
-                                                            {habitStreak > 0 && (
-                                                                <div className="flex items-center gap-1 text-orange-400 animate-pulse" title={`${habitStreak}-day streak`}> {/* Added subtle pulse */}
-                                                                    <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                                                                    <span className="text-xs sm:text-sm font-medium">{habitStreak}</span>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </CollapsibleCard>
-                            ))}
-                        </div>
-                    </TabsContent>
-                ))}
-            </Tabs>
+      {/* Onboarding Section (Collapsible) */}
+      <div className="bg-gray-800 rounded-lg mb-6 overflow-hidden">
+          <button
+            onClick={() => setShowOnboarding(!showOnboarding)}
+            className="w-full p-4 flex justify-between items-center text-[#CCBA78] hover:bg-gray-700 transition-colors"
+            aria-expanded={showOnboarding} // Accessibility
+            aria-controls="onboarding-content" // Accessibility
+          >
+            <h3 className="text-xl font-semibold">Welcome to Your 8-Week Journey!</h3>
+            <ChevronDown
+              className={`w-5 h-5 transform transition-transform duration-200 ${
+                showOnboarding ? 'rotate-180' : ''
+              }`}
+            />
+          </button>
+          {showOnboarding && (
+            <div id="onboarding-content" className="p-6 border-t border-gray-700">
+                {/* Onboarding text lists */}
+                <div className="space-y-4 text-gray-200">
+                   <p>Choose your path:</p>
+                   <ul className="list-disc pl-5 space-y-2">
+                       <li><span className="text-[#CCBA78] font-medium">Strength & Growth</span> - Perfect for building muscle and strength through structured workouts</li>
+                       <li><span className="text-[#CCBA78] font-medium">Functional Training (Hybrid)</span> - Ideal for overall fitness, combining strength and cardio</li>
+                       <li><span className="text-[#CCBA78] font-medium">Group Fitness (Classes)</span> - Great for those who prefer guided workouts and community support</li>
+                   </ul>
+                   <div className="mt-6">
+                       <p className="font-medium text-[#CCBA78] mb-2">How it works:</p>
+                       <ul className="list-disc pl-5 space-y-2">
+                           <li>Select your track below (Strength, Hybrid, or Classes)</li>
+                           <li>Track 3 daily habits shown each week</li>
+                           <li>Check off completed habits daily</li>
+                           <li>Build streaks for consistency (see flames! 🔥)</li>
+                           <li>Earn achievements and points as you progress</li>
+                       </ul>
+                   </div>
+                    <div className="mt-6">
+                       <p className="font-medium text-[#CCBA78] mb-2">Tips for success:</p>
+                       <ul className="list-disc pl-5 space-y-2">
+                           <li>Start with the habits that feel most manageable</li>
+                           <li>Focus on consistency over perfection</li>
+                           <li>Use the example suggestions as guidelines</li>
+                           <li>Don't worry if you miss a day, just get back on track!</li>
+                           <li>Check in daily to maintain your habit streaks</li>
+                       </ul>
+                   </div>
+                   <p className="mt-6 text-sm italic">Need help? Reach out to any staff member for guidance on your journey!</p>
+               </div>
+            </div>
+          )}
         </div>
-    );
-};
 
-export default HabitProgram;
+      {/* Data Management Section (ID, Buttons) */}
+      <DataManagement
+        userId={userId}
+        onExport={exportProgress}
+        onImport={importProgress}
+        onReset={() => setShowResetConfirm(true)}
+      />
+
+      {/* Reset Confirmation Dialog (logic outside return) */}
+      <AlertDialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>
+          <AlertDialogContent className="bg-gray-800 text-white">
+              <AlertDialogHeader><AlertDialogTitle className="text-red-500">Reset Progress?</AlertDialogTitle><AlertDialogDescription>Are you sure? This cannot be undone.</AlertDialogDescription></AlertDialogHeader>
+              <AlertDialogFooter><AlertDialogCancel className="bg-gray-600 hover:bg-gray-500">Cancel</AlertDialogCancel><AlertDialogAction onClick={() => { resetAllProgress(); setShowResetConfirm(false); }} className="bg-red-600 hover:bg-red-700">Yes, Reset</AlertDialogAction></AlertDialogFooter>
+          </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Toast Notification (logic outside return) */}
+      {toastInfo && <Toast message={toastInfo.message} type={toastInfo.type} />}
+
+      {/* Habit Info Sheet (logic outside return) */}
+      {selectedHabitInfo && <HabitInfoSheet habit={selectedHabitInfo} isOpen={showInfoSheet} onClose={() => { setShowInfoSheet(false); setSelectedHabitInfo(null); }} />}
+
+      {/* Achievements Panel */}
+      {/* Ensure userData.achievements is populated before rendering */}
+      {userData?.achievements && <AchievementsPanel achievements={userData.achievements} />}
+
+      {/* Program Tabs Section */}
+      <Tabs defaultValue="strength" className="mb-20 sm:mb-0">
+          {/* Trajectory Buttons */}
+          <TabsList className="grid grid-cols-3 gap-2 sm:gap-4 mb-6 sm:mb-8">
+              {(Object.keys(programs) as Array<keyof typeof programs>).map((key) => {
+                  let Icon = Dumbbell; if (key === 'hybrid') Icon = Clock; if (key === 'cardio') Icon = Users;
+                  const title = key === 'cardio' ? 'Classes' : key.charAt(0).toUpperCase() + key.slice(1); // Capitalize title
+                  return (
+                      <TabsTrigger
+                          key={key}
+                          value={key}
+                          className="data-[state=active]:bg-[#CCBA78] data-[state=active]:text-gray-900 data-[state=inactive]:bg-gray-700 data-[state=inactive]:text-gray-400 data-[state=inactive]:hover:bg-gray-600 px-2 sm:px-4 py-2 sm:py-3 rounded text-xs sm:text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-[#CCBA78] focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900" // Added hover and focus styles
+                      >
+                          <div className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2">
+                              <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
+                              <span>{title}</span>
+                          </div>
+                      </TabsTrigger>
+                  );
+              })}
+          </TabsList>
+
+          {/* Program Content (Weeks and Habits) */}
+          {Object.entries(programs).map(([key, program]) => (
+              <TabsContent key={key} value={key}>
+                  <div className="space-y-6">
+                      {program.weeks.map((week) => (
+                          <CollapsibleCard key={`${key}-week-${week.week}`} week={week}>
+                              <div className="space-y-4">
+                                  {week.habits.map((habit, idx) => {
+                                      const completionDates = savedData[key as keyof typeof programs]?.[week.week]?.[idx]?.completionDates || [];
+                                      const { currentStreak: habitStreak } = calculateHabitStreak(completionDates);
+                                      const isCheckedToday = completionDates.includes(new Date().toISOString().split('T')[0]);
+                                      return (
+                                          <div key={habit.id} className={`group flex items-start space-x-3 sm:space-x-4 p-3 rounded-md transition-colors ${isCheckedToday ? 'bg-green-900 bg-opacity-40 hover:bg-green-900/50' : 'hover:bg-gray-700/30'}`}> {/* Hover effect */}
+                                              <input
+                                                  type="checkbox"
+                                                  id={`habit-${habit.id}`}
+                                                  className="mt-1 w-5 h-5 rounded border-gray-500 focus:ring-2 focus:ring-offset-0 focus:ring-offset-gray-800 focus:ring-[#CCBA78] text-[#CCBA78] bg-gray-700 shrink-0 cursor-pointer" // Improved focus style
+                                                  checked={isCheckedToday}
+                                                  onChange={(e) => handleCheckbox(key as keyof typeof programs, week.week, idx, e.target.checked)}
+                                              />
+                                              <div className="flex-grow">
+                                                  {/* Habit Name (White Text) */}
+                                                  <label htmlFor={`habit-${habit.id}`} className="font-medium text-white cursor-pointer hover:text-[#CCBA78] transition-colors">{habit.habit}</label>
+                                                  {/* Example Text (Lighter Gray) */}
+                                                  <p className="text-gray-300 text-sm mt-1">{habit.example}</p> {/* Adjusted color */}
+                                                  {/* Footer row: Completion Count and Streak */}
+                                                  <div className="flex items-center justify-between mt-1">
+                                                      <p className="text-gray-400 text-xs">Completed {completionDates.length} times</p>
+                                                      {habitStreak > 0 && (
+                                                          <div className="flex items-center gap-1 text-orange-400 animate-pulse" title={`${habitStreak}-day streak`}>
+                                                              <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                                              <span className="text-xs sm:text-sm font-medium">{habitStreak}</span>
+                                                          </div>
+                                                      )}
+                                                  </div>
+                                              </div>
+                                          </div>
+                                      );
+                                  })}
+                              </div>
+                          </CollapsibleCard>
+                      ))}
+                  </div>
+              </TabsContent>
+           ))}
+       </Tabs>
+    </div>
+  );
