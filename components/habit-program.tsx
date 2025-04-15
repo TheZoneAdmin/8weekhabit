@@ -368,6 +368,7 @@ const useUserStorage = (showToastCallback: (message: string, type?: 'success' | 
 };
 
 // --- Main HabitProgram Component ---
+// --- Main HabitProgram Component ---
 const HabitProgram = () => {
     const [toastInfo, setToastInfo] = useState<{ message: string; type?: 'success' | 'error' } | null>(null);
     const showToastCallback = useCallback((message: string, type: 'success' | 'error' = 'success') => {
@@ -379,6 +380,11 @@ const HabitProgram = () => {
     }, []); // Dependencies are empty as it only uses setters/constants
     
     const { userId, userData, setUserData, savedData, setSavedData, exportProgress, importProgress, resetAllProgress, isClient, isLoading } = useUserStorage(showToastCallback);
+    const [selectedHabitInfo, setSelectedHabitInfo] = useState<Habit | null>(null);
+    const [showInfoSheet, setShowInfoSheet] = useState(false);
+    const [showResetConfirm, setShowResetConfirm] = useState(false);
+    const [showOnboarding, setShowOnboarding] = useState(() => isClient ? localStorage.getItem('showOnboarding') !== 'false' : true);
+    useEffect(() => { if (isClient) localStorage.setItem('showOnboarding', showOnboarding.toString()); }, [showOnboarding, isClient]);
 
     // Memoized values to prevent unnecessary recalculations
     const allDatesMap = useMemo(() => {
@@ -434,13 +440,11 @@ const HabitProgram = () => {
         const achievementPoints = achievementsWithProgress.filter(a => a.unlocked).reduce((s, a) => s + a.points, 0);
         const totalPoints = basePoints + achievementPoints;
 
-
         // Update state only if values have actually changed
         if (userData.currentStreak !== currentStreak || userData.longestStreak !== longestStreak || userData.completedHabits !== totalCompletions || userData.totalPoints !== totalPoints || JSON.stringify(userData.achievements) !== JSON.stringify(achievementsWithProgress)) {
             setUserData(prev => ({ ...prev, currentStreak, longestStreak, completedHabits: totalCompletions, totalPoints, achievements: achievementsWithProgress, lastUpdated: new Date().toISOString() }));
         }
     }, [savedData, isClient, isLoading, setUserData, userData.achievements, userData.currentStreak, userData.longestStreak, userData.completedHabits, userData.totalPoints, calculateSingleAchievementProgress, totalCompletions]); // Added isLoading
-
 
     // Pull-to-refresh Effect (remains the same)
     useEffect(() => { /* ... pull to refresh logic ... */ }, [isClient]);
