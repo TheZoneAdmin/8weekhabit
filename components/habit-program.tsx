@@ -824,24 +824,21 @@ const HabitProgram = () => {
                         </label>
                         
                         {/* Why This Matters tooltip */}
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button 
-                                className="text-gray-400 hover:text-[#CCBA78] transition-colors"
-                                aria-label="Learn why this habit matters"
-                              >
-                                <HelpCircle className="w-3.5 h-3.5" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent className="bg-gray-800 border-gray-700 text-white p-3 max-w-xs">
-                              <p className="text-sm">
-                                <span className="text-[#CCBA78] font-medium">Why this matters:</span><br />
-                                {habitDescription || "Building this habit helps create a foundation for your fitness success."}
-                              </p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                        <button 
+  className="text-gray-400 hover:text-[#CCBA78] transition-colors"
+  aria-label="Learn why this habit matters"
+  onClick={() => {
+    showToastCallback(
+      <div>
+        <span className="text-[#CCBA78] font-medium">Why this matters:</span><br />
+        {habitDescription || "Building this habit helps create a foundation for your fitness success."}
+      </div>, 
+      'success'
+    )
+  }}
+>
+  <HelpCircle className="w-3.5 h-3.5" />
+</button>
                       </div>
                       
                       <p className="text-gray-400 text-sm mt-0.5 sm:mt-1">{habit.example}</p> {/* Example slightly darker */}
