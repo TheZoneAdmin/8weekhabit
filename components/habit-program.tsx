@@ -621,3 +621,6 @@ const HabitProgram = () => {
        </Tabs>
     </div>
   );
+}; 
+
+export default HabitProgram;
