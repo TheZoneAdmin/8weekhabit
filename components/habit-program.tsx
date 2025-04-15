@@ -600,9 +600,9 @@ const HabitProgram = () => {
 
              {/* Achievements Panel */}
              {/* Render only if achievements array is not empty */}
-             {(userData?.achievements && userData.achievements.length > 0) &&
-                 <AchievementsPanel achievements={userData.achievements} />
-             }
+            {(userData?.achievements && userData.achievements.length > 0) &&
+    <AchievementsPanel achievements={userData.achievements} selectedTrack={selectedTrack} />
+}
 
             {/* Program Tabs */}
            <Tabs 
