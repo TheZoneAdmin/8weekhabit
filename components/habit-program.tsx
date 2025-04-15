@@ -224,259 +224,6 @@ interface SavedData {
     };
   };
 }
-const handleCheckbox = (program: keyof typeof programs, weekNum: number, habitIndex: number, isChecked: boolean) => {
-  // Get today's date in ISO format (YYYY-MM-DD)
-  const today = new Date().toISOString().split('T')[0];
-  
-  // Create a deep copy of the savedData to avoid direct state mutation
-  const updatedSavedData = JSON.parse(JSON.stringify(savedData));
-  
-  // Ensure the program, week, and habit objects exist
-  if (!updatedSavedData[program]) {
-    updatedSavedData[program] = {};
-  }
-  
-  if (!updatedSavedData[program][weekNum]) {
-    updatedSavedData[program][weekNum] = {};
-  }
-  
-  if (!updatedSavedData[program][weekNum][habitIndex]) {
-    updatedSavedData[program][weekNum][habitIndex] = {
-      completionDates: []
-    };
-  }
-  
-  // Get the completion dates array for this habit
-  const completionDates = updatedSavedData[program][weekNum][habitIndex].completionDates;
-  
-  // Check if today's date is already in the array
-  const todayIndex = completionDates.indexOf(today);
-  
-  if (isChecked && todayIndex === -1) {
-    // Add today's date if checked and not already present
-    completionDates.push(today);
-    showToastCallback('Habit completed today!', 'success');
-    
-    // Update user data
-    const updatedUserData = { ...userData };
-    updatedUserData.completedHabits += 1;
-    
-    // Update points
-    const pointsForHabit = 10; // Base points per habit
-    updatedUserData.totalPoints += pointsForHabit;
-    
-    // Update streaks
-    const { currentStreak, longestStreak } = calculateStreak(updatedSavedData);
-    updatedUserData.currentStreak = currentStreak;
-    updatedUserData.longestStreak = Math.max(longestStreak, updatedUserData.longestStreak);
-    
-    // Update achievements
-    const updatedAchievements = checkAndUpdateAchievements(
-      updatedUserData.achievements || ACHIEVEMENTS,
-      updatedSavedData,
-      updatedUserData.completedHabits,
-      currentStreak
-    );
-    
-    updatedUserData.achievements = updatedAchievements;
-    updatedUserData.lastUpdated = new Date().toISOString();
-    
-    // Update state
-    setUserData(updatedUserData);
-  } else if (!isChecked && todayIndex !== -1) {
-    // Remove today's date if unchecked and present
-    completionDates.splice(todayIndex, 1);
-    showToastCallback('Habit marked incomplete', 'success');
-    
-    // Update user data
-    const updatedUserData = { ...userData };
-    updatedUserData.completedHabits = Math.max(0, updatedUserData.completedHabits - 1);
-    
-    // Deduct points
-    const pointsForHabit = 10; // Base points per habit
-    updatedUserData.totalPoints = Math.max(0, updatedUserData.totalPoints - pointsForHabit);
-    
-    // Update streaks
-    const { currentStreak, longestStreak } = calculateStreak(updatedSavedData);
-    updatedUserData.currentStreak = currentStreak;
-    
-    // Update achievements (recalculate progress)
-    const updatedAchievements = checkAndUpdateAchievements(
-      updatedUserData.achievements || ACHIEVEMENTS,
-      updatedSavedData,
-      updatedUserData.completedHabits,
-      currentStreak
-    );
-    
-    updatedUserData.achievements = updatedAchievements;
-    updatedUserData.lastUpdated = new Date().toISOString();
-    
-    // Update state
-    setUserData(updatedUserData);
-  }
-  
-  // Update savedData state
-  setSavedData(updatedSavedData);
-};
-const checkAndUpdateAchievements = (
-  currentAchievements: Achievement[],
-  savedData: SavedData,
-  completedHabitsCount: number,
-  currentStreak: number
-): Achievement[] => {
-  // Create a copy of the achievements to avoid direct state mutation
-  const updatedAchievements = [...currentAchievements];
-  
-  // Initialize an array to store newly unlocked achievements for notifications
-  const newlyUnlocked: Achievement[] = [];
-  
-  // Check each achievement
-  updatedAchievements.forEach((achievement, index) => {
-    // Skip if already unlocked
-    if (achievement.unlocked) return;
-    
-    let progress = 0;
-    let isUnlocked = false;
-    
-    // Calculate progress based on achievement type
-    switch (achievement.id) {
-      // First Week Champion
-      case 'first-week':
-        // Count how many days in a week have habits completed
-        let weeklyHabitsCount = 0;
-        let totalWeeklyHabits = 21; // 3 habits per day * 7 days
-        
-        // Count habits completed in each program's first week
-        Object.values(savedData).forEach(program => {
-          const weekOne = program[1]; // Week 1
-          if (weekOne) {
-            Object.values(weekOne).forEach(habit => {
-              weeklyHabitsCount += habit.completionDates.length;
-            });
-          }
-        });
-        
-        progress = Math.min(100, (weeklyHabitsCount / totalWeeklyHabits) * 100);
-        isUnlocked = weeklyHabitsCount >= totalWeeklyHabits;
-        break;
-        
-      // Habit Warrior (50 total habits)
-      case 'habit-warrior':
-        progress = Math.min(100, (completedHabitsCount / 50) * 100);
-        isUnlocked = completedHabitsCount >= 50;
-        break;
-        
-      // Century Club (100 total habits)
-      case 'century-club':
-        progress = Math.min(100, (completedHabitsCount / 100) * 100);
-        isUnlocked = completedHabitsCount >= 100;
-        break;
-        
-      // Halfway There (Weeks 1-4 complete)
-      case 'halfway-there':
-        let halfwayHabitsCount = 0;
-        let totalHalfwayHabits = 84; // 3 habits * 4 weeks * 7 days
-        
-        // Count habits completed in the first 4 weeks of any program
-        Object.values(savedData).forEach(program => {
-          for (let week = 1; week <= 4; week++) {
-            const weekData = program[week];
-            if (weekData) {
-              Object.values(weekData).forEach(habit => {
-                halfwayHabitsCount += habit.completionDates.length;
-              });
-            }
-          }
-        });
-        
-        progress = Math.min(100, (halfwayHabitsCount / totalHalfwayHabits) * 100);
-        isUnlocked = halfwayHabitsCount >= totalHalfwayHabits;
-        break;
-        
-      // Program Master (complete entire 8-week program)
-      case 'program-master':
-        let programHabitsCount = 0;
-        let totalProgramHabits = 168; // 3 habits * 8 weeks * 7 days
-        
-        // Count all habits completed in any program
-        Object.values(savedData).forEach(program => {
-          for (let week = 1; week <= 8; week++) {
-            const weekData = program[week];
-            if (weekData) {
-              Object.values(weekData).forEach(habit => {
-                programHabitsCount += habit.completionDates.length;
-              });
-            }
-          }
-        });
-        
-        progress = Math.min(100, (programHabitsCount / totalProgramHabits) * 100);
-        isUnlocked = programHabitsCount >= totalProgramHabits;
-        break;
-        
-      // Streak Master (7-day check-in streak)
-      case 'streak-master-login':
-        const streakTarget = achievement.streakTarget || 7;
-        progress = Math.min(100, (currentStreak / streakTarget) * 100);
-        isUnlocked = currentStreak >= streakTarget;
-        break;
-        
-      // Habit-specific streaks
-      default:
-        if (achievement.targetHabitId && achievement.streakTarget) {
-          // Find the habit in the data
-          let habitStreak = 0;
-          
-          // Look through all programs to find the habit
-          Object.entries(savedData).forEach(([programKey, program]) => {
-            Object.entries(program).forEach(([weekKey, week]) => {
-              Object.entries(week).forEach(([habitIdxKey, habit]) => {
-                // Get the corresponding habit ID from the programs data
-                const programType = programKey as keyof typeof programs;
-                const weekNum = parseInt(weekKey);
-                const habitIdx = parseInt(habitIdxKey);
-                
-                if (programs[programType]?.weeks?.[weekNum - 1]?.habits?.[habitIdx]?.id === achievement.targetHabitId) {
-                  const { currentStreak: habStreak } = calculateHabitStreak(habit.completionDates);
-                  habitStreak = Math.max(habitStreak, habStreak);
-                }
-              });
-            });
-          });
-          
-          progress = Math.min(100, (habitStreak / achievement.streakTarget) * 100);
-          isUnlocked = habitStreak >= achievement.streakTarget;
-        }
-        break;
-    }
-    
-    // Update progress
-    updatedAchievements[index] = {
-      ...achievement,
-      progress: progress
-    };
-    
-    // Check if newly unlocked
-    if (isUnlocked && !achievement.unlocked) {
-      updatedAchievements[index] = {
-        ...updatedAchievements[index],
-        unlocked: true,
-        unlockedAt: new Date().toISOString()
-      };
-      
-      // Add to newly unlocked list for notification
-      newlyUnlocked.push(updatedAchievements[index]);
-    }
-  });
-  
-  // Show notifications for newly unlocked achievements
-  newlyUnlocked.forEach(achievement => {
-    // This would be where you'd call a toast or notification function
-    // For now, we'll assume that's handled elsewhere
-  });
-  
-  return updatedAchievements;
-};
 // Ensure this object is complete and correct in your actual file
 const programs = {
     strength: {
@@ -978,6 +725,269 @@ const HabitProgram = () => {
             }
         }
     }, [showOnboarding, isClient]);
+
+const checkAndUpdateAchievements = (
+      currentAchievements: Achievement[],
+      savedData: SavedData,
+      completedHabitsCount: number,
+      currentStreak: number
+    ): Achievement[] => {
+      // Create a copy of the achievements to avoid direct state mutation
+      const updatedAchievements = [...currentAchievements];
+      
+      // Initialize an array to store newly unlocked achievements for notifications
+      const newlyUnlocked: Achievement[] = [];
+      
+      // Check each achievement
+      updatedAchievements.forEach((achievement, index) => {
+        // Skip if already unlocked
+        if (achievement.unlocked) return;
+        
+        let progress = 0;
+        let isUnlocked = false;
+        
+        // Calculate progress based on achievement type
+        switch (achievement.id) {
+          // First Week Champion
+          case 'first-week':
+            // Count how many days in a week have habits completed
+            let weeklyHabitsCount = 0;
+            let totalWeeklyHabits = 21; // 3 habits per day * 7 days
+            
+            // Count habits completed in each program's first week
+            Object.values(savedData).forEach(program => {
+              const weekOne = program[1]; // Week 1
+              if (weekOne) {
+                Object.values(weekOne).forEach(habit => {
+                  weeklyHabitsCount += habit.completionDates.length;
+                });
+              }
+            });
+            
+            progress = Math.min(100, (weeklyHabitsCount / totalWeeklyHabits) * 100);
+            isUnlocked = weeklyHabitsCount >= totalWeeklyHabits;
+            break;
+            
+          // Habit Warrior (50 total habits)
+          case 'habit-warrior':
+            progress = Math.min(100, (completedHabitsCount / 50) * 100);
+            isUnlocked = completedHabitsCount >= 50;
+            break;
+            
+          // Century Club (100 total habits)
+          case 'century-club':
+            progress = Math.min(100, (completedHabitsCount / 100) * 100);
+            isUnlocked = completedHabitsCount >= 100;
+            break;
+            
+          // Halfway There (Weeks 1-4 complete)
+          case 'halfway-there':
+            let halfwayHabitsCount = 0;
+            let totalHalfwayHabits = 84; // 3 habits * 4 weeks * 7 days
+            
+            // Count habits completed in the first 4 weeks of any program
+            Object.values(savedData).forEach(program => {
+              for (let week = 1; week <= 4; week++) {
+                const weekData = program[week];
+                if (weekData) {
+                  Object.values(weekData).forEach(habit => {
+                    halfwayHabitsCount += habit.completionDates.length;
+                  });
+                }
+              }
+            });
+            
+            progress = Math.min(100, (halfwayHabitsCount / totalHalfwayHabits) * 100);
+            isUnlocked = halfwayHabitsCount >= totalHalfwayHabits;
+            break;
+            
+          // Program Master (complete entire 8-week program)
+          case 'program-master':
+            let programHabitsCount = 0;
+            let totalProgramHabits = 168; // 3 habits * 8 weeks * 7 days
+            
+            // Count all habits completed in any program
+            Object.values(savedData).forEach(program => {
+              for (let week = 1; week <= 8; week++) {
+                const weekData = program[week];
+                if (weekData) {
+                  Object.values(weekData).forEach(habit => {
+                    programHabitsCount += habit.completionDates.length;
+                  });
+                }
+              }
+            });
+            
+            progress = Math.min(100, (programHabitsCount / totalProgramHabits) * 100);
+            isUnlocked = programHabitsCount >= totalProgramHabits;
+            break;
+            
+          // Streak Master (7-day check-in streak)
+          case 'streak-master-login':
+            const streakTarget = achievement.streakTarget || 7;
+            progress = Math.min(100, (currentStreak / streakTarget) * 100);
+            isUnlocked = currentStreak >= streakTarget;
+            break;
+            
+          // Habit-specific streaks
+          default:
+            if (achievement.targetHabitId && achievement.streakTarget) {
+              // Find the habit in the data
+              let habitStreak = 0;
+              
+              // Look through all programs to find the habit
+              Object.entries(savedData).forEach(([programKey, program]) => {
+                Object.entries(program).forEach(([weekKey, week]) => {
+                  Object.entries(week).forEach(([habitIdxKey, habit]) => {
+                    // Get the corresponding habit ID from the programs data
+                    const programType = programKey as keyof typeof programs;
+                    const weekNum = parseInt(weekKey);
+                    const habitIdx = parseInt(habitIdxKey);
+                    
+                    if (programs[programType]?.weeks?.[weekNum - 1]?.habits?.[habitIdx]?.id === achievement.targetHabitId) {
+                      const { currentStreak: habStreak } = calculateHabitStreak(habit.completionDates);
+                      habitStreak = Math.max(habitStreak, habStreak);
+                    }
+                  });
+                });
+              });
+              
+              progress = Math.min(100, (habitStreak / achievement.streakTarget) * 100);
+              isUnlocked = habitStreak >= achievement.streakTarget;
+            }
+            break;
+        }
+        
+        // Update progress
+        updatedAchievements[index] = {
+          ...achievement,
+          progress: progress
+        };
+        
+        // Check if newly unlocked
+        if (isUnlocked && !achievement.unlocked) {
+          updatedAchievements[index] = {
+            ...updatedAchievements[index],
+            unlocked: true,
+            unlockedAt: new Date().toISOString()
+          };
+          
+          // Add to newly unlocked list for notification
+          newlyUnlocked.push(updatedAchievements[index]);
+        }
+      });
+      
+      // Show notifications for newly unlocked achievements
+      newlyUnlocked.forEach(achievement => {
+        showToastCallback(`🏆 Achievement Unlocked: ${achievement.title} (${achievement.points} pts)`, 'success');
+      });
+      
+      return updatedAchievements;
+    };
+
+    // Handle checkbox state changes
+    const handleCheckbox = (program: keyof typeof programs, weekNum: number, habitIndex: number, isChecked: boolean) => {
+      // Get today's date in ISO format (YYYY-MM-DD)
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Create a deep copy of the savedData to avoid direct state mutation
+      const updatedSavedData = JSON.parse(JSON.stringify(savedData));
+      
+      // Ensure the program, week, and habit objects exist
+      if (!updatedSavedData[program]) {
+        updatedSavedData[program] = {};
+      }
+      
+      if (!updatedSavedData[program][weekNum]) {
+        updatedSavedData[program][weekNum] = {};
+      }
+      
+      if (!updatedSavedData[program][weekNum][habitIndex]) {
+        updatedSavedData[program][weekNum][habitIndex] = {
+          completionDates: []
+        };
+      }
+      
+      // Get the completion dates array for this habit
+      const completionDates = updatedSavedData[program][weekNum][habitIndex].completionDates;
+      
+      // Check if today's date is already in the array
+      const todayIndex = completionDates.indexOf(today);
+      
+      if (isChecked && todayIndex === -1) {
+        // Add today's date if checked and not already present
+        completionDates.push(today);
+        showToastCallback('Habit completed today!', 'success');
+        
+        // Update user data
+        const updatedUserData = { ...userData };
+        updatedUserData.completedHabits += 1;
+        
+        // Update points
+        const pointsForHabit = 10; // Base points per habit
+        updatedUserData.totalPoints += pointsForHabit;
+        
+        // Update streaks
+        const { currentStreak, longestStreak } = calculateStreak(updatedSavedData);
+        updatedUserData.currentStreak = currentStreak;
+        updatedUserData.longestStreak = Math.max(longestStreak, updatedUserData.longestStreak);
+        
+        // Update achievements
+        const updatedAchievements = checkAndUpdateAchievements(
+          updatedUserData.achievements || ACHIEVEMENTS,
+          updatedSavedData,
+          updatedUserData.completedHabits,
+          currentStreak
+        );
+        
+        updatedUserData.achievements = updatedAchievements;
+        updatedUserData.lastUpdated = new Date().toISOString();
+        
+        // Update state
+        setUserData(updatedUserData);
+      } else if (!isChecked && todayIndex !== -1) {
+        // Remove today's date if unchecked and present
+        completionDates.splice(todayIndex, 1);
+        showToastCallback('Habit marked incomplete', 'success');
+        
+        // Update user data
+        const updatedUserData = { ...userData };
+        updatedUserData.completedHabits = Math.max(0, updatedUserData.completedHabits - 1);
+        
+        // Deduct points
+        const pointsForHabit = 10; // Base points per habit
+        updatedUserData.totalPoints = Math.max(0, updatedUserData.totalPoints - pointsForHabit);
+        
+        // Update streaks
+        const { currentStreak, longestStreak } = calculateStreak(updatedSavedData);
+        updatedUserData.currentStreak = currentStreak;
+        
+        // Update achievements (recalculate progress)
+        const updatedAchievements = checkAndUpdateAchievements(
+          updatedUserData.achievements || ACHIEVEMENTS,
+          updatedSavedData,
+          updatedUserData.completedHabits,
+          currentStreak
+        );
+        
+        updatedUserData.achievements = updatedAchievements;
+        updatedUserData.lastUpdated = new Date().toISOString();
+        
+        // Update state
+        setUserData(updatedUserData);
+      }
+      
+      // Update savedData state
+      setSavedData(updatedSavedData);
+    };
+
+    // Function to show habit info
+    const showHabitInfo = (habit: Habit) => { setSelectedHabitInfo(habit); setShowInfoSheet(true); };
+
+    // Loading state handling
+    if (isLoading && isClient) {
+        return <div className="flex justify-center items-center min-h-screen bg-gray-900 text-white">Loading Your Progress...</div>;
+    }
 
     // [Keep your existing memoized values, effects, and handlers]
 
