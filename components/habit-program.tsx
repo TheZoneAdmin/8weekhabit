@@ -334,12 +334,12 @@ const showToastCallback = useCallback((message: string, type: 'success' | 'error
         } catch (error) {
             console.error("Error loading data from localStorage:", error);
              // Reset to defaults if loading fails? Or notify user?
-             showToastCallback("Error loading previous progress.", 'error');
-             localStorage.removeItem(`habit_tracker_${id}`); // Clear potentially corrupt data
-             localStorage.removeItem('habitProgress');
-             setUserId(crypto.randomUUID()); // Generate a new ID maybe?
-             setUserData({ currentStreak: 0, longestStreak: 0, totalPoints: 0, completedHabits: 0, achievements: ACHIEVEMENTS.map(a => ({ ...a, progress: 0, unlocked: false, unlockedAt: undefined })), weeklyProgress: {}, lastUpdated: new Date().toISOString() });
-             setSavedData({});
+            showToastCallback("Error loading previous progress.", 'error');
+            localStorage.removeItem(`habit_tracker_${id}`); // Clear potentially corrupt data
+            localStorage.removeItem('habitProgress');
+            setUserId(crypto.randomUUID()); // Generate a new ID maybe?
+            setUserData({ currentStreak: 0, longestStreak: 0, totalPoints: 0, completedHabits: 0, achievements: ACHIEVEMENTS.map(a => ({ ...a, progress: 0, unlocked: false, unlockedAt: undefined })), weeklyProgress: {}, lastUpdated: new Date().toISOString() });
+            setSavedData({});
         } finally {
              setIsLoading(false); // Finish loading
         }
@@ -355,7 +355,7 @@ const showToastCallback = useCallback((message: string, type: 'success' | 'error
     // Import function
     const importProgress = (file: File) => { if (!isClient) return; const reader = new FileReader(); reader.onload = (e) => { try { const data = JSON.parse(e.target?.result as string); if (data.userData && data.savedData) { const currentIds = new Set(ACHIEVEMENTS.map(a => a.id)); const loadedAch = (data.userData.achievements || []).filter((a: Achievement) => currentIds.has(a.id)).map((la: Achievement) => ({ ...ACHIEVEMENTS.find(d => d.id === la.id), ...la })); const newAch = ACHIEVEMENTS.filter(d => !loadedAch.some((la: Achievement) => la.id === d.id)).map(a => ({ ...a, progress: 0, unlocked: false })); data.userData.achievements = [...loadedAch, ...newAch]; setUserData(data.userData); setSavedData(data.savedData); showToastCallback("Progress imported!", 'success'); } else { throw new Error("Invalid file"); } } catch (err) { console.error(err); showToastCallback(`Import failed: ${err instanceof Error ? err.message : 'Unknown error'}`, 'error'); } }; reader.onerror = () => { showToastCallback('Failed to read file.', 'error'); }; reader.readAsText(file); };
     // Reset function
-     const resetAllProgress = useCallback(() => {
+    const resetAllProgress = useCallback(() => {
         if (!isClient) return;
         setSavedData({});
         localStorage.removeItem('habitProgress');
@@ -368,11 +368,10 @@ const showToastCallback = useCallback((message: string, type: 'success' | 'error
         // Saving immediately after setting state might be slightly delayed, but usually fine
         localStorage.setItem(`habit_tracker_${userId}`, JSON.stringify(initialUserData));
         showToastCallback("Progress reset.", 'success');
-    }, [userId, isClient, setUserData, setSavedData, showToastCallback]); // Add semicolon
+    }, [userId, isClient, setUserData, setSavedData, showToastCallback]);
 
-   
     return { userId, userData, setUserData, savedData, setSavedData, exportProgress, importProgress, resetAllProgress, isClient, isLoading };
-} 
+}
 // --- Main HabitProgram Component ---
 const HabitProgram = () => {
     const [toastInfo, setToastInfo] = useState<{ message: string; type?: 'success' | 'error' } | null>(null);
@@ -426,7 +425,7 @@ const HabitProgram = () => {
             }
         }
         return Math.floor(progress);
-     }, [savedData, allDatesMap, totalCompletions]); // Dependencies
+    }, [savedData, allDatesMap, totalCompletions]); // Dependencies
 
     // Effect to Update Achievement Progress and Overall Streaks
     useEffect(() => {
@@ -441,7 +440,7 @@ const HabitProgram = () => {
 
         // Update state only if values have actually changed
         if (userData.currentStreak !== currentStreak || userData.longestStreak !== longestStreak || userData.completedHabits !== totalCompletions || userData.totalPoints !== totalPoints || JSON.stringify(userData.achievements) !== JSON.stringify(achievementsWithProgress)) {
-             setUserData(prev => ({ ...prev, currentStreak, longestStreak, completedHabits: totalCompletions, totalPoints, achievements: achievementsWithProgress, lastUpdated: new Date().toISOString() }));
+            setUserData(prev => ({ ...prev, currentStreak, longestStreak, completedHabits: totalCompletions, totalPoints, achievements: achievementsWithProgress, lastUpdated: new Date().toISOString() }));
         }
     }, [savedData, isClient, isLoading, setUserData, userData.achievements, userData.currentStreak, userData.longestStreak, userData.completedHabits, userData.totalPoints, calculateSingleAchievementProgress, totalCompletions]); // Added isLoading
 
@@ -450,48 +449,48 @@ const HabitProgram = () => {
     useEffect(() => { /* ... pull to refresh logic ... */ }, [isClient]);
 
     // Checkbox Handler - Checks for immediate unlocks for toast, main update via useEffect
-     const handleCheckbox = (programKey: keyof typeof programs, weekNumber: number, habitIndex: number, checked: boolean) => {
-         const today = new Date().toISOString().split('T')[0];
-         const habit = programs[programKey]?.weeks?.[weekNumber - 1]?.habits?.[habitIndex];
-         if (!habit) return;
-         const habitId = habit.id;
-         let toastMsg = checked ? `${habit.habit} checked!` : `${habit.habit} unchecked.`;
+    const handleCheckbox = (programKey: keyof typeof programs, weekNumber: number, habitIndex: number, checked: boolean) => {
+        const today = new Date().toISOString().split('T')[0];
+        const habit = programs[programKey]?.weeks?.[weekNumber - 1]?.habits?.[habitIndex];
+        if (!habit) return;
+        const habitId = habit.id;
+        let toastMsg = checked ? `${habit.habit} checked!` : `${habit.habit} unchecked.`;
 
-         // --- Update savedData State ---
-         setSavedData(prev => {
-             const currentDates = prev[programKey]?.[weekNumber]?.[habitIndex]?.completionDates || [];
-             const newDates = checked ? Array.from(new Set([...currentDates, today])) : currentDates.filter(date => date !== today);
-             const updatedData = { ...prev }; // Shallow copy previous state
-              // Deep copy necessary levels before modification
-             if (!updatedData[programKey]) updatedData[programKey] = {}; else updatedData[programKey] = { ...updatedData[programKey] };
-             if (!updatedData[programKey][weekNumber]) updatedData[programKey][weekNumber] = {}; else updatedData[programKey][weekNumber] = { ...updatedData[programKey][weekNumber] };
-             // Assign new data for the specific habit
-             updatedData[programKey][weekNumber][habitIndex] = { completionDates: newDates };
-             return updatedData; // Return the new state object
-         });
+        // --- Update savedData State ---
+        setSavedData(prev => {
+            const currentDates = prev[programKey]?.[weekNumber]?.[habitIndex]?.completionDates || [];
+            const newDates = checked ? Array.from(new Set([...currentDates, today])) : currentDates.filter(date => date !== today);
+            const updatedData = { ...prev }; // Shallow copy previous state
+            // Deep copy necessary levels before modification
+            if (!updatedData[programKey]) updatedData[programKey] = {}; else updatedData[programKey] = { ...updatedData[programKey] };
+            if (!updatedData[programKey][weekNumber]) updatedData[programKey][weekNumber] = {}; else updatedData[programKey][weekNumber] = { ...updatedData[programKey][weekNumber] };
+            // Assign new data for the specific habit
+            updatedData[programKey][weekNumber][habitIndex] = { completionDates: newDates };
+            return updatedData; // Return the new state object
+        });
 
-         // Show immediate habit check/uncheck feedback
-         showToastCallback(toastMsg, 'success');
+        // Show immediate habit check/uncheck feedback
+        showToastCallback(toastMsg, 'success');
 
-         // --- Check for immediate achievement unlock TOAST ---
-         // (Actual state update happens in useEffect reacting to savedData change)
-         const finalDates = checked
+        // --- Check for immediate achievement unlock TOAST ---
+        // (Actual state update happens in useEffect reacting to savedData change)
+        const finalDates = checked
             ? Array.from(new Set([...(savedData[programKey]?.[weekNumber]?.[habitIndex]?.completionDates || []), today]))
             : (savedData[programKey]?.[weekNumber]?.[habitIndex]?.completionDates || []).filter(date => date !== today);
-         const { currentStreak: specificHabitStreak } = calculateHabitStreak(finalDates);
-         let newlyUnlocked: string[] = [];
-         userData.achievements.forEach(ach => {
-             if (!ach.unlocked && ach.targetHabitId === habitId && ach.streakTarget && specificHabitStreak >= ach.streakTarget) {
-                 newlyUnlocked.push(ach.title);
-             }
-             // You could add immediate checks for other simple achievements here if needed
-             // e.g., check for totalCompletions === 50 for Habit Warrior toast
-             // Note: totalCompletions used here would be based on the *previous* state before this update finishes
-         });
-         if (newlyUnlocked.length > 0) {
-             showToastCallback(`Achievement Unlocked: ${newlyUnlocked.join(', ')}! 🎉`, 'success');
-         }
-     };
+        const { currentStreak: specificHabitStreak } = calculateHabitStreak(finalDates);
+        let newlyUnlocked: string[] = [];
+        userData.achievements.forEach(ach => {
+            if (!ach.unlocked && ach.targetHabitId === habitId && ach.streakTarget && specificHabitStreak >= ach.streakTarget) {
+                newlyUnlocked.push(ach.title);
+            }
+            // You could add immediate checks for other simple achievements here if needed
+            // e.g., check for totalCompletions === 50 for Habit Warrior toast
+            // Note: totalCompletions used here would be based on the *previous* state before this update finishes
+        });
+        if (newlyUnlocked.length > 0) {
+            showToastCallback(`Achievement Unlocked: ${newlyUnlocked.join(', ')}! 🎉`, 'success');
+        }
+    };
 
     // Function to show habit info
     const showHabitInfo = (habit: Habit) => { setSelectedHabitInfo(habit); setShowInfoSheet(true); };
@@ -554,8 +553,8 @@ const HabitProgram = () => {
 
             {/* Reset Dialog */}
             <AlertDialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>
-                 <AlertDialogContent className="bg-gray-800 text-white"><AlertDialogHeader><AlertDialogTitle className="text-red-500">Reset Progress?</AlertDialogTitle><AlertDialogDescription>This cannot be undone.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel className="bg-gray-600 hover:bg-gray-500 border-none">Cancel</AlertDialogCancel><AlertDialogAction onClick={()=>{resetAllProgress(); setShowResetConfirm(false);}} className="bg-red-600 hover:bg-red-700">Reset</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
-             </AlertDialog>
+                <AlertDialogContent className="bg-gray-800 text-white"><AlertDialogHeader><AlertDialogTitle className="text-red-500">Reset Progress?</AlertDialogTitle><AlertDialogDescription>This cannot be undone.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel className="bg-gray-600 hover:bg-gray-500 border-none">Cancel</AlertDialogCancel><AlertDialogAction onClick={()=>{resetAllProgress(); setShowResetConfirm(false);}} className="bg-red-600 hover:bg-red-700">Reset</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
+            </AlertDialog>
 
             {/* Toast Area - Position fixed at bottom center */}
             <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-xs sm:max-w-sm px-4">
@@ -599,22 +598,22 @@ const HabitProgram = () => {
                                                         <label htmlFor={`habit-${habit.id}`} className="font-medium text-gray-100 hover:text-[#CCBA78] transition-colors cursor-pointer">{habit.habit}</label> {/* Habit text slightly lighter */}
                                                         <p className="text-gray-400 text-sm mt-0.5 sm:mt-1">{habit.example}</p> {/* Example slightly darker */}
                                                         <div className="flex items-center justify-between mt-1.5"> {/* Adjusted spacing */}
-                                                             <p className="text-gray-500 text-xs">Completed {completionDates.length} times</p> {/* Completion count darker */}
-                                                             {habitStreak > 0 && (<div className="flex items-center gap-1 text-orange-400 animate-pulse" title={`${habitStreak}-day streak`}><Flame className="w-3.5 h-3.5" /><span className="text-xs font-medium">{habitStreak}</span></div>)}
-                                                         </div>
-                                                     </div>
-                                                 </div>
-                                             );
-                                         })}
-                                     </div>
-                                 </CollapsibleCard>
-                             ))}
-                         </div>
-                     </TabsContent>
-                 ))}
-             </Tabs>
-         </div>
-     );
- };
+                                                            <p className="text-gray-500 text-xs">Completed {completionDates.length} times</p> {/* Completion count darker */}
+                                                            {habitStreak > 0 && (<div className="flex items-center gap-1 text-orange-400 animate-pulse" title={`${habitStreak}-day streak`}><Flame className="w-3.5 h-3.5" /><span className="text-xs font-medium">{habitStreak}</span></div>)}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </CollapsibleCard>
+                            ))}
+                        </div>
+                    </TabsContent>
+                ))}
+            </Tabs>
+        </div>
+    );
+};
 
- export default HabitProgram;
+export default HabitProgram;
